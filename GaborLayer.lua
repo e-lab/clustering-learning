@@ -25,7 +25,7 @@
 
 
 -- Gabor filter algorithm to compute the Tensor
-function GaborLayer(Sx,Sy,lambda,theta)
+function GaborLayer(Sx,Sy,lambda,theta,gamma,shi)
 	sigma = 0.56*lambda
 	Gabor = torch.Tensor(Sx,Sy)
 	for x = 1,Sx do
