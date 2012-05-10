@@ -1,3 +1,5 @@
 this library includes all Lua/Torch/xlearn code from elab
 
 GaborLayer: generates a layer of gabor filters
+
+SADtest: test sum of absolute differences
