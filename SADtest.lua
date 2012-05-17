@@ -33,10 +33,10 @@ SAD = inline.load [[
       float *output_data = THFloatTensor_data(output);
       
       // dims
-      int ir = input->size[0];
-      int ic = input->size[1];
-      int kr = kernel->size[0];
-      int kc = kernel->size[1];
+      int ir = input->size[1];
+      int ic = input->size[2];
+      int kr = kernel->size[1];
+      int kc = kernel->size[2];
       int or = (ir - kr) + 1;
       int oc = (ic - kc) + 1;
 
@@ -63,20 +63,21 @@ SAD = inline.load [[
 ]]
 
 -- input image/test:
-lena=image.rgb2y(image.lena())
+lena=image.lena()
 -- global linear normalization of input frame
 kNorm = torch.ones(9)
-m=nn.SpatialSubtractiveNormalization(1,kNorm)
+m=nn.SpatialSubtractiveNormalization(3,kNorm)
 Nlena = m:forward(lena)
 
 -- kernel/patch size
-fil_s = 15
+fil_s = 31
+ker=torch.zeros(lena:size(1),fil_s,fil_s)
 
 -- get sizes:
 ir = Nlena:size(2)
 ic = Nlena:size(3)
-kr = ker:size(2)
-kc = ker:size(3)
+kr = fil_s
+kc = fil_s
 our = (ir - kr) + 1
 ouc = (ic - kc) + 1
 
@@ -88,15 +89,12 @@ py=100
 -- patch extraction
 ker=image.crop(Nlena, px, py, px+fil_s, py+fil_s)
 -- SAD:
-SAD(Nlena[1],ker[1],processed)
-print(torch.min(processed))
-print(torch.max(processed))
+SAD(Nlena,ker,processed)
+print(torch.min(processed), torch.max(processed))
 processed=processed/torch.max(processed)
-print(torch.min(processed))
-print(torch.max(processed))
+print(torch.min(processed), torch.max(processed))
 processed= processed:mul(-1):add(1)
-print(torch.min(processed))
-print(torch.max(processed))
+print(torch.min(processed), torch.max(processed))
 -- show a pseudo-bounding box: 4 dots on screen
 processed[py+(fil_s-1)/2][px+(fil_s-1)/2]=1
 processed[py+(fil_s-1)/2][px-(fil_s-1)/2]=1
