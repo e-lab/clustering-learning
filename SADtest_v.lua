@@ -153,7 +153,7 @@ py=40
 i=1
 
 -- global linear normalization of input frame
-kNorm = torch.ones(9)
+kNorm = torch.ones(5)
 m=nn.SpatialSubtractiveNormalization(3,kNorm)
 Ninputim = m:forward(inputim)
 

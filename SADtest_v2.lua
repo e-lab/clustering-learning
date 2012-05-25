@@ -93,12 +93,12 @@ p = xlua.Profiler()
 -- input image/test:
 inputim=image.loadPNG('/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/07_motocross/00001.png',3)
 -- initial object/patch location and video frame
-px=285
-py=25
+px=300
+py=40
 i=1
 
 -- global linear normalization of input frame
-kNorm = torch.ones(9)
+kNorm = torch.ones(5)
 m=nn.SpatialSubtractiveNormalization(3,kNorm)
 Ninputim = m:forward(inputim)
 
@@ -137,7 +137,7 @@ function process()
 	m=nn.SpatialSubtractiveNormalization(3,kNorm)
 	Ninputim = m:forward(inputim)
 	
-	--ker=image.crop(Ninputim, px, py, px+fil_s, py+fil_s) -- test ONLY!!!!
+	--ker=image.crop(Ninputim, px-fil2c, py-fil2r, px+fil2c+1, py+fil2r+1) -- test ONLY!!!!
 	-- SAD: REMEMBER TO INIT OUTput to 0!!!
 	processed=processed:mul(0)
 	
@@ -146,59 +146,48 @@ function process()
 	x1=math.max(px-src_rng,1)
 	x2=math.min(px+src_rng,ic)
 	
-	tim1=Ninputim[1]:sub(y1,y2,x1,x2) -- inputs
-	tim2=Ninputim[2]:sub(y1,y2,x1,x2)
-	tim3=Ninputim[3]:sub(y1,y2,x1,x2)
-	
-	nir = tim1:size(1)
-	nic = tim1:size(2)
+	tim=image.crop(Ninputim, x1,y1,x2,y2) -- input patch if input image
+		
+	nir = tim:size(2)
+	nic = tim:size(3)
 	nour = (nir - kr) + 1
 	nouc = (nic - kc) + 1
 	
 	ym = y1+fil2r -- outputs box (shrinked from input box)
-	yM = y2-fil2r
+	yM = y2-fil2r-1
 	xm = x1+fil2c
-	xM = x2-fil2c
+	xM = x2-fil2c-1
 	
 	total=torch.zeros(nour, nouc) -- outputs
 	temp1=torch.zeros(nour, nouc)
 	temp2=torch.zeros(nour, nouc)
 	temp3=torch.zeros(nour, nouc)
-	
-	--print(y1,y2,x1,x2)
-	--print(ym,yM,xm,xM)
-	--print(tim1:size(),temp1:size()) 
 
-	SADbw(tim1,ker[1],temp1)
-	SADbw(tim2,ker[2],temp2)
-	SADbw(tim3,ker[3],temp3)
+	SADbw(tim[1],ker[1],temp1)
+	SADbw(tim[2],ker[2],temp2)
+	SADbw(tim[3],ker[3],temp3)
 	
 	total=temp1+temp2+temp3
 	total=total/torch.max(total)
 	total = total:mul(-1):add(1)
-	--print(total:size())
-	--print(processed:size())
+
 	processed[{{ym,yM},{xm,xM}}] = total
-	--processed=total
 	outim[1]:copy(processed)
 	outim[2]:copy(processed)
 	outim[3]:copy(processed)
 	
 	-- update object/patch location
 	value, px_nxt, py_nxt = GetMax(total)
-	print('SAD output:', value)
-	print(px_nxt,py_nxt, x1,y1)
-	
-	px = px_nxt-1 + x1-1 + fil2c
-    py = py_nxt-1 + y1-1 + fil2r
-    print(px,py)
-   
+	--print('SAD output:', value)
+	px = px_nxt + xm -1 
+    py = py_nxt + ym -1 
+       
     -- next patch extraction
 	ker=image.crop(Ninputim, px-fil2c, py-fil2r, px+fil2c+1, py+fil2r+1)
     
     --if i==1 then image.display(total) end
     -- continue loop, chose endframe
-    if i==1 then i=1 else i=i+1 end
+    if i==100 then i=1 else i=i+1 end
     -- close program window at a certain frame if needed:
     --if i==10 then exit() end
 end	
@@ -215,9 +204,9 @@ function display()
 
    -- (2) overlay bounding boxes for each detection
    win:setcolor(1,0,0)
-   win:rectangle(px, py, fil_c, fil_r)
-   win:rectangle(ic+px, py, fil_c, fil_r)
-   --win:rectangle(2*ic+px, py, fil_c, fil_r)
+   win:rectangle(px-fil2c, py-fil2r, fil_c, fil_r)
+   win:rectangle(ic+px-fil2c, py-fil2r, fil_c, fil_r)
+   win:rectangle(2*ic+px-fil2c, py-fil2r, fil_c, fil_r)
    win:stroke()
    --win:setfont(qt.QFont{serif=false,italic=false,size=16})
    --win:moveto(detect.x, detect.y-1)
