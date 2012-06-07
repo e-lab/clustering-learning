@@ -91,10 +91,19 @@ end
 p = xlua.Profiler()
 
 -- input image/test:
-inputim=image.loadPNG('/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/07_motocross/00001.png',3)
+--filename = '/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/07_motocross/'
+--inputim=image.loadPNG(filename..'00001.png',3)
+---- initial object/patch location and video frame
+--px=300
+--py=40
+--src_rng=100
+--i=1
+filename = '/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/05_pedestrian3/'
+inputim=image.loadJPG(filename..'00001.jpg',3)
 -- initial object/patch location and video frame
-px=300
-py=40
+px=160
+py=120
+src_rng=50
 i=1
 
 -- global linear normalization of input frame
@@ -117,7 +126,6 @@ our = (ir - kr) + 1
 ouc = (ic - kc) + 1
 
 -- search range for SAD maxima/min
-src_rng=100
 if src_rng < fil2r then print("Error: search range src_rng < patch size/2") end
 
 -- inits:
@@ -128,8 +136,8 @@ ker=image.crop(Ninputim, px-fil2c, py-fil2r, px+fil2c+1, py+fil2r+1)
 
 -- loop on video frames:
 function process()
-	inputim=image.loadPNG(string.format(
-		"/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/07_motocross/%0005d", i) .. '.png',3)
+	--inputim=image.loadPNG(string.format(filename..'%0005d', i) .. '.png',3)
+	inputim=image.loadJPG(string.format(filename..'%0005d', i) .. '.jpg',3)
 	print('Frame count:'..i)
 
 	-- global linear normalization of input frame

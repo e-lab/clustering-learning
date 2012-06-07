@@ -146,7 +146,8 @@ end
 p = xlua.Profiler()
 
 -- input image/test:
-inputim=image.loadPNG('/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/07_motocross/00001.png',3)
+filename = '/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/07_motocross/'
+inputim=image.loadPNG(filename..'00001.png',3)
 -- initial object/patch location and video frame
 px=300
 py=40
@@ -185,7 +186,7 @@ ker=image.crop(Ninputim, px-fil2c, py-fil2r, px+fil2c+1, py+fil2r+1)
 -- loop on video frames:
 function process()
 	inputim=image.loadPNG(string.format(
-		"/Users/eugenioculurciello/AdvancedResearch/SyntheticVision/datasets/TLD/07_motocross/%0005d", i) .. '.png',3)
+		filename..'%0005d', i) .. '.png',3)
 
 	-- global linear normalization of input frame
 	kNorm = torch.ones(5) --gaussian = image.gaussian(3,0.15)
