@@ -1,0 +1,38 @@
+
+DONE:
+-----------------------------------------
+generate 1st layer
+train 1st layer
+test 1st layer 
+train 2nd layer k-means
+[all done on CIFAR]
+
+
+
+TO DO:
+-----------------------------------------
+k-means in unsup generates some nan filters: due to divide by 0 when templates are not used
+FIX!!!!
+
+normalize and zero mean data after each layer!
+
+test on a dataset 2 layer net
+
+SpatialSAD: how to deal with input kernels, input have 3 color spaces: 3 x 2-dimensions
+but then in 2nd layer we have input with many dimensions and filters are 1 x 2 dimensions:
+meaning that at least now filters are shared for all input dimensions
+how to connect 1st and second layer? conned table: pick M subset of inputs and compute SpatialSAD on that
+or just use all of them if you have time for computation
+What I would like is to learn filter, kernels that are independent of color planes
+so filters in each layer are always N x 2-dimensions
+
+
+CIFAR too small for 2 or more layers: switch to other dataset
+switch to: SVHN dataset:
+http://ufldl.stanford.edu/housenumbers/
+or spanish dataset on our server (even better for final use)
+
+
+STUDENT TASK:
+“Filter” k-means filters so that they are different: group them together and remove copies!!!
+
