@@ -175,7 +175,7 @@ function train()
    local filename = paths.concat(opt.save, 'model.net')
    os.execute('mkdir -p ' .. sys.dirname(filename))
    print('==> saving model to '..filename)
-   --torch.save(filename, model)
+   torch.save(filename, model)
 
    -- next epoch
    confusion:zero()

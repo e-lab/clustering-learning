@@ -74,7 +74,7 @@ is = 9
 --image.display(outiman[1])
 
 
-print '==> computing distances to templates, convolutionally'
+print '==> computing distances to templates SAD:'
 n1 = nn.Sequential()
 n1:add(nn.SpatialSAD(3,nk,is,is))
 n1.modules[1]:templates(kernels:reshape(nk, 1, is, is):expand(nk,3,is,is))
@@ -84,7 +84,24 @@ time = sys.clock()
 outima = n1:forward(lena)
 time = sys.clock() - time
 print('==> Compute Time = ' .. (time*1000) .. 'ms')
-image.display(outima[1])
+--image.display(outima[1])
+
+-- comparing speed with spatial convolution layer:
+print '==> computing spatial convolution on same image:'
+n2 = nn.Sequential()
+n2:add(nn.SpatialConvolution(3, nk, is, is, cvstepsize, cvstepsize))
+n2:add(nn.Sum(2))
+-- initialize 1st layer parameters to learned filters:
+for i=1,nk do   
+   n2.modules[1].weight[i] = kernels[i]:reshape(3, is, is):type('torch.FloatTensor')
+end
+n2.modules[1].bias = n2.modules[1].bias *0
+
+time = sys.clock()
+outima = n2:forward(lena)
+time = sys.clock() - time
+print('==> Compute Time = ' .. (time*1000) .. 'ms')
+--image.display(outima[1])
 
 
 
