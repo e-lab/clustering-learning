@@ -89,10 +89,8 @@ image.display{image=data[{{1,256}}]:reshape(256,is,is),
 --print '==> running k-means'
 function cb (kernels)
    if params.visualize then
-      win = image.display{image=kernels:reshape(nk,1,is,is),
-               padding=2, symmetric=true, zoom=2, win=win,
-               nrow=math.floor(math.sqrt(nk)),
-               legend='K-Means Centroids'}
+         win = image.display{image=kernels:reshape(nk,is,is), padding=2, symmetric=true, 
+         zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='2nd layer filters'}
    end
 end                    
 kernels, kcounts = unsup.kmeans(data, nk, params.initstd, params.niter, params.batchsize,cb,true)

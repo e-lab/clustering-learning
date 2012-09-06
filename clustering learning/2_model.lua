@@ -53,17 +53,30 @@ if opt.model == '1st-layer' then
    o1size = trainData.data:size(3) - is + 1 -- size of spatial conv layer output
    cvstepsize = 1
    poolsize = 2
-   outsize = torch.max(trainData.labels)
    l1netoutsize = o1size/poolsize/cvstepsize
    
    model = nn.Sequential()
-   model:add(nn.SpatialConvolution(3, nk, is, is, cvstepsize, cvstepsize))
+   model:add(nn.SpatialConvolution(3, nk1, is, is, cvstepsize, cvstepsize))
    model:add(nn.Tanh())
-   model:add(nn.SpatialLPPooling(nk, 2, poolsize, poolsize, poolsize, poolsize))
-   model:add(nn.SpatialSubtractiveNormalization(nk, normkernel))
+   model:add(nn.SpatialSubSampling(nk1, poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialLPPooling(nk1, 1, poolsize, poolsize, poolsize, poolsize))
+   model:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
 
 
-elseif opt.model == '2nd layer' then
+elseif opt.model == '2nd-layer' then
+
+   normkernel = image.gaussian1D(7)
+   o1size = trainData.data:size(3) - is + 1 -- size of spatial conv layer output
+   cvstepsize = 1
+   poolsize = 2
+   l1netoutsize = o1size/poolsize/cvstepsize
+   
+   model = nn.Sequential()
+   model:add(nn.SpatialConvolution(nk1, nk2, is, is, cvstepsize, cvstepsize))
+   model:add(nn.Tanh())
+   model:add(nn.SpatialSubSampling(nk2, poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
+   model:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
 
 
 elseif opt.model == '2mlp-classifier' then

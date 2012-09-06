@@ -13,8 +13,6 @@ cmd:text('Get k-means templates on directory of images')
 cmd:text()
 cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
-cmd:option('-images', 'images', 'directory full of images')
-cmd:option('-maximages', 100, 'max nb of images')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 9, 'size of each input patches') -- 9x9 kernels wanted
@@ -37,112 +35,51 @@ cmd:option('-momentum', 0, 'momentum (SGD only)')
 cmd:option('-t0', 1, 'start averaging at t0 (ASGD only), in nb of epochs')
 cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
 cmd:text()
-params = cmd:parse(arg or {})
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
 if not qt then
    opt.visualize = false
 end
 
-torch.manualSeed(params.seed)
-torch.setnumthreads(params.threads)
+torch.manualSeed(opt.seed)
+torch.setnumthreads(opt.threads)
 torch.setdefaulttensortype('torch.DoubleTensor')
 
-is = params.inputsize
-nk = params.nkernels
+is = opt.inputsize
+nk = opt.nkernels
 
 ----------------------------------------------------------------------
-print '==> loading dataset'
-
-trsize = 50000
-tesize = 2000
-
-trainData = {
-   data = torch.Tensor(trsize, 3*32*32),
-   labels = torch.Tensor(trsize),
-   size = function() return trsize end
-}
-for i = 0,4 do
-   subset = torch.load('../datasets/cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
-   trainData.data[{ {i*10000+1, (i+1)*10000} }] = subset.data:t()
-   trainData.labels[{ {i*10000+1, (i+1)*10000} }] = subset.labels
-end
-trainData.labels = trainData.labels + 1
-
-subset = torch.load('../datasets/cifar-10-batches-t7/test_batch.t7', 'ascii')
-testData = {
-   data = subset.data:t():double(),
-   labels = subset.labels[1]:double(),
-   size = function() return tesize end
-}
-testData.labels = testData.labels + 1
-
--- resize dataset (if using small version)
-trainData.data = trainData.data[{ {1,trsize} }]
-trainData.labels = trainData.labels[{ {1,trsize} }]
-
-testData.data = testData.data[{ {1,tesize} }]
-testData.labels = testData.labels[{ {1,tesize} }]
-
--- reshape data                                                                                     
-trainData.data = trainData.data:reshape(trsize,3,32,32)
-testData.data = testData.data:reshape(tesize,3,32,32)
-
-print('Training Data:')
-print(trainData)
-print()
-
-print('Test Data:')
-print(testData)
-print()
-
+-- loading and processing dataset:
+dofile '1_data_cifar.lua'
 
 ----------------------------------------------------------------------
-print "==> preparing images"
-
-print '==> whitening images (local normalization)'
-highpass = image.gaussian1D(9)
-n1 = nn.SpatialContrastiveNormalization(1,highpass)
-for i=1,trainData.data:size(1) do 
-   for c = 1,3 do
-      trainData.data[i][c] = n1(trainData.data[i][{{c}}])
-   end
-end
-
-for i=1,testData.data:size(1) do 
-   for c = 1,3 do
-      testData.data[i][c] = n1(testData.data[i][{{c}}])
-   end
-end
-
-print '==> extracting patches'
-data = torch.Tensor(params.nsamples,is*is)
-for i = 1,params.nsamples do
+print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
+data = torch.Tensor(opt.nsamples,is*is)
+for i = 1,opt.nsamples do
    local img = math.random(1,trainData.data:size(1))
    local image = trainData.data[img]
-   local z = math.random(1,trainData.data:size(2))
    local x = math.random(1,trainData.data:size(3)-is+1)
    local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {z},{y,y+is-1},{x,x+is-1} }]
+   local randompatch = image[{ {1},{y,y+is-1},{x,x+is-1} }]
    data[i] = randompatch
 end
 
---if not paths.filep('cifar10-1l-64.t7') then
+--if not paths.filep('cifar10-1l-64-d.t7') then
    print '==> running k-means'
    function cb (kernels)
-      if params.visualize then
-         win = image.display{image=kernels:reshape(nk,1,is,is),
+      if opt.visualize then
+         win = image.display{image=kernels:reshape(nk,is,is),
                           padding=2, symmetric=true, zoom=2, win=win,
                           nrow=math.floor(math.sqrt(nk)),
                           legend='K-Means Centroids'}
       end
    end                    
-   kernels = unsup.kmeans(data, nk, params.initstd,params.niter, params.batchsize,cb,true)
+   kernels = unsup.kmeans(data, nk, opt.initstd,opt.niter, opt.batchsize,cb,true)
    print('==> saving centroids to disk:')
-   torch.save('cifar10-1l.t7', kernels)
+   torch.save('cifar10-1l-d.t7', kernels)
 --else
 --   print '==> loading pre-trained k-means kernels'
---   kernels = torch.load('cifar10-1l.t7')
+--   kernels = torch.load('cifar10-1l-64-d.t7')
 --end
 
 -- there is a bug in unpus.kmeans: some kernels come out nan!!!
@@ -153,6 +90,7 @@ for i=1,nk do
       kernels[i] = torch.zeros(kernels[1]:size()) 
    end
 end
+
 
 ----------------------------------------------------------------------
 print "==> processing dataset with k-means kernels + pooling"
@@ -235,8 +173,8 @@ end
 -- save datasets:
 -- testData.data=testData.data:float()
 -- trainData.data=trainData.data:float() 
--- torch.save('trainData-xxx.t7', trainData)
--- torch.save('testData-xxx.t7', testData)
+-- torch.save('trainData-cifar-ddd.t7', trainData)
+-- torch.save('testData-cifar-ddd.t7', testData)
 
 
 
