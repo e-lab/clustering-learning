@@ -73,10 +73,11 @@ for i,channel in ipairs(channels) do
    print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
+vs = testData.data:size(3)
 if opt.visualize then
-   image.display{image=trainData.data[{{1,256},{1}}]:reshape(256,12,12),padding=2, nrow=16, 
+   image.display{image=trainData.data[{{1,256},{1}}]:reshape(256,vs,vs),padding=2, nrow=16, 
          symmetric=true, zoom=2, legend='Some normalized training samples'}
-   image.display{image=testData.data[{{1,256},{1}}]:reshape(256,12,12),padding=2, nrow=16, 
+   image.display{image=testData.data[{{1,256},{1}}]:reshape(256,vs,vs),padding=2, nrow=16, 
          symmetric=true, zoom=2, legend='Some normalized test samples'}
 end
 
@@ -217,8 +218,8 @@ end
 -- save datasets:
 --trainData.data = trainData.data:float()
 --testData.data = testData.data:float()
---torch.save('trainData-CL2l.t7', trainData)
---torch.save('testData-CL2l.t7', testData)
+--torch.save('trainData-cifar-CL2l.t7', trainData)
+--torch.save('testData-cifar-CL2l.t7', testData)
 
 
 

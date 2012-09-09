@@ -14,18 +14,18 @@ cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 9, 'size of each input patches') -- 9x9 kernels wanted
+cmd:option('-inputsize', 7, 'size of each input patches')
 cmd:option('-nkernels', 64, 'number of kernels to learn')
-cmd:option('-niter', 50, 'nb of k-means iterations')
+cmd:option('-niter', 25, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 1000*100, 'nb of random training samples')
+cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 -- loss:
 cmd:option('-loss', 'nll', 'type of loss function to minimize: nll | mse | margin')
 -- training:
 cmd:option('-save', 'results', 'subdirectory to save/log experiments in')
-cmd:option('-plot', false, 'live plot')
+cmd:option('-plot', true, 'live plot')
 cmd:option('-optimization', 'SGD', 'optimization method: SGD | ASGD | CG | LBFGS')
 cmd:option('-learningRate', 1e-3, 'learning rate at t=0')
 cmd:option('-batchSize', 1, 'mini-batch size (1 = pure stochastic)')
@@ -36,9 +36,9 @@ cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
-if not qt then
-   opt.visualize = false
-end
+--if not qt then
+--   opt.visualize = false
+--end
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
@@ -53,8 +53,8 @@ nk = opt.nkernels
 dofile '1_data_svhn.lua'
 
 
-------------------------------------------------------------------------------
-print '==> extracting patches' -- only extract on Y channel
+---------------------------------------------------------------------
+print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
 data = torch.Tensor(opt.nsamples,is*is)
 for i = 1,opt.nsamples do
    local img = math.random(1,trainData.data:size(1))
@@ -65,7 +65,13 @@ for i = 1,opt.nsamples do
    data[i] = randompatch
 end
 
---if not paths.filep('SVHN-1l-64.t7') then
+-- show a few patches:
+if opt.visualize then
+   f256S = data[{{1,256}}]:reshape(256,is,is)
+   image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 1st layer learning'}
+end
+
+--if not paths.filep('svhn-CL1l.t7') then
    print '==> running k-means'
    function cb (kernels)
       if opt.visualize then
@@ -75,37 +81,59 @@ end
    end                    
    kernels = unsup.kmeans(data, nk, opt.initstd,opt.niter, opt.batchsize,cb,true)
    print('==> saving centroids to disk:')
-   torch.save('SVHN-1l.t7', kernels)
+   torch.save('svhn-CL1l.t7', kernels)
 --else
 --   print '==> loading pre-trained k-means kernels'
---   kernels = torch.load('SVHN-1l-64.t7')
+--   kernels = torch.load('svhn-CL1l.t7')
 --end
 
--- there is a bug in unpus.kmeans: some kernels come out nan!!!
--- clear nan kernels
-for i=1,nk do   
+for i=1,nk do
+   -- there is a bug in unpus.kmeans: some kernels come out nan!!!
+   -- clear nan kernels   
    if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
       print('Found NaN kernels!') 
       kernels[i] = torch.zeros(kernels[1]:size()) 
    end
+   
+   -- give gaussian shape if needed:
+   sigma=0.4
+   fil = image.gaussian(is, sigma)
+   kernels[i] = kernels[i]:cmul(fil)
+   
+   -- normalize kernels to 0 mean and 1 std:
+   kernels[i]:add(-kernels[i]:mean())
+   kernels[i]:div(kernels[i]:std())
 end
 
+-- show final:
+if opt.visualize then
+   win = image.display{image=kernels:reshape(nk,is,is), padding=2, symmetric=true, 
+      zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='1st layer filters'}
+end
+
+print '==> verify filters statistics'
+print('filters max mean: ' .. kernels:mean(2):abs():max())
+print('filters max standard deviation: ' .. kernels:std(2):abs():max())
 
 ----------------------------------------------------------------------
 print "==> loading and initialize 1 layer CL model"
 
+nk1=nk
 opt.model = '1st-layer'
 dofile '2_model.lua' 
 l1net = model:clone()
 
--- initialize 1st layer parameters to learned filters:
-l1net.modules[1].weight = kernels:reshape(nk, 1, is, is):expand(nk,3,is,is):type('torch.DoubleTensor')
+-- initialize 1st layer parameters to learned filters (expand them for use in all channels):
+l1net.modules[1].weight = kernels:reshape(nk,1,is,is):expand(nk,3,is,is):type('torch.DoubleTensor')
 l1net.modules[1].bias = l1net.modules[1].bias *0
 
 --tests:
 --td_1=torch.zeros(3,32,32)
 --print(l1net:forward(td_1)[1])
 
+--td_2 = image.lena()
+--out_2 = l1net:forward(td_1)
+--image.display(out_2)
 
 ----------------------------------------------------------------------
 print "==> processing dataset with CL network"
@@ -135,17 +163,33 @@ trainData2.data = trainData2.data:reshape(trsize, nk, l1netoutsize, l1netoutsize
 testData2.data = testData2.data:reshape(tesize, nk, l1netoutsize, l1netoutsize)
 
 -- relocate pointers to new dataset:
-trainData1 = trainData -- save original dataset
-testData1 = testData
+--trainData1 = trainData -- save original dataset
+--testData1 = testData
 trainData = trainData2 -- relocate new dataset
 testData = testData2
 
 -- show a few outputs:
-first256Samples_y = trainData1.data[{ {1,256},1 }]
-image.display{image=first256Samples_y, nrow=16, nrow=16, padding=2, zoom=2, legend='Some training examples: Y channel'}
-first256Samples_y = trainData2.data[{ {1,256},1 }]
-image.display{image=first256Samples_y, nrow=16, nrow=16, padding=2, zoom=2, legend='Some training examples: Y channel'}
+if opt.visualize then
+   f256S_y = trainData2.data[{ {1,256},1 }]
+   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
+            legend='Output 1st layer: first 256 examples, 1st feature'}
+end
 
+print '==> verify statistics'
+channels = {'y','u','v'}
+for i,channel in ipairs(channels) do
+   trainMean = trainData.data[{ {},i }]:mean()
+   trainStd = trainData.data[{ {},i }]:std()
+
+   testMean = testData.data[{ {},i }]:mean()
+   testStd = testData.data[{ {},i }]:std()
+
+   print('training data, '..channel..'-channel, mean: ' .. trainMean)
+   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
+
+   print('test data, '..channel..'-channel, mean: ' .. testMean)
+   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
+end
 
 --------------------------------------------------------------
 --torch.load('c') -- break function
@@ -179,5 +223,5 @@ end
 -- save datasets:
 trainData.data = trainData.data:float()
 testData.data = testData.data:float()
-torch.save('trainData-svhn-xxx.t7', trainData)
-torch.save('testData-svhn-xxx.t7', testData)
+torch.save('trainData-svhn-CL1l.t7', trainData)
+torch.save('testData-svhn-CL1l.t7', testData)
