@@ -9,6 +9,7 @@
 require 'torch'   -- torch
 require 'image'   -- to visualize the dataset
 require 'nnx'      -- provides all sorts of trainable modules/layers
+require 'SpatialSAD'
 
 ----------------------------------------------------------------------
 -- parse command line arguments
@@ -49,7 +50,6 @@ print '==> construct model'
 
 if opt.model == '1st-layer' then
 
-   normkernel = image.gaussian1D(7)
    o1size = trainData.data:size(3) - is + 1 -- size of spatial conv layer output
    cvstepsize = 1
    poolsize = 2
@@ -59,13 +59,13 @@ if opt.model == '1st-layer' then
    model:add(nn.SpatialConvolution(3, nk1, is, is, cvstepsize, cvstepsize))
    model:add(nn.Tanh())
    model:add(nn.SpatialSubSampling(nk1, poolsize, poolsize, poolsize, poolsize))
-   --model:add(nn.SpatialLPPooling(nk1, 1, poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialMaxPooling(poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize)) 
    model:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
 
 
 elseif opt.model == '2nd-layer' then
 
-   normkernel = image.gaussian1D(7)
    o1size = trainData.data:size(3) - is + 1 -- size of spatial conv layer output
    cvstepsize = 1
    poolsize = 2
@@ -75,8 +75,23 @@ elseif opt.model == '2nd-layer' then
    model:add(nn.SpatialConvolution(nk1, nk2, is, is, cvstepsize, cvstepsize))
    model:add(nn.Tanh())
    model:add(nn.SpatialSubSampling(nk2, poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialMaxPooling(poolsize, poolsize, poolsize, poolsize))
    --model:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
    model:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
+   
+elseif opt.model == '1st-layer-dist' then   
+   
+   o1size = trainData.data:size(3) - is + 1 -- size of spatial conv layer output
+   poolsize = 2
+   l1netoutsize = o1size/poolsize
+
+   model = nn.Sequential()
+   model:add(nn.SpatialSAD(3, nk1, is, is))
+   model:add(nn.SpatialContrastiveNormalization(nk1, normkernel, 1e-3))
+   model:add(nn.Tanh())
+   model:add(nn.SpatialSubSampling(nk1, poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialLPPooling(nk1,2,poolsize,poolsize,poolsize,poolsize))
+   model:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
 
 
 elseif opt.model == '2mlp-classifier' then
@@ -108,7 +123,7 @@ elseif opt.model == 'convnet' then
    model:add(nn.SpatialConvolutionMap(nn.tables.random(nfeats, nstates[1], fanin[1]), filtsize, filtsize))
    model:add(nn.Tanh())
    model:add(nn.SpatialLPPooling(nstates[1],2,poolsize,poolsize,poolsize,poolsize))
-   model:add(nn.SpatialSubtractiveNormalization(16, normkernel))
+   model:add(nn.SpatialSubtractiveNormalization(nstates[1], normkernel))
 
    -- stage 2 : filter bank -> squashing -> L2 pooling -> normalization
    model:add(nn.SpatialConvolutionMap(nn.tables.random(nstates[1], nstates[2], fanin[2]), filtsize, filtsize))

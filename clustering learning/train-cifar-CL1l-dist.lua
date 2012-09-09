@@ -17,9 +17,9 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 9, 'size of each input patches') -- 9x9 kernels wanted
 cmd:option('-nkernels', 64, 'number of kernels to learn')
-cmd:option('-niter', 50, 'nb of k-means iterations')
+cmd:option('-niter', 25, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 100000, 'nb of random training samples')
+cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 -- loss:
@@ -37,9 +37,9 @@ cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
-if not qt then
-   opt.visualize = false
-end
+--if not qt then
+--   opt.visualize = false
+--end
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
@@ -51,6 +51,7 @@ nk = opt.nkernels
 ----------------------------------------------------------------------
 -- loading and processing dataset:
 dofile '1_data_cifar.lua'
+
 
 ----------------------------------------------------------------------
 print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
@@ -64,56 +65,70 @@ for i = 1,opt.nsamples do
    data[i] = randompatch
 end
 
---if not paths.filep('cifar10-1l-64-d.t7') then
+-- show a few patches:
+if opt.visualize then
+   f256S = data[{{1,256}}]:reshape(256,9,9)
+   image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 1st layer learning'}
+end
+
+--if not paths.filep('cifar10-1l.t7') then
    print '==> running k-means'
    function cb (kernels)
       if opt.visualize then
-         win = image.display{image=kernels:reshape(nk,is,is),
-                          padding=2, symmetric=true, zoom=2, win=win,
-                          nrow=math.floor(math.sqrt(nk)),
-                          legend='K-Means Centroids'}
+         win = image.display{image=kernels:reshape(nk,is,is), padding=2, symmetric=true, 
+         zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='1st layer filters'}
       end
    end                    
    kernels = unsup.kmeans(data, nk, opt.initstd,opt.niter, opt.batchsize,cb,true)
    print('==> saving centroids to disk:')
-   torch.save('cifar10-1l-d.t7', kernels)
+   torch.save('cifar10-1l.t7', kernels)
 --else
 --   print '==> loading pre-trained k-means kernels'
---   kernels = torch.load('cifar10-1l-64-d.t7')
+--   kernels = torch.load('cifar10-1l.t7')
 --end
 
--- there is a bug in unpus.kmeans: some kernels come out nan!!!
--- clear nan kernels
-for i=1,nk do   
+for i=1,nk do
+   -- there is a bug in unpus.kmeans: some kernels come out nan!!!
+   -- clear nan kernels   
    if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
       print('Found NaN kernels!') 
       kernels[i] = torch.zeros(kernels[1]:size()) 
    end
+   
+   -- normalize kernels to 0 mean and 1 std:
+   kernels[i]:add(-kernels[i]:mean())
+   kernels[i]:div(kernels[i]:std())
 end
+
+print '==> verify filters statistics'
+print('filters max mean: ' .. kernels:mean(2):abs():max())
+print('filters max standard deviation: ' .. kernels:std(2):abs():max())
+
 
 
 ----------------------------------------------------------------------
-print "==> processing dataset with k-means kernels + pooling"
+print "==> loading and initialize 1 layer CL model"
 
-normkernel = image.gaussian1D(7)
-o1size = trainData.data:size(3) - is + 1 -- size of spatial conv layer output
-poolsize = 2
-outsize = torch.max(trainData.labels)
-
-l1net = nn.Sequential()
-l1net:add(nn.SpatialSAD(1, nk, is, is))
-l1net:add(nn.SpatialContrastiveNormalization(nk, normkernel, 1e-3))
-l1net:add(nn.Tanh())
-l1net:add(nn.SpatialLPPooling(nk,2,poolsize,poolsize,poolsize,poolsize))
-l1net:add(nn.SpatialSubtractiveNormalization(nk, normkernel))
+nk1=nk
+opt.model = '1st-layer-dist'
+dofile '2_model.lua' 
+l1net = model:clone()
 
 -- initialize templates:
-l1net.modules[1]:templates(kernels:reshape(nk, 1, is, is))
+l1net.modules[1]:templates(kernels:reshape(nk, 1, is, is):expand(nk,3,is,is))
 
--- output size:
-l1netoutsize = o1size/poolsize
 
--- processing dataset:
+--tests:
+--td_1=torch.zeros(3,32,32)
+--print(l1net:forward(td_1)[1])
+
+--td_2 = image.lena()
+--out_2 = l1net:forward(td_1)
+--image.display(out_2)
+
+----------------------------------------------------------------------
+print "==> processing dataset with CL network"
+
 trainData2 = {
    data = torch.Tensor(trsize, nk*(l1netoutsize)^2),
    labels = trainData.labels:clone(),
@@ -125,37 +140,62 @@ testData2 = {
    size = function() return tesize end
 }
 for t = 1,trainData:size() do
-   trainData2.data[t] = l1net:forward(trainData.data[t])
+   trainData2.data[t] = l1net:forward(trainData.data[t]:double())
    xlua.progress(t, trainData:size())
 end
+--trainData2.data = l1net:forward(trainData.data:double())
 for t = 1,testData:size() do
-   testData2.data[t] = l1net:forward(testData.data[t])
+   testData2.data[t] = l1net:forward(testData.data[t]:double())
    xlua.progress(t, testData:size())
 end
+--testData2.data = l1net:forward(testData.data:double())
 
 trainData2.data = trainData2.data:reshape(trsize, nk, l1netoutsize, l1netoutsize)
 testData2.data = testData2.data:reshape(tesize, nk, l1netoutsize, l1netoutsize)
 
 -- relocate pointers to new dataset:
-trainData1 = trainData -- save original dataset
-testData1 = testData
+--trainData1 = trainData -- save original dataset
+--testData1 = testData
 trainData = trainData2 -- relocate new dataset
 testData = testData2
 
+-- show a few outputs:
+if opt.visualize then
+   f256S_y = trainData2.data[{ {1,256},1 }]
+   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
+            legend='Output 1st layer: first 256 examples, 1st feature'}
+end
+
+print '==> verify statistics'
+channels = {'y','u','v'}
+for i,channel in ipairs(channels) do
+   trainMean = trainData.data[{ {},i }]:mean()
+   trainStd = trainData.data[{ {},i }]:std()
+
+   testMean = testData.data[{ {},i }]:mean()
+   testStd = testData.data[{ {},i }]:std()
+
+   print('training data, '..channel..'-channel, mean: ' .. trainMean)
+   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
+
+   print('test data, '..channel..'-channel, mean: ' .. testMean)
+   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
+end
+
+--------------------------------------------------------------
+--torch.load('c') -- break function
+--------------------------------------------------------------
+
 
 ----------------------------------------------------------------------
+--print "==> creating 1-layer network classifier"
+
 print "==> creating 2-layer network classifier"
-
-nhiddens = outsize^2
-
-model = nn.Sequential()
-model:add(nn.Reshape(nk*(l1netoutsize)^2))
-model:add(nn.Linear(nk*(l1netoutsize)^2,nhiddens))
-model:add(nn.Tanh())
-model:add(nn.Linear(nhiddens,outsize))
+opt.model = '2mlp-classifier'
+dofile '2_model.lua' 
 
 print "==> test network output:"
-print(model:forward(trainData.data[1]))
+print(model:forward(trainData.data[1]:double()))
 
 dofile '3_loss.lua' 
 dofile '4_train.lua'
@@ -170,11 +210,9 @@ while true do
 end
 
 
+
 -- save datasets:
--- testData.data=testData.data:float()
--- trainData.data=trainData.data:float() 
--- torch.save('trainData-cifar-ddd.t7', trainData)
--- torch.save('testData-cifar-ddd.t7', testData)
-
-
-
+trainData.data = trainData.data:float()
+testData.data = testData.data:float()
+torch.save('trainData-cifar-CL1l-dist.t7', trainData)
+torch.save('testData-cifar-CL1l-dist.t7', testData)

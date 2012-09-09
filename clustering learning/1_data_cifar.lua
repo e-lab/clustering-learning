@@ -61,8 +61,9 @@ testData = {
 testData.labels = testData.labels + 1
 
 -- resize dataset (if using small version)
---trsize = 5000  -- repeated here for smaller size train/test
+--trsize = 50000  -- repeated here for smaller size train/test
 --tesize = 200
+
 trainData.data = trainData.data[{ {1,trsize} }]
 trainData.labels = trainData.labels[{ {1,trsize} }]
 
@@ -108,10 +109,10 @@ testData.data = testData.data:float()
 
 -- Convert all images to YUV
 print '==> preprocessing data: colorspace RGB -> YUV'
-for i = 1,trainData:size() do
+for i = 1,trsize do
    trainData.data[i] = image.rgb2yuv(trainData.data[i])
 end
-for i = 1,testData:size() do
+for i = 1,tesize do
    testData.data[i] = image.rgb2yuv(testData.data[i])
 end
 
@@ -155,10 +156,10 @@ normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float(
 
 -- Normalize all channels locally:
 for c in ipairs(channels) do
-   for i = 1,trainData:size() do
+   for i = 1,trsize do
       trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
    end
-   for i = 1,testData:size() do
+   for i = 1,tesize do
       testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
    end
 end

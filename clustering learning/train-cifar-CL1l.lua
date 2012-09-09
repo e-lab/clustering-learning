@@ -15,9 +15,9 @@ cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 9, 'size of each input patches') -- 9x9 kernels wanted
+cmd:option('-inputsize', 5, 'size of each input patches')
 cmd:option('-nkernels', 64, 'number of kernels to learn')
-cmd:option('-niter', 30, 'nb of k-means iterations')
+cmd:option('-niter', 25, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
@@ -66,8 +66,10 @@ for i = 1,opt.nsamples do
 end
 
 -- show a few patches:
-f256S = data[{{1,256}}]:reshape(256,9,9)
-image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 1st layer learning'}
+if opt.visualize then
+   f256S = data[{{1,256}}]:reshape(256,is,is)
+   image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 1st layer learning'}
+end
 
 --if not paths.filep('cifar10-1l.t7') then
    print '==> running k-means'
@@ -85,24 +87,27 @@ image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches 
 --   kernels = torch.load('cifar10-1l.t7')
 --end
 
--- there is a bug in unpus.kmeans: some kernels come out nan!!!
--- clear nan kernels
-for i=1,nk do   
+for i=1,nk do
+   -- there is a bug in unpus.kmeans: some kernels come out nan!!!
+   -- clear nan kernels   
    if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
       print('Found NaN kernels!') 
       kernels[i] = torch.zeros(kernels[1]:size()) 
    end
+   
+   -- give gaussian shape if needed:
+--   sigma=0.25
+--   fil = image.gaussian(is, sigma)
+--   kernels[i] = kernels[i]:cmul(fil)
+   
+   -- normalize kernels to 0 mean and 1 std:
+   kernels[i]:add(-kernels[i]:mean())
+   kernels[i]:div(kernels[i]:std())
 end
 
--- normalize kernels to 0 mean and 1 std:
-mean = {}
-std = {}
-for i=1,nk do
-   mean[i] = kernels[i]:mean()
-   std[i] = kernels[i]:std()
-   kernels[i]:add(-mean[i])
-   kernels[i]:div(std[i])
-end
+print '==> verify filters statistics'
+print('filters max mean: ' .. kernels:mean(2):abs():max())
+print('filters max standard deviation: ' .. kernels:std(2):abs():max())
 
 ----------------------------------------------------------------------
 print "==> loading and initialize 1 layer CL model"
@@ -120,6 +125,9 @@ l1net.modules[1].bias = l1net.modules[1].bias *0
 --td_1=torch.zeros(3,32,32)
 --print(l1net:forward(td_1)[1])
 
+--td_2 = image.lena()
+--out_2 = l1net:forward(td_1)
+--image.display(out_2)
 
 ----------------------------------------------------------------------
 print "==> processing dataset with CL network"
@@ -155,9 +163,27 @@ trainData = trainData2 -- relocate new dataset
 testData = testData2
 
 -- show a few outputs:
-f256S_y = trainData2.data[{ {1,256},1 }]
-image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
-         legend='Output 1st layer: first 256 examples: Y channel'}
+if opt.visualize then
+   f256S_y = trainData2.data[{ {1,256},1 }]
+   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
+            legend='Output 1st layer: first 256 examples, 1st feature'}
+end
+
+print '==> verify statistics'
+channels = {'y','u','v'}
+for i,channel in ipairs(channels) do
+   trainMean = trainData.data[{ {},i }]:mean()
+   trainStd = trainData.data[{ {},i }]:std()
+
+   testMean = testData.data[{ {},i }]:mean()
+   testStd = testData.data[{ {},i }]:std()
+
+   print('training data, '..channel..'-channel, mean: ' .. trainMean)
+   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
+
+   print('test data, '..channel..'-channel, mean: ' .. testMean)
+   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
+end
 
 --------------------------------------------------------------
 --torch.load('c') -- break function

@@ -58,7 +58,7 @@ dofile '1_data.lua'
 
 filename = paths.basename(opt.datafile)
 if not paths.filep(filename) then
-   os.execute('wget ' .. opt.datafile')-- .. ; '.. 'tar xvf ' .. filename)
+   os.execute('wget ' .. opt.datafile .. '; '.. 'tar xvf ' .. filename)
 end
 dataset = getdata(filename, opt.inputsize)
 dataset:conv()
