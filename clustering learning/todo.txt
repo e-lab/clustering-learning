@@ -11,12 +11,31 @@ train 2nd layer k-means
 
 TO DO:
 -----------------------------------------
-k-means in unsup generates some nan filters: due to divide by 0 when templates are not used
-FIX!!!!
+this is a list of things to do:
+
+1- continue the SpatialSAD module integration.
+
+2 - I found out problems with learning a 2nd layer. See figure below 2nd layer filters. They are dots. It means that it is taking filters from the 1st layer and pushing them on the 2nd layer as relevant. 
+Also LPP2 pooling works well, because of reasons mentioned above
+We need:
+- train larger set of filters on 2nd layer
+- then filter out the filters that have only dot-like features, and keep the ones with more sophisticated content
+we need a program to do this
+- try again on SVHN or CIFAR, first using the new 2nd layer filters and seeing if we get good results.
+Also feed to classifier BOTH 1st layer and 2nd layer filters, to improve recognition rate. 
+
+3-  figure out how to save a net in torch without taking GB?
+
+
+
+--k-means in unsup generates some nan filters: due to divide by 0 when templates are not used
+NOT AN ISSUE, just need more initial STD
 
 normalize and zero mean data after each layer!
+DONE if needed
 
 test on a dataset 2 layer net
+NO GOOD RESULTS YET
 
 SpatialSAD: how to deal with input kernels, input have 3 color spaces: 3 x 2-dimensions
 but then in 2nd layer we have input with many dimensions and filters are 1 x 2 dimensions:
@@ -34,5 +53,5 @@ or spanish dataset on our server (even better for final use)
 
 
 STUDENT TASK:
-“Filter” k-means filters so that they are different: group them together and remove copies!!!
-
+- “Filter” k-means filters so that they are different: group them together and remove copies!!!
+- group them as in Adam Coates paper NIPS 2011

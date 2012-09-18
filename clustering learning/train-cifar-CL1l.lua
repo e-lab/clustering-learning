@@ -17,7 +17,7 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
 cmd:option('-nkernels', 64, 'number of kernels to learn')
-cmd:option('-niter', 25, 'nb of k-means iterations')
+cmd:option('-niter', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
@@ -170,7 +170,7 @@ if opt.visualize then
 end
 
 print '==> verify statistics'
-channels = {'y','u','v'}
+channels = {'r','g','b'}
 for i,channel in ipairs(channels) do
    trainMean = trainData.data[{ {},i }]:mean()
    trainStd = trainData.data[{ {},i }]:std()

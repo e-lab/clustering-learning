@@ -14,9 +14,9 @@ cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 7, 'size of each input patches')
+cmd:option('-inputsize', 9, 'size of each input patches')
 cmd:option('-nkernels', 64, 'number of kernels to learn')
-cmd:option('-niter', 25, 'nb of k-means iterations')
+cmd:option('-niter', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
@@ -54,21 +54,22 @@ dofile '1_data_svhn.lua'
 
 
 ---------------------------------------------------------------------
-print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
+print '==> extracting patches'
 data = torch.Tensor(opt.nsamples,is*is)
 for i = 1,opt.nsamples do
    local img = math.random(1,trainData.data:size(1))
    local image = trainData.data[img]
+   local z = math.random(1,trainData.data:size(2))
    local x = math.random(1,trainData.data:size(3)-is+1)
    local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {1},{y,y+is-1},{x,x+is-1} }]
+   local randompatch = image[{ {z},{y,y+is-1},{x,x+is-1} }]
    data[i] = randompatch
 end
 
 -- show a few patches:
 if opt.visualize then
    f256S = data[{{1,256}}]:reshape(256,is,is)
-   image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 1st layer learning'}
+   image.display{image=f256S, nrow=16, padding=2, zoom=2, legend='Patches for 1st layer learning'}
 end
 
 --if not paths.filep('svhn-CL1l.t7') then
@@ -176,7 +177,7 @@ if opt.visualize then
 end
 
 print '==> verify statistics'
-channels = {'y','u','v'}
+channels = {'r','g','b'}
 for i,channel in ipairs(channels) do
    trainMean = trainData.data[{ {},i }]:mean()
    trainStd = trainData.data[{ {},i }]:std()

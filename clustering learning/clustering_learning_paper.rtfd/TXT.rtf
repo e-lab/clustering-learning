@@ -20,6 +20,28 @@ DONE - re-organize files for better use, no repetition code\
 - test CL1l with 512, 1024, 4096 filters: replicate Adam Coates results!\
 - do same as above for larger filter sets with CL 2 layers!\
 \
+\pard\pardeftab720
+
+\f1\fs24 \cf0 \
+\
+1- continue the SpatialSAD module integration.\
+\
+2 - I found out problems with learning a 2nd layer. See figure below 2nd layer filters. They are dots. It means that it is taking filters from the 1st layer and pushing them on the 2nd layer as relevant.\'a0\
+Also LPP2 pooling works well, because of reasons mentioned above\
+We need:\
+- train larger set of filters on 2nd layer\
+- then filter out the filters that have only dot-like features, and keep the ones with more sophisticated content\
+we need a program to do this\
+- try again on SVHN or CIFAR, first using the new 2nd layer filters and seeing if we get good results.\
+Also feed to classifier BOTH 1st layer and 2nd layer filters, to improve recognition rate.\'a0\
+\
+3- \'a0can you figure out how to save a net in torch without taking GB?\
+\
+{{\NeXTGraphic LPP2_pooling.png \width27980 \height17440
+}¬}\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs28 \cf0 \
 \
 \
 \
