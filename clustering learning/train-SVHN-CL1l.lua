@@ -14,11 +14,11 @@ cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 9, 'size of each input patches')
+cmd:option('-inputsize', 5, 'size of each input patches')
 cmd:option('-nkernels', 64, 'number of kernels to learn')
-cmd:option('-niter', 15, 'nb of k-means iterations')
+cmd:option('-niter', 50, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 100*1000, 'nb of random training samples')
+cmd:option('-nsamples', 1000*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 -- loss:
@@ -57,12 +57,15 @@ dofile '1_data_svhn.lua'
 print '==> extracting patches'
 data = torch.Tensor(opt.nsamples,is*is)
 for i = 1,opt.nsamples do
-   local img = math.random(1,trainData.data:size(1))
-   local image = trainData.data[img]
-   local z = math.random(1,trainData.data:size(2))
-   local x = math.random(1,trainData.data:size(3)-is+1)
-   local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {z},{y,y+is-1},{x,x+is-1} }]
+   img = math.random(1,trainData.data:size(1))
+   img2 = trainData.data[img]
+   z = math.random(1,trainData.data:size(2))
+   x = math.random(1,trainData.data:size(3)-is+1)
+   y = math.random(1,trainData.data:size(4)-is+1)
+   randompatch = img2[{ {z},{y,y+is-1},{x,x+is-1} }]
+   -- normalize patches to 0 mean and 1 std:
+   randompatch:add(-randompatch:mean())
+   --randompatch:div(randompatch:std())
    data[i] = randompatch
 end
 
@@ -89,21 +92,15 @@ end
 --end
 
 for i=1,nk do
-   -- there is a bug in unpus.kmeans: some kernels come out nan!!!
+   -- normalize kernels to 0 mean and 1 std:
+   kernels[i]:add(-kernels[i]:mean())
+   kernels[i]:div(kernels[i]:std())
+   
    -- clear nan kernels   
    if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
       print('Found NaN kernels!') 
       kernels[i] = torch.zeros(kernels[1]:size()) 
    end
-   
-   -- give gaussian shape if needed:
-   sigma=0.4
-   fil = image.gaussian(is, sigma)
-   kernels[i] = kernels[i]:cmul(fil)
-   
-   -- normalize kernels to 0 mean and 1 std:
-   kernels[i]:add(-kernels[i]:mean())
-   kernels[i]:div(kernels[i]:std())
 end
 
 -- show final:
@@ -195,7 +192,8 @@ end
 --------------------------------------------------------------
 --torch.load('c') -- break function
 --------------------------------------------------------------
-
+--print "==> run 2nd layer test"
+--dofile('train-SVHN-CL2l.lua')
 
 ----------------------------------------------------------------------
 --print "==> creating 1-layer network classifier"

@@ -17,9 +17,9 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
 cmd:option('-nkernels', 64, 'number of kernels to learn')
-cmd:option('-niter', 15, 'nb of k-means iterations')
+cmd:option('-niter', 50, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 100*1000, 'nb of random training samples')
+cmd:option('-nsamples', 1000*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 -- loss:
@@ -62,6 +62,9 @@ for i = 1,opt.nsamples do
    local x = math.random(1,trainData.data:size(3)-is+1)
    local y = math.random(1,trainData.data:size(4)-is+1)
    local randompatch = image[{ {1},{y,y+is-1},{x,x+is-1} }]
+   -- normalize patches to 0 mean and 1 std:
+   randompatch:add(-randompatch:mean())
+   --randompatch:div(randompatch:std())
    data[i] = randompatch
 end
 
@@ -88,7 +91,10 @@ end
 --end
 
 for i=1,nk do
-   -- there is a bug in unpus.kmeans: some kernels come out nan!!!
+   -- normalize kernels to 0 mean and 1 std:
+   kernels[i]:add(-kernels[i]:mean())
+   kernels[i]:div(kernels[i]:std())
+
    -- clear nan kernels   
    if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
       print('Found NaN kernels!') 
@@ -99,15 +105,12 @@ for i=1,nk do
 --   sigma=0.25
 --   fil = image.gaussian(is, sigma)
 --   kernels[i] = kernels[i]:cmul(fil)
-   
-   -- normalize kernels to 0 mean and 1 std:
-   kernels[i]:add(-kernels[i]:mean())
-   kernels[i]:div(kernels[i]:std())
 end
 
 print '==> verify filters statistics'
 print('filters max mean: ' .. kernels:mean(2):abs():max())
 print('filters max standard deviation: ' .. kernels:std(2):abs():max())
+
 
 ----------------------------------------------------------------------
 print "==> loading and initialize 1 layer CL model"
@@ -118,7 +121,7 @@ dofile '2_model.lua'
 l1net = model:clone()
 
 -- initialize 1st layer parameters to learned filters (expand them for use in all channels):
-l1net.modules[1].weight = kernels:reshape(nk,1,is,is):expand(nk,3,is,is):type('torch.DoubleTensor')
+l1net.modules[1].weight = kernels:reshape(nk,1,is,is):expand(nk,3,is,is):double()
 l1net.modules[1].bias = l1net.modules[1].bias *0
 
 --tests:
@@ -128,6 +131,7 @@ l1net.modules[1].bias = l1net.modules[1].bias *0
 --td_2 = image.lena()
 --out_2 = l1net:forward(td_1)
 --image.display(out_2)
+
 
 ----------------------------------------------------------------------
 print "==> processing dataset with CL network"
@@ -184,6 +188,7 @@ for i,channel in ipairs(channels) do
    print('test data, '..channel..'-channel, mean: ' .. testMean)
    print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
+
 
 --------------------------------------------------------------
 --torch.load('c') -- break function

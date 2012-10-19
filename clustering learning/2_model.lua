@@ -9,7 +9,7 @@
 require 'torch'   -- torch
 require 'image'   -- to visualize the dataset
 require 'nnx'      -- provides all sorts of trainable modules/layers
-require 'SpatialSAD'
+require 'eex'
 
 ----------------------------------------------------------------------
 -- parse command line arguments
@@ -57,10 +57,11 @@ if opt.model == '1st-layer' then
    
    model = nn.Sequential()
    model:add(nn.SpatialConvolution(3, nk1, is, is, cvstepsize, cvstepsize))
+   --model:add(nn.HardShrink(0.5))
    model:add(nn.Tanh())
-   model:add(nn.SpatialSubSampling(nk1, poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialSubSampling(nk1, poolsize, poolsize, poolsize, poolsize))
    --model:add(nn.SpatialMaxPooling(poolsize, poolsize, poolsize, poolsize))
-   --model:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize)) 
+   model:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize)) 
    model:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
 
 
@@ -73,10 +74,12 @@ elseif opt.model == '2nd-layer' then
    
    model = nn.Sequential()
    model:add(nn.SpatialConvolution(nk1, nk2, is, is, cvstepsize, cvstepsize))
+   --model:add(nn.SpatialConvolutionMap(nn.tables.random(nk1, nk2, 8), is, is))
+   --model:add(nn.HardShrink(0.5))
    model:add(nn.Tanh())
-   model:add(nn.SpatialSubSampling(nk2, poolsize, poolsize, poolsize, poolsize))
+   --model:add(nn.SpatialSubSampling(nk2, poolsize, poolsize, poolsize, poolsize))
    --model:add(nn.SpatialMaxPooling(poolsize, poolsize, poolsize, poolsize))
-   --model:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
+   model:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
    model:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
    
 elseif opt.model == '1st-layer-dist' then   
@@ -87,11 +90,29 @@ elseif opt.model == '1st-layer-dist' then
 
    model = nn.Sequential()
    model:add(nn.SpatialSAD(3, nk1, is, is))
-   model:add(nn.SpatialContrastiveNormalization(nk1, normkernel, 1e-3))
-   model:add(nn.Tanh())
-   model:add(nn.SpatialSubSampling(nk1, poolsize, poolsize, poolsize, poolsize))
-   --model:add(nn.SpatialLPPooling(nk1,2,poolsize,poolsize,poolsize,poolsize))
    model:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
+   model:add(nn.Reshape(nk1*o1size*o1size))
+   model:add(nn.Mul(nk1*o1size*o1size))
+   model:add(nn.Reshape(nk1,o1size,o1size))
+   model:add(nn.Tanh())
+   model:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize)) 
+   model:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
+
+elseif opt.model == '2nd-layer-dist' then   
+   
+   o1size = trainData.data:size(3) - is + 1 -- size of spatial conv layer output
+   poolsize = 2
+   l1netoutsize = o1size/poolsize
+
+   model = nn.Sequential()
+   model:add(nn.SpatialSAD(nk1, nk2, is, is))
+   model:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
+   model:add(nn.Reshape(nk2*o1size*o1size))
+   model:add(nn.Mul(nk2*o1size*o1size))
+   model:add(nn.Reshape(nk2,o1size,o1size))
+   model:add(nn.Tanh())
+   model:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize)) 
+   model:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
 
 
 elseif opt.model == '2mlp-classifier' then

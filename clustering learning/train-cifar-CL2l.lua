@@ -54,7 +54,7 @@ print '==> loading pre-processed dataset with 1st layer clustering (test-cifar-1
 trainData = torch.load('trainData-cifar-CL1l.t7')
 testData = torch.load('testData-cifar-CL1l.t7')
 
-trsize = 50000
+trsize = 20000
 tesize = 2000
 
 
@@ -105,45 +105,57 @@ end
 
 -- show a few patches:
 if opt.visualize then
-   f256S = data[{{1,256}}]:reshape(nk2,is,is)
+   f256S = data[{{1,256}}]:reshape(256,is,is)
    image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 2nd layer learning'}
 end
 
-print '==> running k-means'
-function cb (kernels)
-   if opt.visualize then
-         win = image.display{image=kernels:reshape(nk2,is,is), padding=2, symmetric=true, 
-         zoom=2, win=win, nrow=math.floor(math.sqrt(nk2)), legend='2nd layer filters'}
-   end
-end                    
-kernels, kcounts = unsup.kmeans(data, nk2, opt.initstd, opt.niter, opt.batchsize,cb,true)
-print('==> saving centroids to disk:')
-torch.save('cifar10-2l.t7', {kernels, kcounts})
-
-for i=1,nk2 do
-   -- there is a bug in unpus.kmeans: some kernels come out nan!!!
-   -- clear nan kernels   
-   if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
-      print('Found NaN kernels!') 
-      kernels[i] = torch.zeros(kernels[1]:size()) 
-   end
-   
-   -- give gaussian shape if needed:
---   sigma=0.25
---   fil = image.gaussian(is, sigma)
---   kernels[i] = kernels[i]:cmul(fil)
-   
--- normalize kernels to 0 mean and 1 std:
-   kernels[i]:add(-kernels[i]:mean())
-   kernels[i]:div(kernels[i]:std())
-end
-
-print '==> verify filters statistics'
-print('filters max mean: ' .. kernels:mean(2):abs():max())
-print('filters max standard deviation: ' .. kernels:std(2):abs():max())
+--print '==> running k-means'
+--function cb (kernels)
+--   if opt.visualize then
+--         win = image.display{image=kernels:reshape(nk2,is,is), padding=2, symmetric=true, 
+--         zoom=2, win=win, nrow=math.floor(math.sqrt(nk2)), legend='2nd layer filters'}
+--   end
+--end                    
+--kernels, kcounts = unsup.kmeans(data, nk2, opt.initstd, opt.niter, opt.batchsize,cb,true)
+--print('==> saving centroids to disk:')
+--torch.save('cifar10-2l.t7', {kernels, kcounts})
+--
+--for i=1,nk2 do
+   -- normalize kernels to 0 mean and 1 std:
+   --kernels[i]:add(-kernels[i]:mean())
+   -- kernels[i]:div(kernels[i]:std())
+--   -- clear nan kernels   
+--   if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
+--      print('Found NaN kernels!') 
+--      kernels[i] = torch.zeros(kernels[1]:size()) 
+--   end
+--   
+--   -- give gaussian shape if needed:
+----   sigma=0.25
+----   fil = image.gaussian(is, sigma)
+----   kernels[i] = kernels[i]:cmul(fil)
+--   
+--end
+--
+--print '==> verify filters statistics'
+--print('filters max mean: ' .. kernels:mean(2):abs():max())
+--print('filters max standard deviation: ' .. kernels:std(2):abs():max())
 
 --kernels = torch.load('cifar10-2l-256.t7')
 --kernels = kernels[1][{{1,nk2}}] -- just take the 1st 'nk' kernels and use these
+
+----------------------------------------------------------------------
+print "==> using patches as filters"
+
+kernels = torch.Tensor(nk2,is,is)
+kernels[{{1,64}}] = torch.load('cifar10-1l.t7') -- resuse 1st layer kernels
+kernels[{{65,nk2}}] = data[{{65,nk2}}]
+-- normalize kernels to 0 mean and 1 std:
+--for i=1,nk2 do
+--   kernels[i]:add(-kernels[i]:mean())
+--   kernels[i]:div(kernels[i]:std())
+--end
+image.display{image=kernels, padding=2, zoom=4, nrow=math.floor(math.sqrt(nk2)), legend='2nd layer filters'}
 
 ----------------------------------------------------------------------
 print "==> processing dataset with k-means kernels + pooling"
@@ -185,6 +197,29 @@ trainData1 = trainData -- save original dataset
 testData1 = testData
 trainData = trainData2 -- relocate new dataset
 testData = testData2
+
+-- show a few outputs:
+if opt.visualize then
+   f256S_y = trainData2.data[{ {1,256},1 }]
+   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
+            legend='Output 2nd layer: first 256 examples, 1st feature'}
+end
+
+print '==> verify statistics'
+channels = {'r','g','b'}
+for i,channel in ipairs(channels) do
+   trainMean = trainData.data[{ {},i }]:mean()
+   trainStd = trainData.data[{ {},i }]:std()
+
+   testMean = testData.data[{ {},i }]:mean()
+   testStd = testData.data[{ {},i }]:std()
+
+   print('training data, '..channel..'-channel, mean: ' .. trainMean)
+   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
+
+   print('test data, '..channel..'-channel, mean: ' .. testMean)
+   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
+end
 
 
 --------------------------------------------------------------

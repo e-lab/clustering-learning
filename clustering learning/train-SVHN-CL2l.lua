@@ -18,9 +18,9 @@ cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 7, 'size of each input patches') -- 9x9 kernels wanted
-cmd:option('-nkernels', 256, 'number of kernels to learn')
-cmd:option('-niter', 1, 'nb of k-means iterations')
+cmd:option('-inputsize', 5, 'size of each input patches') -- 9x9 kernels wanted
+cmd:option('-nkernels', 128, 'number of kernels to learn')
+cmd:option('-niter', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
@@ -55,8 +55,8 @@ nk2 = opt.nkernels
 ----------------------------------------------------------------------
 print '==> loading pre-processed dataset with 1st layer clustering (test-SVHN-CL1l.lua)'
 
-trainData = torch.load('trainData-SVHN-l1-64.t7')
-testData = torch.load('testData-SVHN-l1-64.t7')
+--trainData = torch.load('trainData-svhn-CL1l.t7')
+--testData = torch.load('testData-svhn-CL1l.t7')
 
 -- ATTENTION HERE: MIGHT HAVE BEEN REDUCED TO SPEED UP TEST!!!! check model file
 trsize = trainData.data:size(1)
@@ -64,7 +64,7 @@ tesize = testData.data:size(1)
 
 
 print '==> verify statistics'
-channels = {'y','u','v'}
+channels = {'r','g','b'}
 for i,channel in ipairs(channels) do
    trainMean = trainData.data[{ {},i }]:mean()
    trainStd = trainData.data[{ {},i }]:std()
@@ -126,7 +126,9 @@ print('==> saving centroids to disk:')
 torch.save('svhn-CL2l.t7', {kernels, kcounts})
 
 for i=1,nk2 do
-   -- there is a bug in unpus.kmeans: some kernels come out nan!!!
+      -- normalize kernels to 0 mean and 1 std:
+   kernels[i]:add(-kernels[i]:mean())
+   kernels[i]:div(kernels[i]:std())
    -- clear nan kernels   
    if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
       print('Found NaN kernels!') 
@@ -134,13 +136,9 @@ for i=1,nk2 do
    end
    
    -- give gaussian shape if needed:
-   sigma=0.4
-   fil = image.gaussian(is, sigma)
-   kernels[i] = kernels[i]:cmul(fil)
-   
--- normalize kernels to 0 mean and 1 std:
-   kernels[i]:add(-kernels[i]:mean())
-   kernels[i]:div(kernels[i]:std())
+--   sigma=0.4
+--   fil = image.gaussian(is, sigma)
+--   kernels[i] = kernels[i]:cmul(fil)
 end
 
 -- show final:
@@ -155,6 +153,21 @@ print('filters max standard deviation: ' .. kernels:std(2):abs():max())
 
 --kernels = torch.load('svhn-CL2l-256.t7')
 --kernels = kernels[1][{{1,nk2}}] -- just take the 1st 'nk' kernels and use these
+
+
+----------------------------------------------------------------------
+print "==> using patches as filters"
+
+--kernels = torch.Tensor(nk2,is,is)
+kernels[{{1,64}}] = torch.load('svhn-CL1l.t7') -- resuse 1st layer kernels
+--kernels[{{65,nk2}}] = data[{{65,nk2}}]
+-- normalize kernels to 0 mean and 1 std:
+--for i=1,nk2 do
+--   kernels[i]:add(-kernels[i]:mean())
+--   kernels[i]:div(kernels[i]:std())
+--end
+image.display{image=kernels, padding=2, zoom=4, nrow=math.floor(math.sqrt(nk2)), legend='2nd layer filters'}
+
 
 ----------------------------------------------------------------------
 print "==> processing dataset with k-means kernels + pooling"
@@ -202,9 +215,7 @@ testData = testData2
 --torch.load('c') -- break function
 --------------------------------------------------------------
 
-
 ----------------------------------------------------------------------
---print "==> creating 1-layer network classifier"
 
 print "==> creating 2-layer network classifier"
 nk=nk2

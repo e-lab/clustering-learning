@@ -58,6 +58,7 @@ testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 -- into a 1-dim vector
 if model then
    parameters,gradParameters = model:getParameters()
+   modelsave = model:clone('weight','bias')  -- network to save (cloned so it saves a compact file)
 end
 
 ----------------------------------------------------------------------
@@ -174,8 +175,8 @@ function train()
    -- save/log current net
    local filename = paths.concat(opt.save, 'model.net')
    os.execute('mkdir -p ' .. sys.dirname(filename))
-   print('==> saving model to '..filename)
-   torch.save(filename, model)
+   --print('==> saving model to '..filename)
+   --torch.save(filename, modelsave)
 
    -- next epoch
    confusion:zero()

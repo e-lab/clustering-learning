@@ -61,8 +61,8 @@ testData = {
 testData.labels = testData.labels + 1
 
 -- resize dataset (if using small version)
---trsize = 50000  -- repeated here for smaller size train/test
---tesize = 200
+trsize = 20000  -- repeated here for smaller size train/test
+tesize = 2000
 
 trainData.data = trainData.data[{ {1,trsize} }]
 trainData.labels = trainData.labels[{ {1,trsize} }]
@@ -108,38 +108,40 @@ testData.data = testData.data:float()
 --     as a result, each color component has 0-mean and 1-norm across the dataset.
 
 -- Convert all images to YUV
-print '==> preprocessing data: colorspace RGB -> YUV'
-for i = 1,trsize do
-   trainData.data[i] = image.rgb2yuv(trainData.data[i])
-end
-for i = 1,tesize do
-   testData.data[i] = image.rgb2yuv(testData.data[i])
-end
+-- EC: removed not bio-inspired!
+--print '==> preprocessing data: colorspace RGB -> YUV'
+--for i = 1,trsize do
+--   trainData.data[i] = image.rgb2yuv(trainData.data[i])
+--end
+--for i = 1,tesize do
+--   testData.data[i] = image.rgb2yuv(testData.data[i])
+--end
 
 -- Name channels for convenience
-channels = {'y','u','v'}
+--channels = {'y','u','v'}
+channels = {'r','g','b'}
 
 -- Normalize each channel, and store mean/std
 -- per channel. These values are important, as they are part of
 -- the trainable parameters. At test time, test data will be normalized
 -- using these values.
-print '==> preprocessing data: normalize each feature (channel) globally'
-mean = {}
-std = {}
-for i,channel in ipairs(channels) do
-   -- normalize each channel globally:
-   mean[i] = trainData.data[{ {},i,{},{} }]:mean()
-   std[i] = trainData.data[{ {},i,{},{} }]:std()
-   trainData.data[{ {},i,{},{} }]:add(-mean[i])
-   trainData.data[{ {},i,{},{} }]:div(std[i])
-end
-
--- Normalize test data, using the training means/stds
-for i,channel in ipairs(channels) do
-   -- normalize each channel globally:
-   testData.data[{ {},i,{},{} }]:add(-mean[i])
-   testData.data[{ {},i,{},{} }]:div(std[i])
-end
+--print '==> preprocessing data: normalize each feature (channel) globally'
+--mean = {}
+--std = {}
+--for i,channel in ipairs(channels) do
+--   -- normalize each channel globally:
+--   mean[i] = trainData.data[{ {},i,{},{} }]:mean()
+--   std[i] = trainData.data[{ {},i,{},{} }]:std()
+--   trainData.data[{ {},i,{},{} }]:add(-mean[i])
+--   trainData.data[{ {},i,{},{} }]:div(std[i])
+--end
+--
+---- Normalize test data, using the training means/stds
+--for i,channel in ipairs(channels) do
+--   -- normalize each channel globally:
+--   testData.data[{ {},i,{},{} }]:add(-mean[i])
+--   testData.data[{ {},i,{},{} }]:div(std[i])
+--end
 
 -- Local normalization
 -- (note: the global normalization is useless, if this local normalization
@@ -148,7 +150,9 @@ end
 print '==> preprocessing data: normalize all three channels locally'
 
 -- Define the normalization neighborhood:
-neighborhood = image.gaussian1D(13)
+--if not is then is = 7 end -- find is value from call-out script
+--print("Normalizing kernel size is:", is)
+neighborhood = image.gaussian1D(9)
 
 -- Define our local normalization operator (It is an actual nn module, 
 -- which could be inserted into a trainable model):
@@ -194,7 +198,7 @@ if opt.visualize then
    first256Samples_y = trainData.data[{ {1,256},1 }]
    first256Samples_u = trainData.data[{ {1,256},2 }]
    first256Samples_v = trainData.data[{ {1,256},3 }]
-   image.display{image=first256Samples_y, nrow=16, legend='Some training examples: Y channel'}
-   image.display{image=first256Samples_u, nrow=16, legend='Some training examples: U channel'}
-   image.display{image=first256Samples_v, nrow=16, legend='Some training examples: V channel'}
+   image.display{image=first256Samples_y, nrow=16, legend='Some training examples: ' ..channels[1].. ' channel'}
+   image.display{image=first256Samples_u, nrow=16, legend='Some training examples: ' ..channels[2].. ' channel'}
+   image.display{image=first256Samples_v, nrow=16, legend='Some training examples: ' ..channels[3].. ' channel'}
 end
