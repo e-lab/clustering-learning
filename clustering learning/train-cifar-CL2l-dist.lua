@@ -130,7 +130,7 @@ print('filters max standard deviation: ' .. kernels:std(2):abs():max())
 ----------------------------------------------------------------------
 print "==> loading and initializing 2nd layer CL model"
 
-nk1=64
+nk1=testData.data:size(2)
 nk2=nk
 opt.model = '2nd-layer-dist'
 dofile '2_model.lua' 
