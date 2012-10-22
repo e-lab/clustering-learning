@@ -57,6 +57,7 @@ tesize = 2000
 
 trainData = torch.load('trainData-cifar-CL1l-dist.t7')
 testData = torch.load('testData-cifar-CL1l-dist.t7')
+nk1 = trainData.data:size(2)
 
 ----------------------------------------------------------------------
 print "==> preparing images"
@@ -67,13 +68,13 @@ testData.data=testData.data-torch.mean(testData.data)
 
 ----------------------------------------------------------------------
 print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
-data = torch.Tensor(opt.nsamples,is*is)
+data = torch.Tensor(opt.nsamples,nk1*is*is)
 for i = 1,opt.nsamples do
    local img = math.random(1,trainData.data:size(1))
    local image = trainData.data[img]
    local x = math.random(1,trainData.data:size(3)-is+1)
    local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {1},{y,y+is-1},{x,x+is-1} }]
+   local randompatch = image[{ {},{y,y+is-1},{x,x+is-1} }]
    -- normalize patches to 0 mean and 1 std:
    randompatch:add(-randompatch:mean())
    --randompatch:div(randompatch:std())
@@ -82,16 +83,16 @@ end
 
 -- show a few patches:
 if opt.visualize then
-   f256S = data[{{1,256}}]:reshape(256,is,is)
-   image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 2nd layer learning'}
+   --f256S = data[{{1,256}}]:reshape(256,nk1,is,is)[{{},1,{},{}}]
+   --image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 2nd layer learning'}
 end
 
 --if not paths.filep('cifar10-1l.t7') then
    print '==> running k-means'
    function cb (kernels)
       if opt.visualize then
-         win = image.display{image=kernels:reshape(nk,is,is), padding=2, symmetric=true, 
-         zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='2nd layer filters'}
+         --win = image.display{image=kernels:reshape(nk,is,is), padding=2, symmetric=true, 
+         --zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='2nd layer filters'}
       end
    end                    
    kernels = unsup.kmeans(data, nk, opt.initstd,opt.niter, opt.batchsize,cb,true)
@@ -137,7 +138,7 @@ dofile '2_model.lua'
 l1net = model:clone()
 
 -- initialize templates:
-l1net.modules[1]:templates(kernels:reshape(nk2, 1, is, is):expand(nk2,nk1,is,is))
+l1net.modules[1]:templates(kernels:reshape(nk2,nk1,is,is))
 l1net.modules[1].bias = l1net.modules[1].bias *0
 l1net.modules[4].weight = torch.ones(1)*(1/is)
 
@@ -178,9 +179,9 @@ testData = testData2
 
 -- show a few outputs:
 if opt.visualize then
-   f256S_y = trainData2.data[{ {1,256},1 }]
-   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
-            legend='Output 2nd layer: first 256 examples, 1st feature'}
+   --f256S_y = trainData2.data[{ {1,256},1 }]
+   --image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
+   --         legend='Output 2nd layer: first 256 examples, 1st feature'}
 end
 
 print '==> verify statistics'

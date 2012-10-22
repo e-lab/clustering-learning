@@ -92,14 +92,13 @@ print "==> preparing images"
 
 
 print '==> extracting patches'
-data = torch.Tensor(opt.nsamples,is*is)
+data = torch.Tensor(opt.nsamples,nk1*is*is)
 for i = 1,opt.nsamples do
    local img = math.random(1,trainData.data:size(1))
    local image = trainData.data[img]
    local z = math.random(1,trainData.data:size(2))
    local x = math.random(1,trainData.data:size(3)-is+1)
-   local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {z},{y,y+is-1},{x,x+is-1} }]
+   local randompatch = image[{ {},{y,y+is-1},{x,x+is-1} }]
    data[i] = randompatch
 end
 
@@ -165,7 +164,7 @@ dofile '2_model.lua'
 l1net = model:clone()
 
 -- initialize templates:
-l1net.modules[1].weight = kernels:reshape(nk2,1,is,is):expand(nk2,nk1,is,is)
+l1net.modules[1].weight = kernels:expand(nk2,nk1,is,is)
 l1net.modules[1].bias = l1net.modules[1].bias *0
 
 
