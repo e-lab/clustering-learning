@@ -95,7 +95,7 @@ model:add(nn.Linear(nstates[3], noutputs))
 
 
 print "==> test network output:"
-print(model:forward(trainData.data[1]:double()))
+print(model:forward(trainData.data[1]:clone():double()))
 
 dofile '3_loss.lua' 
 dofile '4_train.lua'

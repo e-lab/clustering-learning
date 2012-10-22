@@ -101,7 +101,7 @@ l1netoutsize = 5
 dofile '2_model.lua' 
 
 print "==> test network output:"
-print(model:forward(trainData.data[1]))
+print(model:forward(trainData.data[1]:clone()))
 
 dofile '3_loss.lua' 
 dofile '4_train.lua'
@@ -168,7 +168,7 @@ l1netoutsize = 5
 dofile '2_model.lua' 
 
 print "==> test network output:"
-print(model:forward(trainData.data[1]))
+print(model:forward(trainData.data[1]:clone()))
 
 dofile '3_loss.lua' 
 dofile '4_train.lua'
