@@ -8,9 +8,6 @@ require 'image'
 require 'unsup'
 
 cmd = torch.CmdLine()
-cmd:text()
-cmd:text('Get k-means templates on directory of images')
-cmd:text()
 cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
@@ -22,6 +19,8 @@ cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 1000*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
+cmd:option('-savedataset', false, 'save modified dataset')
+cmd:option('-classify', true, 'run classification train/test')
 -- loss:
 cmd:option('-loss', 'nll', 'type of loss function to minimize: nll | mse | margin')
 -- training:
@@ -57,11 +56,12 @@ dofile '1_data_cifar.lua'
 print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
 data = torch.Tensor(opt.nsamples,is*is)
 for i = 1,opt.nsamples do
-   local img = math.random(1,trainData.data:size(1))
-   local image = trainData.data[img]
-   local x = math.random(1,trainData.data:size(3)-is+1)
-   local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {1},{y,y+is-1},{x,x+is-1} }]
+   img = math.random(1,trainData.data:size(1))
+   img2 = trainData1.data[img]
+   z = math.random(1,trainData.data:size(2))
+   x = math.random(1,trainData.data:size(3)-is+1)
+   y = math.random(1,trainData.data:size(4)-is+1)
+   randompatch = img2[{ {z},{y,y+is-1},{x,x+is-1} }]
    -- normalize patches to 0 mean and 1 std:
    randompatch:add(-randompatch:mean())
    --randompatch:div(randompatch:std())
@@ -189,38 +189,39 @@ for i,channel in ipairs(channels) do
    print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
+
+----------------------------------------------------------------------
 -- save datasets:
-trainData.data = trainData.data:float()
-testData.data = testData.data:float()
-torch.save('trainData-cifar-CL1l.t7', trainData)
-torch.save('testData-cifar-CL1l.t7', testData)
-
-
---------------------------------------------------------------
---torch.load('c') -- break function
---------------------------------------------------------------
-
-
-----------------------------------------------------------------------
---print "==> creating 1-layer network classifier"
-
-print "==> creating 2-layer network classifier"
-opt.model = '2mlp-classifier'
-dofile '2_model.lua' 
-
-print "==> test network output:"
-print(model:forward(trainData.data[1]:clone():double()))
-
-dofile '3_loss.lua' 
-dofile '4_train.lua'
-dofile '5_test.lua'
-
-----------------------------------------------------------------------
-print "==> training 1-layer network classifier"
-
-while true do
-   train()
-   test()
+if opt.savedataset then
+   trainData.data = trainData.data:float()  -- float to save space if needed
+   testData.data = testData.data:float()
+   torch.save('trainData-cifar-CL1l.t7', trainData)
+   torch.save('testData-cifar-CL1l.t7', testData)
 end
 
 
+----------------------------------------------------------------------
+-- classifier for train/test:
+if opt.classify then
+   ----------------------------------------------------------------------
+   print "==> creating classifier"
+   
+   opt.model = '2mlp-classifier'
+   dofile '2_model.lua' 
+   
+   print "==> test network output:"
+   print(model:forward(trainData.data[1]:double()))
+   
+   dofile '3_loss.lua' 
+   dofile '4_train.lua'
+   dofile '5_test.lua'
+   
+   ----------------------------------------------------------------------
+   print "==> training classifier"
+   
+   while true do
+      train()
+      test()
+   end
+   
+end

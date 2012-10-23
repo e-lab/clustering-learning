@@ -121,10 +121,22 @@ elseif opt.model == '2mlp-classifier' then
    outsize = 10 -- in CIFAR, SVHN datasets
 
    model = nn.Sequential()
-   model:add(nn.Reshape(nk*(l1netoutsize)^2))
-   model:add(nn.Linear(nk*(l1netoutsize)^2,nhiddens))
+   model:add(nn.Reshape(nk*l1netoutsize^2))
+   model:add(nn.Linear(nk*l1netoutsize^2, nhiddens))
    model:add(nn.Tanh())
    model:add(nn.Linear(nhiddens,outsize))
+
+   
+elseif opt.model == '2mlp-cl-2layers' then
+
+   nhiddens = 256
+   outsize = 10 -- in CIFAR, SVHN datasets
+
+   model = nn.Sequential()
+   model:add(nn.Linear(nk2*l1netoutsize^2 + nk1*l1o^2, nhiddens))
+   model:add(nn.Tanh())
+   model:add(nn.Linear(nhiddens,outsize))
+
 
 elseif opt.model == 'convnet' then
 

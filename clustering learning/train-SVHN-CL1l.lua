@@ -7,9 +7,6 @@ require 'image'
 require 'unsup'
 
 cmd = torch.CmdLine()
-cmd:text()
-cmd:text('Get k-means templates on directory of images')
-cmd:text()
 cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
@@ -21,6 +18,8 @@ cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 1000*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
+cmd:option('-savedataset', false, 'save modified dataset')
+cmd:option('-classify', true, 'run classification train/test')
 -- loss:
 cmd:option('-loss', 'nll', 'type of loss function to minimize: nll | mse | margin')
 -- training:
@@ -189,38 +188,39 @@ for i,channel in ipairs(channels) do
    print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
---------------------------------------------------------------
---torch.load('c') -- break function
---------------------------------------------------------------
---print "==> run 2nd layer test"
---dofile('train-SVHN-CL2l.lua')
 
 ----------------------------------------------------------------------
---print "==> creating 1-layer network classifier"
-
-print "==> creating 2-layer network classifier"
-opt.model = '2mlp-classifier'
-dofile '2_model.lua' 
-
-print "==> test network output:"
-print(model:forward(trainData.data[1]:clone():double()))
-
-dofile '3_loss.lua' 
-dofile '4_train.lua'
-dofile '5_test.lua'
-
-----------------------------------------------------------------------
-print "==> training 1-layer network classifier"
-
-while true do
-   train()
-   test()
+-- save datasets:
+if opt.savedataset then
+   trainData.data = trainData.data:float()  -- float to save space if needed
+   testData.data = testData.data:float()
+   torch.save('trainData-SVHN-CL1l.t7', trainData)
+   torch.save('testData-SVHN-CL1l.t7', testData)
 end
 
 
-
--- save datasets:
-trainData.data = trainData.data:float()
-testData.data = testData.data:float()
-torch.save('trainData-svhn-CL1l.t7', trainData)
-torch.save('testData-svhn-CL1l.t7', testData)
+----------------------------------------------------------------------
+-- classifier for train/test:
+if opt.classify then
+   ----------------------------------------------------------------------
+   print "==> creating classifier"
+   
+   opt.model = '2mlp-classifier'
+   dofile '2_model.lua' 
+   
+   print "==> test network output:"
+   print(model:forward(trainData.data[1]:double()))
+   
+   dofile '3_loss.lua' 
+   dofile '4_train.lua'
+   dofile '5_test.lua'
+   
+   ----------------------------------------------------------------------
+   print "==> training classifier"
+   
+   while true do
+      train()
+      test()
+   end
+   
+end
