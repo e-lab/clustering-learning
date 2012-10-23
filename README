@@ -1,8 +1,7 @@
-this library includes all Lua/Torch/xlearn code from elab
+all code, writing, figures related to clustering experiments
 
-GaborLayer: generates a layer of gabor filters
+scripts:  lua scripts for experiments (these will be refactored)
+sad:      sad code and tests (replaced with eex now)
+ol:       code for generating nets for the online learner
+paper:    write-up and figures
 
-SADtest: test sum of absolute differences
-
-clustering learning:
-   1 and 2 layers networks, generation of filters, tests on CIFAR10
