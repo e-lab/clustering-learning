@@ -189,6 +189,12 @@ for i,channel in ipairs(channels) do
    print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
+-- save datasets:
+trainData.data = trainData.data:float()
+testData.data = testData.data:float()
+torch.save('trainData-cifar-CL1l.t7', trainData)
+torch.save('testData-cifar-CL1l.t7', testData)
+
 
 --------------------------------------------------------------
 --torch.load('c') -- break function
@@ -218,9 +224,3 @@ while true do
 end
 
 
-
--- save datasets:
-trainData.data = trainData.data:float()
-testData.data = testData.data:float()
-torch.save('trainData-cifar-CL1l.t7', trainData)
-torch.save('testData-cifar-CL1l.t7', testData)

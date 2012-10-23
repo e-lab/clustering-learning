@@ -55,13 +55,13 @@ dofile '1_data_cifar.lua'
 
 ----------------------------------------------------------------------
 print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
-data = torch.Tensor(opt.nsamples,is*is)
+data = torch.Tensor(opt.nsamples,3*is*is)
 for i = 1,opt.nsamples do
    local img = math.random(1,trainData.data:size(1))
    local image = trainData.data[img]
    local x = math.random(1,trainData.data:size(3)-is+1)
    local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {1},{y,y+is-1},{x,x+is-1} }]
+   local randompatch = image[{ {},{y,y+is-1},{x,x+is-1} }]
    -- normalize patches to 0 mean and 1 std:
    randompatch:add(-randompatch:mean())
    --randompatch:div(randompatch:std())
@@ -70,7 +70,7 @@ end
 
 -- show a few patches:
 if opt.visualize then
-   f256S = data[{{1,256}}]:reshape(256,is,is)
+   f256S = data[{{1,256}}]:reshape(256,3,is,is)
    image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 1st layer learning'}
 end
 
@@ -78,7 +78,7 @@ end
    print '==> running k-means'
    function cb (kernels)
       if opt.visualize then
-         win = image.display{image=kernels:reshape(nk,is,is), padding=2, symmetric=true, 
+         win = image.display{image=kernels:reshape(nk,3,is,is), padding=2, symmetric=true, 
          zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='1st layer filters'}
       end
    end                    
@@ -122,7 +122,7 @@ dofile '2_model.lua'
 l1net = model:clone()
 
 -- initialize templates:
-l1net.modules[1]:templates(kernels:reshape(nk, 1, is, is):expand(nk,3,is,is))
+l1net.modules[1]:templates(kernels:reshape(nk, 3, is, is))
 l1net.modules[1].bias = l1net.modules[1].bias *0
 l1net.modules[4].weight = torch.ones(1)*(1/is)
 
@@ -191,6 +191,11 @@ for i,channel in ipairs(channels) do
    print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
+-- save datasets:
+trainData.data = trainData.data:float()
+testData.data = testData.data:float()
+torch.save('trainData-cifar-CL1l-dist.t7', trainData)
+torch.save('testData-cifar-CL1l-dist.t7', testData)
 
 --------------------------------------------------------------
 --torch.load('c') -- break function
@@ -223,8 +228,3 @@ end
 
 
 
--- save datasets:
-trainData.data = trainData.data:float()
-testData.data = testData.data:float()
-torch.save('trainData-cifar-CL1l-dist.t7', trainData)
-torch.save('testData-cifar-CL1l-dist.t7', testData)
