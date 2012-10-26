@@ -304,6 +304,10 @@ inp = l1net:forward(trainData.data[12])--:double())
 image.display{image=inp, padding=2, symmetric=true, 
          zoom=2, nrow=8, legend='example of 1st layer output'}
 
+
+torch.load('c') -- break function
+
+
 ----------------------------------------------------------------------
 print "==> processing dataset with CL network"
 

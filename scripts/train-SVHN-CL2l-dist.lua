@@ -14,7 +14,7 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches') -- 9x9 kernels wanted
 cmd:option('-nkernels', 128, 'number of kernels to learn')
-cmd:option('-niter', 50, 'nb of k-means iterations')
+cmd:option('-niter', 30, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 1000*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
@@ -93,14 +93,14 @@ print "==> preparing images"
 
 
 print '==> extracting patches'
-data = torch.Tensor(opt.nsamples,is*is)
+data = torch.Tensor(opt.nsamples,nk1*is*is)
 for i = 1,opt.nsamples do
    img = math.random(1,trainData.data:size(1))
    img2 = trainData.data[img]
    z = math.random(1,trainData.data:size(2))
    x = math.random(1,trainData.data:size(3)-is+1)
    y = math.random(1,trainData.data:size(4)-is+1)
-   randompatch = img2[{ {z},{y,y+is-1},{x,x+is-1} }]
+   randompatch = img2[{ {},{y,y+is-1},{x,x+is-1} }]
    -- normalize patches to 0 mean and 1 std:
    randompatch:add(-randompatch:mean())
    --randompatch:div(randompatch:std())
@@ -109,15 +109,15 @@ end
 
 -- show a few patches:
 if opt.visualize then
-   f256S = data[{{1,256}}]:reshape(256,is,is)
-   image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 2nd layer learning'}
+   --f256S = data[{{1,256}}]:reshape(256,is,is)
+   --image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 2nd layer learning'}
 end
 
 print '==> running k-means'
 function cb (kernels)
    if opt.visualize then
-         win = image.display{image=kernels:reshape(nk2,is,is), padding=2, symmetric=true, 
-         zoom=2, win=win, nrow=math.floor(math.sqrt(nk2)), legend='2nd layer filters'}
+         --win = image.display{image=kernels[1]:reshape(nk2,is,is), padding=2, symmetric=true, 
+         --zoom=2, win=win, nrow=math.floor(math.sqrt(nk2)), legend='2nd layer filters, 1plane'}
    end
 end                    
 kernels, kcounts = unsup.kmeans(data, nk2, opt.initstd, opt.niter, opt.batchsize,cb,true)
@@ -136,11 +136,6 @@ for i=1,nk2 do
    end
 end
 
--- show final:
-if opt.visualize then
-         win = image.display{image=kernels:reshape(nk2,is,is), padding=2, symmetric=true, 
-         zoom=2, win=win, nrow=math.floor(math.sqrt(nk2)), legend='2nd layer filters'}
-   end
 
 print '==> verify filters statistics'
 print('filters max mean: ' .. kernels:mean(2):abs():max())
@@ -168,14 +163,16 @@ print "==> using patches as filters"
 print "==> loading and initializing 2nd layer CL model"
 
 nk1=testData.data:size(2)
+nk2=nk
 opt.model = '2nd-layer-dist'
 dofile '2_model.lua' 
 l1net = model:clone()
 
 -- initialize templates:
-l1net.modules[1]:templates(kernels:reshape(nk2, 1, is, is):expand(nk2,nk1,is,is))
+--l1net.modules[1]:templates(kernels:reshape(nk2, 1, is, is):expand(nk2,nk1,is,is))
+l1net.modules[1]:templates(kernels)
 l1net.modules[1].bias = l1net.modules[1].bias *0
-l1net.modules[4].weight = torch.ones(1)*(1/is)
+l1net.modules[4].weight = torch.ones(1)*(1/is*1/2) -- the value 2/is is empirical, looking at net output...
 
 
 ----------------------------------------------------------------------

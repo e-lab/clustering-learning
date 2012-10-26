@@ -56,11 +56,15 @@ dofile '1_data_cifar.lua'
 print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
 data = torch.Tensor(opt.nsamples,is*is)
 for i = 1,opt.nsamples do
-   local img = math.random(1,trainData.data:size(1))
-   local image = trainData.data[img]
-   local x = math.random(1,trainData.data:size(3)-is+1)
-   local y = math.random(1,trainData.data:size(4)-is+1)
-   local randompatch = image[{ {1},{y,y+is-1},{x,x+is-1} }]
+   img = math.random(1,trainData.data:size(1))
+   img2 = trainData.data[img]
+   z = math.random(1,trainData.data:size(2))
+   x = math.random(1,trainData.data:size(3)-is+1)
+   y = math.random(1,trainData.data:size(4)-is+1)
+   randompatch = img2[{ {z},{y,y+is-1},{x,x+is-1} }]
+   -- normalize patches to 0 mean and 1 std:
+   randompatch:add(-randompatch:mean())
+   --randompatch:div(randompatch:std())
    data[i] = randompatch
 end
 

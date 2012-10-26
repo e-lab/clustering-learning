@@ -51,35 +51,32 @@ nk = opt.nkernels
 ----------------------------------------------------------------------
 print '==> loading pre-processed dataset with 1st layer clustering (test-cifar-1l-dist.lua)'
 
-trsize = 20000
-tesize = 2000
-
 trainData1 = torch.load('trainData-cifar-CL1l-dist.t7')
 testData1 = torch.load('testData-cifar-CL1l-dist.t7')
 trainData = trainData1 -- temporary pointers
 testData = testData1
 
-----------------------------------------------------------------------
-print "==> preparing images"
--- remove offsets
---print(torch.mean(trainData1.data))
---print(torch.mean(testData1.data))
-trainData1.data=trainData1.data-torch.mean(trainData1.data)
-testData1.data=testData1.data-torch.mean(testData1.data)
---print(torch.mean(trainData1.data))
---print(torch.mean(testData1.data))
+nk1=testData.data:size(2)
+-- ATTENTION HERE: MIGHT HAVE BEEN REDUCED TO SPEED UP TEST!!!! check model file
+trsize = trainData.data:size(1)
+tesize = testData.data:size(1)
 
+----------------------------------------------------------------------
+--print "==> preparing images"
+-- remove offsets
+--trainData.data=trainData.data-torch.mean(trainData.data)
+--testData.data=testData.data-torch.mean(testData.data)
 
 ----------------------------------------------------------------------
 print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
-data = torch.Tensor(opt.nsamples,is*is)
+data = torch.Tensor(opt.nsamples,nk1*is*is)
 for i = 1,opt.nsamples do
-   img = math.random(1,trainData1.data:size(1))
-   img2 = trainData1.data[img]
-   z = math.random(1,trainData1.data:size(2))
-   x = math.random(1,trainData1.data:size(3)-is+1)
-   y = math.random(1,trainData1.data:size(4)-is+1)
-   randompatch = img2[{ {z},{y,y+is-1},{x,x+is-1} }]
+   img = math.random(1,trainData.data:size(1))
+   img2 = trainData.data[img]
+   z = math.random(1,trainData.data:size(2))
+   x = math.random(1,trainData.data:size(3)-is+1)
+   y = math.random(1,trainData.data:size(4)-is+1)
+   randompatch = img2[{ {},{y,y+is-1},{x,x+is-1} }]
    -- normalize patches to 0 mean and 1 std:
    randompatch:add(-randompatch:mean())
    --randompatch:div(randompatch:std())
@@ -88,16 +85,16 @@ end
 
 -- show a few patches:
 if opt.visualize then
-   f256S = data[{{1,256}}]:reshape(256,is,is)
-   image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 2nd layer learning'}
+   --f256S = data[{{1,256}}]:reshape(256,is,is)
+   --image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches for 2nd layer learning'}
 end
 
 --if not paths.filep('cifar10-1l.t7') then
    print '==> running k-means'
    function cb (kernels)
       if opt.visualize then
-         win = image.display{image=kernels:reshape(nk,is,is), padding=2, symmetric=true, 
-         zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='2nd layer filters'}
+         win = image.display{image=kernels[1]:reshape(nk,is,is), padding=2, symmetric=true, 
+         zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='2nd layer filters, 1 plane'}
       end
    end                    
    kernels = unsup.kmeans(data, nk, opt.initstd,opt.niter, opt.batchsize,cb,true)
@@ -131,16 +128,17 @@ print('filters max standard deviation: ' .. kernels:std(2):abs():max())
 ----------------------------------------------------------------------
 print "==> loading and initializing 2nd layer CL model"
 
-nk1=trainData1.data:size(2)
+nk1=trainData.data:size(2)
 nk2=nk
 opt.model = '2nd-layer-dist'
 dofile '2_model.lua' 
 l1net = model:clone()
 
 -- initialize templates:
-l1net.modules[1]:templates(kernels:reshape(nk2, 1, is, is):expand(nk2,nk1,is,is))
+--l1net.modules[1]:templates(kernels:reshape(nk2, 1, is, is):expand(nk2,nk1,is,is))
+l1net.modules[1]:templates(kernels)
 l1net.modules[1].bias = l1net.modules[1].bias *0
-l1net.modules[4].weight = torch.ones(1)*(1/is)
+l1net.modules[4].weight = torch.ones(1)*(1/is*1/2) -- the value 2/is is empirical, looking at net output...
 
 
 ----------------------------------------------------------------------
@@ -217,10 +215,6 @@ testData = {
    labels = testData1.labels:clone(),
    size = function() return tesize end
 }
-
--- expand dataset to include output from 1st layer and 2nd
---trainData2.data = trainData2.data:reshape(trsize, nk2*l1netoutsize^2, 1):expand(trsize, nk2*l1netoutsize^2, nk1*l1o^2):resize(trsize, nk2*l1netoutsize^2 + nk1*l1o^2)
---testData2.data = testData2.data:reshape(tesize, nk2*l1netoutsize^2,1):expand(tesize, nk2*l1netoutsize^2, nk1*l1o^2):resize(tesize, nk2*l1netoutsize^2 + nk1*l1o^2)
 
 -- concatenate data:
 trainData.data[{{},{1, nk1*l1o^2}}] = trainData1.data

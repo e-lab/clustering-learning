@@ -57,7 +57,7 @@ print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all
 data = torch.Tensor(opt.nsamples,is*is)
 for i = 1,opt.nsamples do
    img = math.random(1,trainData.data:size(1))
-   img2 = trainData1.data[img]
+   img2 = trainData.data[img]
    z = math.random(1,trainData.data:size(2))
    x = math.random(1,trainData.data:size(3)-is+1)
    y = math.random(1,trainData.data:size(4)-is+1)

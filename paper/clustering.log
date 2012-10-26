@@ -1,0 +1,123 @@
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  25 OCT 2012 18:24
+entering extended mode
+ \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**clustering.tex
+(./clustering.tex
+LaTeX2e <2009/09/24>
+Babel <v3.8l> and hyphenation patterns for english, dumylang, nohyphenation, ge
+rman-x-2009-06-19, ngerman-x-2009-06-19, afrikaans, ancientgreek, ibycus, arabi
+c, armenian, basque, bulgarian, catalan, pinyin, coptic, croatian, czech, danis
+h, dutch, ukenglish, usenglishmax, esperanto, estonian, ethiopic, farsi, finnis
+h, french, galician, german, ngerman, swissgerman, monogreek, greek, hungarian,
+ icelandic, assamese, bengali, gujarati, hindi, kannada, malayalam, marathi, or
+iya, panjabi, tamil, telugu, indonesian, interlingua, irish, italian, kurmanji,
+ lao, latin, latvian, lithuanian, mongolian, mongolianlmc, bokmal, nynorsk, pol
+ish, portuguese, romanian, russian, sanskrit, serbian, serbianc, slovak, sloven
+ian, spanish, swedish, turkish, turkmen, ukrainian, uppersorbian, welsh, loaded
+.
+(/usr/local/texlive/2011/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(/usr/local/texlive/2011/texmf-dist/tex/latex/base/size11.clo
+File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(./clustering.aux)
+\openout1 = `clustering.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 2.
+LaTeX Font Info:    ... okay on input line 2.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 7.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 7.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 7.
+
+Overfull \hbox (71.2582pt too wide) in paragraph at lines 7--7
+ [][] 
+ []
+
+[1
+
+{/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+[2] [3]
+Missing character: There is no É in font cmr10!
+Missing character: There is no Ê in font cmr10!
+Missing character: There is no Ê in font cmr10!
+ [4]
+Missing character: There is no Ê in font cmr10!
+Missing character: There is no Ê in font cmr10!
+Missing character: There is no Ê in font cmr10!
+ [5]
+Missing character: There is no Ž in font cmr10!
+
+Underfull \hbox (badness 10000) in paragraph at lines 177--178
+[]\OT1/cmr/m/n/10.95 Eugenio Cu-lur-ciello, neu-Flow syn-thetic vi-sion sys-tem
+s,
+ []
+
+Missing character: There is no Ð in font cmr10!
+
+Underfull \hbox (badness 10000) in paragraph at lines 187--188
+[]\OT1/cmr/m/n/10.95 http://karpathy.ca/myblog/2011/04/27/lessons-learned-from-
+
+ []
+
+[6]
+Underfull \hbox (badness 10000) in paragraph at lines 200--201
+[]\OT1/cmr/m/n/10.95 Learning Mul-ti-ple Lay-ers of Fea-tures from Tiny Im-ages
+,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 200--201
+\OT1/cmr/m/n/10.95 http://www.cs.toronto.edu/ kriz/learning-features-2009-TR.pd
+f,
+ []
+
+Missing character: There is no Ò in font cmr10!
+Missing character: There is no Ó in font cmr10!
+[7] (./clustering.aux) ) 
+Here is how much of TeX's memory you used:
+ 251 strings out of 493633
+ 2820 string characters out of 3143378
+ 53245 words of memory out of 3000000
+ 3627 multiletter control sequences out of 15000+200000
+ 7887 words of font info for 28 fonts, out of 3000000 for 9000
+ 831 hyphenation exceptions out of 8191
+ 21i,6n,19p,872b,201s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/local/texlive/2011/texmf-dist/fonts/type1/public/
+amsfonts/cm/cmbx12.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmr10.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/public/ams
+fonts/cm/cmr12.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr17.pfb>
+Output written on clustering.pdf (7 pages, 73460 bytes).
+PDF statistics:
+ 44 PDF objects out of 1000 (max. 8388607)
+ 30 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

@@ -129,7 +129,7 @@ model:add(nn.Tanh())
 model:add(nn.Linear(nhiddens,outsize))
 
 print "==> test network output:"
-print(model:forward(trainData.data[1]:clone()))
+print(model:forward(trainData.data[1]))
 
 dofile '3_loss.lua' 
 dofile '4_train.lua'
