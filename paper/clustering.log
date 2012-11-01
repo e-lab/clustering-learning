@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  25 OCT 2012 18:24
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  1 NOV 2012 11:40
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -34,90 +34,289 @@ File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
 )
-(./clustering.aux)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2011/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2011/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/latexconfig/graphics.cfg
+File: graphics.cfg 2010/04/23 v1.9 graphics configuration of TeX Live
+)
+Package graphics Info: Driver file: pdftex.def on input line 91.
+
+(/usr/local/texlive/2011/texmf-dist/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+
+(/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/message (HO)
+)
+(/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2011/04/18 v1.20 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count87
+))
+\Gin@req@height=\dimen103
+\Gin@req@width=\dimen104
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/graphics/epsfig.sty
+Package: epsfig 1999/02/16 v1.7a (e)psfig emulation (SPQR)
+\epsfxsize=\dimen105
+\epsfysize=\dimen106
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/caption/caption.sty
+Package: caption 2010/01/09 v3.1m Customizing captions (AR)
+
+(/usr/local/texlive/2011/texmf-dist/tex/latex/caption/caption3.sty
+Package: caption3 2010/01/14 v3.1m caption3 kernel (AR)
+\captionmargin=\dimen107
+\captionmargin@=\dimen108
+\captionwidth=\dimen109
+\caption@indent=\dimen110
+\caption@parindent=\dimen111
+\caption@hangindent=\dimen112
+)
+\c@ContinuedFloat=\count88
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/caption/subcaption.sty
+Package: subcaption 2008/08/31 v1.0b Adding subcaptions (AR)
+\c@subfigure=\count89
+\c@subtable=\count90
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/cite/cite.sty
+LaTeX Info: Redefining \cite on input line 302.
+LaTeX Info: Redefining \nocite on input line 373.
+Package: cite 2010/09/10  v 5.3
+) (./clustering.aux
+
+LaTeX Warning: Label `Netzer2011' multiply defined.
+
+)
 \openout1 = `clustering.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 2.
-LaTeX Font Info:    ... okay on input line 2.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 2.
-LaTeX Font Info:    ... okay on input line 2.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 2.
-LaTeX Font Info:    ... okay on input line 2.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 2.
-LaTeX Font Info:    ... okay on input line 2.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 2.
-LaTeX Font Info:    ... okay on input line 2.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 2.
-LaTeX Font Info:    ... okay on input line 2.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 7.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 7.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 7.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 10.
+LaTeX Font Info:    ... okay on input line 10.
+ (/usr/local/texlive/2011/texmf-dist/tex/context/base/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count91
+\scratchdimen=\dimen113
+\scratchbox=\box26
+\nofMPsegments=\count92
+\nofMParguments=\count93
+\everyMPshowfont=\toks15
+\MPscratchCnt=\count94
+\MPscratchDim=\dimen114
+\MPnumerator=\count95
+\makeMPintoPDFobject=\count96
+\everyMPtoPDFconversion=\toks16
+) (/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
+Package: pdftexcmds 2011/04/22 v0.16 Utilities of pdfTeX for LuaTeX (HO)
 
-Overfull \hbox (71.2582pt too wide) in paragraph at lines 7--7
+(/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/ifluatex.sty
+Package: ifluatex 2010/03/01 v1.3 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+)
+(/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/ifpdf.sty
+Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
+Package ifpdf Info: pdfTeX in PDF mode is detected.
+)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
+Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
+
+(/usr/local/texlive/2011/texmf-dist/tex/latex/oberdiek/grfext.sty
+Package: grfext 2010/08/19 v1.1 Managing graphics extensions (HO)
+
+(/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
+Package: kvdefinekeys 2011/04/07 v1.3 Defining keys (HO)
+))
+(/usr/local/texlive/2011/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+Package: kvoptions 2010/12/23 v3.10 Keyval support for LaTeX options (HO)
+
+(/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
+Package: kvsetkeys 2011/04/07 v1.13 Key value parser (HO)
+
+(/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/etexcmds.sty
+Package: etexcmds 2011/02/16 v1.5 Prefix for e-TeX command names (HO)
+Package etexcmds Info: Could not find \expanded.
+(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
+(etexcmds)             that some package has redefined \expanded.
+(etexcmds)             In the latter case, load this package earlier.
+)))
+Package grfext Info: Graphics extension search list:
+(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 452.
+
+(/usr/local/texlive/2011/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 15.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 15.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 15.
+
+Overfull \hbox (71.2582pt too wide) in paragraph at lines 15--15
  [][] 
  []
 
 [1
 
 {/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-[2] [3]
-Missing character: There is no É in font cmr10!
-Missing character: There is no Ê in font cmr10!
-Missing character: There is no Ê in font cmr10!
- [4]
-Missing character: There is no Ê in font cmr10!
-Missing character: There is no Ê in font cmr10!
-Missing character: There is no Ê in font cmr10!
- [5]
-Missing character: There is no Ž in font cmr10!
+[2] [3] <filters-1l.pdf, id=16, 174.6525pt x 174.6525pt>
+File: filters-1l.pdf Graphic file (type pdf)
+ <use filters-1l.pdf>
+Package pdftex.def Info: filters-1l.pdf used on input line 83.
+(pdftex.def)             Requested size: 86.72377pt x 86.72374pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 177--178
+<filters-2l.pdf, id=17, 352.31625pt x 352.31625pt>
+File: filters-2l.pdf Graphic file (type pdf)
+ <use filters-2l.pdf>
+Package pdftex.def Info: filters-2l.pdf used on input line 91.
+(pdftex.def)             Requested size: 173.44756pt x 173.44823pt.
+
+Overfull \hbox (4.86667pt too wide) in paragraph at lines 81--95
+ [][]  [] 
+ []
+
+[4 <./filters-1l.pdf> <./filters-2l.pdf>]
+
+LaTeX Warning: Citation `Farabet2012' on page 5 undefined on input line 105.
+
+Package epstopdf Info: Source file: <data_svhn.eps>
+(epstopdf)                    date: 2012-11-01 10:04:21
+(epstopdf)                    size: 31718 bytes
+(epstopdf)             Output file: <data_svhn-eps-converted-to.pdf>
+(epstopdf)                    date: 2012-11-01 10:13:02
+(epstopdf)                    size: 19067 bytes
+(epstopdf)             Command: <epstopdf --outfile=data_svhn-eps-converted-to.
+pdf data_svhn.eps>
+(epstopdf)             \includegraphics on input line 132.
+Package epstopdf Info: Output file is already uptodate.
+<data_svhn-eps-converted-to.pdf, id=41, 578.16pt x 433.62pt>
+File: data_svhn-eps-converted-to.pdf Graphic file (type pdf)
+
+<use data_svhn-eps-converted-to.pdf>
+Package pdftex.def Info: data_svhn-eps-converted-to.pdf used on input line 132.
+
+(pdftex.def)             Requested size: 288.0011pt x 215.99564pt.
+Package epstopdf Info: Source file: <data_cifar.eps>
+(epstopdf)                    date: 2012-11-01 10:04:36
+(epstopdf)                    size: 27867 bytes
+(epstopdf)             Output file: <data_cifar-eps-converted-to.pdf>
+(epstopdf)                    date: 2012-11-01 10:15:41
+(epstopdf)                    size: 17713 bytes
+(epstopdf)             Command: <epstopdf --outfile=data_cifar-eps-converted-to
+.pdf data_cifar.eps>
+(epstopdf)             \includegraphics on input line 142.
+Package epstopdf Info: Output file is already uptodate.
+
+<data_cifar-eps-converted-to.pdf, id=42, 578.16pt x 433.62pt>
+File: data_cifar-eps-converted-to.pdf Graphic file (type pdf)
+
+<use data_cifar-eps-converted-to.pdf>
+Package pdftex.def Info: data_cifar-eps-converted-to.pdf used on input line 142
+.
+(pdftex.def)             Requested size: 288.0011pt x 215.99564pt.
+Missing character: There is no É in font cmr10!
+
+Overfull \hbox (0.87596pt too wide) in paragraph at lines 148--154
+[]\OT1/cmr/m/n/10.95 baseline cifar-convnet: [- CI-FAR10 - RGB: 100- CI-FAR10 Y
+UV: 100Note:
+ []
+
+Missing character: There is no Ê in font cmr10!
+[5] [6 <./data_svhn-eps-converted-to.pdf> <./data_cifar-eps-converted-to.pdf>]
+Missing character: There is no Ê in font cmr10!
+
+Overfull \hbox (6.94417pt too wide) in paragraph at lines 205--206
+[]\OT1/cmr/m/n/10.95 - get base-line per-for-mance with con-vnet, CI-FAR, SVHN,
+ barcelona dataset 
+ []
+
+Missing character: There is no Ê in font cmr10!
+Missing character: There is no Ê in font cmr10!
+[7]
+Missing character: There is no Ê in font cmr10!
+Missing character: There is no Ž in font cmr10!
+ [8]
+Underfull \hbox (badness 10000) in paragraph at lines 259--260
 []\OT1/cmr/m/n/10.95 Eugenio Cu-lur-ciello, neu-Flow syn-thetic vi-sion sys-tem
 s,
  []
 
 Missing character: There is no Ð in font cmr10!
 
-Underfull \hbox (badness 10000) in paragraph at lines 187--188
+Underfull \hbox (badness 10000) in paragraph at lines 269--270
 []\OT1/cmr/m/n/10.95 http://karpathy.ca/myblog/2011/04/27/lessons-learned-from-
 
  []
 
-[6]
-Underfull \hbox (badness 10000) in paragraph at lines 200--201
+
+Underfull \hbox (badness 10000) in paragraph at lines 282--283
 []\OT1/cmr/m/n/10.95 Learning Mul-ti-ple Lay-ers of Fea-tures from Tiny Im-ages
 ,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 200--201
+Underfull \hbox (badness 10000) in paragraph at lines 282--283
 \OT1/cmr/m/n/10.95 http://www.cs.toronto.edu/ kriz/learning-features-2009-TR.pd
 f,
  []
 
 Missing character: There is no Ò in font cmr10!
 Missing character: There is no Ó in font cmr10!
-[7] (./clustering.aux) ) 
+[9] [10] (./clustering.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: There were multiply-defined labels.
+
+ ) 
 Here is how much of TeX's memory you used:
- 251 strings out of 493633
- 2820 string characters out of 3143378
- 53245 words of memory out of 3000000
- 3627 multiletter control sequences out of 15000+200000
- 7887 words of font info for 28 fonts, out of 3000000 for 9000
+ 2646 strings out of 493633
+ 41497 string characters out of 3143378
+ 100110 words of memory out of 3000000
+ 5938 multiletter control sequences out of 15000+200000
+ 8195 words of font info for 29 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
- 21i,6n,19p,872b,201s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/local/texlive/2011/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmbx12.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/public/a
-msfonts/cm/cmr10.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr12.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmr17.pfb>
-Output written on clustering.pdf (7 pages, 73460 bytes).
+ 38i,7n,38p,942b,425s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
+></usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
+</usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></
+usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></us
+r/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
+Output written on clustering.pdf (10 pages, 177174 bytes).
 PDF statistics:
- 44 PDF objects out of 1000 (max. 8388607)
- 30 compressed objects within 1 object stream
+ 149 PDF objects out of 1000 (max. 8388607)
+ 61 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1,17 +1,25 @@
+
 \documentclass[11pt]{article}
+
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{cite}
+
 \begin{document}
 
 \title{Clustering Learning for Robotic Vision}
 \author{Eugenio Culurciello, Jordan Bates, Jose Carrasco, Yann LeCun, Clement Farabet}
-\date{}
+\date{\today}
 \maketitle
 
 
 \section{Introduction}
 
 In the recent years the fusion of bio-inspired and neuromorphic vision models and machine learning has dominated the development of artificial vision system for the categorization of multiple objects in static frames.
-Bio-inspired deep networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks \cite{lecun-98,hadsell-chopra-lecun-06,gregor-nips-11,Riesenhuber1999,Serre2007,Serre2010}. Most deep network architectures are composed of multiple layers (2, 3 typically), where each layer is composed of: linear two-dimensional filtering, pooling of data, output data normalization \cite{jarrett-iccv-09,lecun-iscas-10,boureau-icml-10}. 
-Recent machine learning research has focused on the task of training such deep networks from the abundant digital data in form of image frames and videos. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking. These representation usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{Karpathy2011, Torralba2011}, the recent focus is on learning these features purely from unlabeled input data \cite{Olshausen1996, Hyvarinen2000, Hinton2006, Vincent2008, Coates2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of leaning models. 
+Bio-inspired deep networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks \cite{lecun-98,hadsell-chopra-lecun-06,gregor-nips-11,Riesenhuber1999,Serre2007,Serre2010}. Most deep network architectures are composed of multiple layers (2, 3 typically), where each layer is composed of: linear two-dimensional filtering, non-linearity, pooling of data, output data normalization \cite{jarrett-iccv-09,lecun-iscas-10,boureau-icml-10}. 
+Recent machine learning research has focused on the task of training such deep networks from the abundant digital data in form of image frames and videos. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representation usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{Karpathy2011, Torralba2011}, the recent focus is on learning these features purely from unlabeled input data \cite{Olshausen1996, Hyvarinen2000, Hinton2006, Vincent2008, Coates2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of leaning models. 
 
 Recent techniques based on unsupervised clustering algorithms are especially promising because they use simple learning methods that quickly converge \cite{Coates2011}. These algorithms are easy to setup and train and are especially suite for robotics research, because less complex knowledge of machine learning is needed, environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks. In addition, real-time operation with efficient networks can be obtained with less than a hour of training and setup, leading to direct experimentation in robotic experiments.
 [[[These models are also very interesting to bio-inspired vision research because they provide a close connection between computational neuroscience and machine learning. In particular unsupervised clustering algorithms provide a simplistic model of Hebbian Learning methods, where neurons that respond to the same input are clustered.]]]
@@ -20,8 +28,6 @@ In this paper we present results obtained with unsupervised clustering algorithm
 The main goal of the paper is not to present state-of-art results on a specific dataset. Rather we use standard published datasets to evaluate the performance of prototype robotic vision system for general-purpose use, where no dataset is available. It is thus not useful to train the network to perform only on one dataset, when the levels of performance would not carry over to another dataset or real-world images.
 The goal is thus mainly to evaluate the use of unsupervised networks that can support at least ten frames-per-second operation on congenital hardware, such as recent laptop computers.
 The paper also focuses on the advancement of deep network operation in real-time with hardware accelerators \cite{neuflow}.
-
-TODO: [prove that one network trained on one dataset is bad for another?]
 
 
 
@@ -32,31 +38,82 @@ In this paper we created and tested a model of unsupervised clustering algorithm
 We used the Torch7 software for all our experiments \cite{Collobert2011}.
 
 \subsection{Input data}
-Input data was taken from the CIFAR10 [Krizhevsky2009] and the Street View House Numbers (SVHN) [Netzer2011] datasets. Both datasets offer a 10 categories classification task on 32 x 32 size images. Input frames were whitened with a gaussian filter of size 9 x 9 to provide contrastive normalization. 
+Input data was taken from the CIFAR10 \cite{Krizhevsky2009} and the Street View House Numbers (SVHN) \cite{Netzer2011} datasets. The SVHN dataset has a training size of 73,257 32x32 images and test size of 26,032 32x32 images.
+the CIFAR10 dataset has training size of 20,000 32x32 images and test size of 2,000 32x32 images.
+
+Both datasets offer a 10 categories classification task on 32 x 32 size images. The train dataset was in all cases learned to 100\% accuracy, and training was then stopped. Input data was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.Spatial Contrastive Normalization" function.
+
+
+
 
 \subsection{Network architecture}
 The deep neural network architecture is composed of 4 layers. Two layers of linear two-dimensional filtering and two layers of output classifier in the form of a fully connected 2-layer neural network. The first two layers were composed of a two-dimensional convolutional linear filtering stage, a L2 norm pooling stage, and a subtractive normalization layer for removing the mean of all outputs. 
-The filters of the first two layers are generated with unsupervised clustering algorithms, as explained below. Training of the last two layers fully connected neural network was performed with approximately 300 epochs on the SVHN dataset on a quad-core Intel i7 laptop, or about 8 hours. Test data convergence usually only needed ~15 epochs
+The filters of the first two layers are generated with unsupervised clustering algorithms, as explained below. Training of the last two layers fully connected neural network was performed with approximately 300 epochs on the SVHN dataset on a quad-core Intel i7 laptop, or about 8 hours. Test data convergence usually only needed approximately 15 epochs.
+
+
+The layers in the clustering learning network used the following sequence of operations:
+\begin{enumerate}
+\item SpatialSAD module: performing sum-abs-diff operation on images convolutionally with the learned CL filters
+\item Spatial Subtractive Normalization: to zero the data mean
+\item Tanh nonlinearity
+\item L2 pooling over 2x2 regions
+\item Spatial Subtractive Normalization: to zero the data mean
+\end{enumerate}
+
+In order to show the effectiveness of the learning techniques, we compared them to a standard 1-layer and a 2-layers convolutional neural network \cite{sermanet-icpr-12,boureau-icml-10,lecun-iscas-10}. The layers in the convolutional neural network used the following sequence of operations:
+\begin{enumerate}
+\item SpatialConvolution module
+\item Tanh nonlinearity
+\item L2 pooling over 2x2 regions
+\item Spatial Subtractive Normalization: to zero the data mean
+\end{enumerate}
+
+
+All networks used 16 filters on the first layer, 128 filters on the second layer. The final classifier was always with 128 hidden units and 10 output classes for CIFAR and SVHN. Clustering learning networks used a fully connected 1st to 2nd layer, while convolutional neural networks used 1-out-of-3 and 4-out-of-16 random connection table between the input and 1st layer, and 1st and 2nd layer respectively.
+
+
 
 \subsection{Learning}
-We use k-means clustering algorithm to learn a set of 64 filters in the first layer, and 256 filters in the second layer. Both layers filters size was set to 9 x 9 pixels. Clustering used 9 x 9 pixels patches of the normalized images, and we used 1M patches from each dataset to train the first layer. The second layer training was performed by passing the entire dataset through the first layer of the deep neural network. The output dataset was then used again with the same script to train another set of linear filters (256), by using 10M patches of the processed dataset.
+We use k-means clustering algorithm to learn a set of 16 filters in the first layer, and 128 filters in the second layer. Both layers filters size was set to 5 x 5 pixels for the SVHN and CIFAR datasets. In CIFAR, and on the 2nd layer, we used 3 x 3 filters, as features were more spatially constrained in this dataset. Clustering used the same size patches of the normalized images, and we used 1 Million patches from each dataset to train the first layer. The second layer training was performed by passing the entire dataset through the first layer of the deep neural network. The output dataset was then used again with the same script to train another set of linear filters, by using 1 Million patches of the processed dataset.
 
-Figure: 1,2 layer features learned
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.3\textwidth}
+                \centering
+                \includegraphics[width=1.2in]{filters-1l.pdf}
+                \caption{1st layer filters}
+                \label{fig:gull}
+        \end{subfigure}%
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad etc. 
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.7\textwidth}
+                \centering
+                \includegraphics[width=2.4in]{filters-2l.pdf}
+                \caption{2nd layer filters}
+                \label{fig:tiger}
+        \end{subfigure}
+        \caption{Filters}\label{filters}
+\end{figure}
+
+Clustering learning filters learned on the 2nd layer used as many planes as the 1st layer (16 here). This was done to cluster different sets of features for each output of the 1st layer, and increased performance by an average of 5\% or more.
 
 
 \section{Real-time network}
 We use the same two-layer network architecture used in [Farabet 2012] for insuring real-time operation of ~6 frames/s on a quad-code Intel i7 laptop computer. We focused on this network and restricted ourselves to real-time operation because the goal of this project is the use of deep networks in mobile computers. The network operates on 46 x 46 input images, uses 16 7 x 7 filters on the first layer and 128 7 x 7 filters on the second layer. The network produces a 128 feature vector as output. Learned filters through clustering algorithm of size 9 x 9 were resize to size of 7 x 7 for use in this network.
 
-TODO: [why 64 and 128 filters? heuristics?]
+
+TODO:  ADD TRACKING DATA FROM CL NETWORK and compare to convnet and paper \cite{Farabet 2012} 
+
+[why 64 and 128 filters? heuristics?]
 
 
 Larger network:
 This network can be executed in real-time with accelerated hardware [neuflow]
 
 
-
 Advantages:
 - learning is fast: can be applied to online learning of filters, adaptation to environment?
+
 
 Disadvantages:
 - are clustering learning features clustered well? no copies?
@@ -65,6 +122,28 @@ Disadvantages:
 
 
 \section{Results}
+
+We report the results in figure \ref{data_svhn}. Here we compared results of accuracy in the test set for 4 cases: clustering learning with 1 layer (CL 1 layer), clustering learning with 2 layers (CL 2 layers), a 1-layer and a 2-layers convolutional neural network (convnet 1l, 2l). 
+
+
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{data_svhn.eps}
+\caption{default}
+\label{data_svhn}
+\end{center}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{data_cifar.eps}
+\caption{default}
+\label{data_cifar}
+\end{center}
+\end{figure}
 
 baseline cifar-convnet:
 [- CIFAR10 - RGB: 100% train, 71% test, 94 epochs, ~22hours (begin: 38% train, 55% test) (peak test: 73.35% at 15 epochs, train: 90%)]
@@ -121,16 +200,19 @@ Paper on Convolutional Neural Networks Applied to House Numbers Digit Classifica
 
 \section{TODO}
 
-
-DONE - save all nets after training!!!! save logs and scripts
 - check all code for clustering learning
-- use first clustering learning with convolutional networks, if time allows, test with distance SpatialSAD metric
-DONE - re-organize files for better use, no repetition code
+
 - get baseline performance with convnet, CIFAR, SVHN, barcelona dataset
+
 - train with CIFAR, SVHN, barcelona Clustering learning 2 layers
+
 - compare classification results of 1layer, 2 layers, baseline convnet
+
+TODO: [prove that one network trained on one dataset is bad for another?]
 - cross test: learn a net in barcelona, try it in another set, see performance
+
 - test CL1l with 512, 1024, 4096 filters: replicate Adam Coates results!
+
 - do same as above for larger filter sets with CL 2 layers!
 
 
@@ -202,6 +284,8 @@ pages={1521 -1528}
 \bibitem{Netzer2011} Yuval Netzer, Tao Wang, Adam Coates, Alessandro Bissacco, Bo Wu, Andrew Y. Ng Reading Digits in Natural Images with Unsupervised Feature Learning NIPS Workshop on Deep Learning and Unsupervised Feature Learning 2011.
 
 \bibitem{Farabet 2012} C. Farabet, C. Couprie, L. Najman, Y. LeCun, “Scene Parsing with Multiscale Feature Learning, Purity Trees, and Optimal Covers”, in Proc. of the International Conference on Machine Learning (ICML'12), Edinburgh, Scotland, 2012.
+
+\bibitem{Netzer2011} Yuval Netzer, Tao Wang, Adam Coates, Alessandro Bissacco, Bo Wu, Andrew Y. Ng Reading Digits in Natural Images with Unsupervised Feature Learning NIPS Workshop on Deep Learning and Unsupervised Feature Learning 2011. 
 
 \end{thebibliography}
 
