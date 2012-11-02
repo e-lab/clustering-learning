@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  1 NOV 2012 11:40
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  2 NOV 2012 10:38
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -210,22 +210,23 @@ Overfull \hbox (4.86667pt too wide) in paragraph at lines 81--95
 LaTeX Warning: Citation `Farabet2012' on page 5 undefined on input line 105.
 
 Package epstopdf Info: Source file: <data_svhn.eps>
-(epstopdf)                    date: 2012-11-01 10:04:21
-(epstopdf)                    size: 31718 bytes
+(epstopdf)                    date: 2012-11-02 09:57:56
+(epstopdf)                    size: 31595 bytes
 (epstopdf)             Output file: <data_svhn-eps-converted-to.pdf>
-(epstopdf)                    date: 2012-11-01 10:13:02
-(epstopdf)                    size: 19067 bytes
+(epstopdf)                    date: 2012-11-02 09:58:39
+(epstopdf)                    size: 19132 bytes
 (epstopdf)             Command: <epstopdf --outfile=data_svhn-eps-converted-to.
 pdf data_svhn.eps>
-(epstopdf)             \includegraphics on input line 132.
+(epstopdf)             \includegraphics on input line 130.
 Package epstopdf Info: Output file is already uptodate.
 <data_svhn-eps-converted-to.pdf, id=41, 578.16pt x 433.62pt>
 File: data_svhn-eps-converted-to.pdf Graphic file (type pdf)
 
 <use data_svhn-eps-converted-to.pdf>
-Package pdftex.def Info: data_svhn-eps-converted-to.pdf used on input line 132.
+Package pdftex.def Info: data_svhn-eps-converted-to.pdf used on input line 130.
 
 (pdftex.def)             Requested size: 288.0011pt x 215.99564pt.
+ [5]
 Package epstopdf Info: Source file: <data_cifar.eps>
 (epstopdf)                    date: 2012-11-01 10:04:36
 (epstopdf)                    size: 27867 bytes
@@ -234,65 +235,60 @@ Package epstopdf Info: Source file: <data_cifar.eps>
 (epstopdf)                    size: 17713 bytes
 (epstopdf)             Command: <epstopdf --outfile=data_cifar-eps-converted-to
 .pdf data_cifar.eps>
-(epstopdf)             \includegraphics on input line 142.
+(epstopdf)             \includegraphics on input line 151.
 Package epstopdf Info: Output file is already uptodate.
 
-<data_cifar-eps-converted-to.pdf, id=42, 578.16pt x 433.62pt>
+<data_cifar-eps-converted-to.pdf, id=46, 578.16pt x 433.62pt>
 File: data_cifar-eps-converted-to.pdf Graphic file (type pdf)
 
 <use data_cifar-eps-converted-to.pdf>
-Package pdftex.def Info: data_cifar-eps-converted-to.pdf used on input line 142
+Package pdftex.def Info: data_cifar-eps-converted-to.pdf used on input line 151
 .
 (pdftex.def)             Requested size: 288.0011pt x 215.99564pt.
-Missing character: There is no É in font cmr10!
-
-Overfull \hbox (0.87596pt too wide) in paragraph at lines 148--154
-[]\OT1/cmr/m/n/10.95 baseline cifar-convnet: [- CI-FAR10 - RGB: 100- CI-FAR10 Y
-UV: 100Note:
- []
-
-Missing character: There is no Ê in font cmr10!
-[5] [6 <./data_svhn-eps-converted-to.pdf> <./data_cifar-eps-converted-to.pdf>]
+ [6 <./data_svhn-eps-converted-to.pdf>]
 Missing character: There is no Ê in font cmr10!
 
-Overfull \hbox (6.94417pt too wide) in paragraph at lines 205--206
+[7 <./data_cifar-eps-converted-to.pdf>]
+Missing character: There is no Ê in font cmr10!
+
+Overfull \hbox (6.94417pt too wide) in paragraph at lines 213--214
 []\OT1/cmr/m/n/10.95 - get base-line per-for-mance with con-vnet, CI-FAR, SVHN,
  barcelona dataset 
  []
 
 Missing character: There is no Ê in font cmr10!
 Missing character: There is no Ê in font cmr10!
-[7]
 Missing character: There is no Ê in font cmr10!
+[8]
 Missing character: There is no Ž in font cmr10!
- [8]
-Underfull \hbox (badness 10000) in paragraph at lines 259--260
+ [9]
+Underfull \hbox (badness 10000) in paragraph at lines 269--270
 []\OT1/cmr/m/n/10.95 Eugenio Cu-lur-ciello, neu-Flow syn-thetic vi-sion sys-tem
 s,
  []
 
 Missing character: There is no Ð in font cmr10!
 
-Underfull \hbox (badness 10000) in paragraph at lines 269--270
+Underfull \hbox (badness 10000) in paragraph at lines 279--280
 []\OT1/cmr/m/n/10.95 http://karpathy.ca/myblog/2011/04/27/lessons-learned-from-
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 282--283
+Underfull \hbox (badness 10000) in paragraph at lines 292--293
 []\OT1/cmr/m/n/10.95 Learning Mul-ti-ple Lay-ers of Fea-tures from Tiny Im-ages
 ,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 282--283
+Underfull \hbox (badness 10000) in paragraph at lines 292--293
 \OT1/cmr/m/n/10.95 http://www.cs.toronto.edu/ kriz/learning-features-2009-TR.pd
 f,
  []
 
 Missing character: There is no Ò in font cmr10!
 Missing character: There is no Ó in font cmr10!
-[9] [10] (./clustering.aux)
+[10] [11] (./clustering.aux)
 
 LaTeX Warning: There were undefined references.
 
@@ -301,10 +297,10 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 2646 strings out of 493633
- 41497 string characters out of 3143378
- 100110 words of memory out of 3000000
- 5938 multiletter control sequences out of 15000+200000
+ 2648 strings out of 493633
+ 41521 string characters out of 3143378
+ 100118 words of memory out of 3000000
+ 5940 multiletter control sequences out of 15000+200000
  8195 words of font info for 29 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
  38i,7n,38p,942b,425s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -313,10 +309,10 @@ Here is how much of TeX's memory you used:
 </usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></
 usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></us
 r/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-Output written on clustering.pdf (10 pages, 177174 bytes).
+Output written on clustering.pdf (11 pages, 180091 bytes).
 PDF statistics:
- 149 PDF objects out of 1000 (max. 8388607)
- 61 compressed objects within 1 object stream
+ 152 PDF objects out of 1000 (max. 8388607)
+ 63 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

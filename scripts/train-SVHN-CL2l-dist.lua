@@ -47,6 +47,7 @@ torch.setdefaulttensortype('torch.DoubleTensor')
 -- shortcuts:
 is = opt.inputsize
 nk2 = opt.nkernels
+nk=nk2
 
 ----------------------------------------------------------------------
 print '==> loading pre-processed dataset with 1st layer clustering (test-SVHN-CL1l.lua)'
@@ -62,28 +63,14 @@ nk1=testData.data:size(2)
 
 
 print '==> verify statistics'
-channels = {'r','g','b'}
-for i,channel in ipairs(channels) do
-   trainMean = trainData.data[{ {},i }]:mean()
-   trainStd = trainData.data[{ {},i }]:std()
-
-   testMean = testData.data[{ {},i }]:mean()
-   testStd = testData.data[{ {},i }]:std()
-
-   print('training data, '..channel..'-channel, mean: ' .. trainMean)
-   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
-
-   print('test data, '..channel..'-channel, mean: ' .. testMean)
-   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
-end
-
-vs = testData.data:size(3)
-if opt.visualize then
-   image.display{image=trainData.data[{{1,256},{1}}]:reshape(256,vs,vs),padding=2, nrow=16, 
-         symmetric=true, zoom=2, legend='Some normalized training samples'}
-   image.display{image=testData.data[{{1,256},{1}}]:reshape(256,vs,vs),padding=2, nrow=16, 
-         symmetric=true, zoom=2, legend='Some normalized test samples'}
-end
+trainMean = trainData.data:mean()
+trainStd = trainData.data:std()
+testMean = testData.data:mean()
+testStd = testData.data:std()
+print('training data mean: ' .. trainMean)
+print('training datastandard deviation: ' .. trainStd)
+print('test data mean: ' .. testMean)
+print('test data standard deviation: ' .. testStd)
 
 ----------------------------------------------------------------------
 print "==> preparing images"
@@ -163,7 +150,6 @@ print "==> using patches as filters"
 print "==> loading and initializing 2nd layer CL model"
 
 nk1=testData.data:size(2)
-nk2=nk
 opt.model = '2nd-layer-dist'
 dofile '2_model.lua' 
 l1net = model:clone()
@@ -172,8 +158,19 @@ l1net = model:clone()
 --l1net.modules[1]:templates(kernels:reshape(nk2, 1, is, is):expand(nk2,nk1,is,is))
 l1net.modules[1]:templates(kernels)
 l1net.modules[1].bias = l1net.modules[1].bias *0
-l1net.modules[4].weight = torch.ones(1)*(1/is*1/2) -- the value 2/is is empirical, looking at net output...
+l1net.modules[4].weight = torch.ones(1)*(1/is)*(1/is)*(1/4) -- this value is empirical, looking at net output...
 
+
+--tests:
+inp = torch.Tensor(100)
+for t = 1,100 do
+   l1net:forward(trainData.data[t]:double())
+   inp[t] = l1net.modules[4].output:max()
+end
+print('MAX output after nn.Mul:', inp:mean())
+
+
+trainData2.data[tou] = 2
 
 ----------------------------------------------------------------------
 print "==> processing dataset with CL network"

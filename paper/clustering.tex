@@ -43,7 +43,7 @@ the CIFAR10 dataset has training size of 20,000 32x32 images and test size of 2,
 
 Both datasets offer a 10 categories classification task on 32 x 32 size images. The train dataset was in all cases learned to 100\% accuracy, and training was then stopped. Input data was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.Spatial Contrastive Normalization" function.
 
-
+In terms of color space, we did not convert the input images to YUV, but rather kept them in RGB to keep the model closer to biological human vision, where the retina is broadly sensitive to roughly RGB \cite{Wandell95}. Other researchers showed slight improvements using a YUV color space.
 
 
 \subsection{Network architecture}
@@ -123,9 +123,7 @@ Disadvantages:
 
 \section{Results}
 
-We report the results in figure \ref{data_svhn}. Here we compared results of accuracy in the test set for 4 cases: clustering learning with 1 layer (CL 1 layer), clustering learning with 2 layers (CL 2 layers), a 1-layer and a 2-layers convolutional neural network (convnet 1l, 2l). 
-
-
+We report the results in the SVHN dataset in figure \ref{data_svhn}. Here we compared results of accuracy in the test set for 4 cases: clustering learning with 1 layer (CL 1 layer), clustering learning with 2 layers (CL 2 layers), a 1-layer and a 2-layers convolutional neural network (convnet 1l, 2l). 
 
 \begin{figure}[htbp]
 \begin{center}
@@ -136,6 +134,17 @@ We report the results in figure \ref{data_svhn}. Here we compared results of acc
 \end{figure}
 
 
+The data shows that clustering learning and convnet with 1 layer provide remarkably the same levels of accuracy on the dataset. This shows that at least on the 1st layer, the features learned with clustering learning are very effective.
+Adding a second layer brings the convnet to 91\% levels of accuracy, which are standard without using any sophisticated tricks and with a small network with only 16 filters on the first layer.
+On the other had, the clustering learning network with 2 layers showed more than 2\% increase in accuracy, from ~86\% to ~89\%. This increase is not as large as one would want and expect from adding a second layer, but is consistent with unsupervised learning results \cite{Coates2011,Coates2011b}.
+
+It is interesting to note that with in the clustering learning 2 layers network accuracy was above 88\%, and plateaued with the train set accuracy plateauing also at ~92\%. This shows that clustering learning filters also do not over fit, and present non-perfect, but almost identical results on both train and test sets.
+
+The results above were all obtained with feed-forward hierarchical networks. We also tried to use multiple layers of clustering learning unsupervised networks in parallel, as recommended by other publications \cite{Coates2011,lecun-iscas-10}, but we did not obtain any benefits from that strategy, on the contrary parallel networks always reported losses of 3-5\% accuracy with respect to a single layer.
+
+
+We also report here the results in the CIFAR10 dataset in figure \ref{data_cifar}. As in the SVHN case, we compared results of accuracy in the test set for 4 cases: clustering learning with 1 layer (CL 1 layer), clustering learning with 2 layers (CL 2 layers), a 1-layer and a 2-layers convolutional neural network (convnet 1l, 2l). 
+
 
 \begin{figure}[htbp]
 \begin{center}
@@ -145,15 +154,12 @@ We report the results in figure \ref{data_svhn}. Here we compared results of acc
 \end{center}
 \end{figure}
 
-baseline cifar-convnet:
-[- CIFAR10 - RGB: 100% train, 71% test, 94 epochs, ~22hours (begin: 38% train, 55% test) (peak test: 73.35% at 15 epochs, train: 90%)]
-- CIFAR10 YUV: 100% train, 70% test, 35 epochs, ~8hours (begin: train 37, test: 51)  (peak test 72.7%, epoch 9, train: 81.3%)
-Note: beginning values (train 37, test: 51) for YUV inputs were lower than RGB…
-[- SVHN -RGB: train 99%, test 78%, 84 epochs (begin: 57% train, 70% test) peak test: 78.9% epoch 18, train: 84.5%]
-- SVHN -YUV: train 99.5% test 90%, 27 epochs, ~10hours (begin: 74 train, 83 test) peak test: 91.2, epoch 13th train at 95.2%
+The results in the CIFAR10 dataset show a gain of more than 10\% from using a single layer convnet to a 2 layer convnet. 
+Clustering learning showed the same behavior as in the SVHN dataset: adding a second layer achieved 3-5\% better accuracy on the test set. This dataset uses very small images and is notoriously difficult, and clustering learning only reported a 50\% accuracy overall with 2 layers.
+All results are much lower than the current state of art in this dataset, which is close to 90\%. But again we stressed our goal was real-time implementation and other researcher have obtained really hight results in this dataset only with very large networks, most of which are not amenable to real-time operation.
 
-clustering learning:
-- 1 layer CIFAR:
+
+MORE:
 
 x validation:
 - Cifar net tested in SVHN: 1st epoch: 71% train, 76% test (almost like 1st epoch of SVHN: 74 train, 83 test - see above)
@@ -189,6 +195,8 @@ So I think this demonstrates my point.
 
 Future work:
 - extension to temporal filters
+
+- Why only 2-4\% more with a second layer? and less even with a  3rd? that is a big question
 
 
 
@@ -256,6 +264,8 @@ Proceedings of the National Academy of Science, 2007.
 
 \bibitem{Coates2011} An Analysis of Single-Layer Networks in Unsupervised Feature Learning, Adam Coates, Honglak Lee, and Andrew Y. Ng. In AISTATS 14, 2011.
 
+\bibitem{Coates2011b} A. Coates and A. Y. Ng. Selecting receptive fields in deep networks. In Advances in Neural Information Processing Systems, 2011.
+
 \bibitem{neuflow} Eugenio Culurciello, neuFlow synthetic vision systems, http://www.neuflow.org/, 2012.
 
 \bibitem{Olshausen1996} Olshausen, B. A. and Field, D. J. Emergence of simple- cell receptive field properties by learning a sparse code for natural images. Nature, 381(6583):607–609, 1996.
@@ -286,6 +296,9 @@ pages={1521 -1528}
 \bibitem{Farabet 2012} C. Farabet, C. Couprie, L. Najman, Y. LeCun, “Scene Parsing with Multiscale Feature Learning, Purity Trees, and Optimal Covers”, in Proc. of the International Conference on Machine Learning (ICML'12), Edinburgh, Scotland, 2012.
 
 \bibitem{Netzer2011} Yuval Netzer, Tao Wang, Adam Coates, Alessandro Bissacco, Bo Wu, Andrew Y. Ng Reading Digits in Natural Images with Unsupervised Feature Learning NIPS Workshop on Deep Learning and Unsupervised Feature Learning 2011. 
+
+\bibitem{Wandell95} B. A. Wandell, Foundations of Vision. Sunderland, MA: Sinauer, 1995.
+
 
 \end{thebibliography}
 

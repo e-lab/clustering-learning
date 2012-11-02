@@ -14,9 +14,9 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
 cmd:option('-nkernels', 16, 'number of kernels to learn')
-cmd:option('-niter', 50, 'nb of k-means iterations')
+cmd:option('-niter', 30, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 1000*1000, 'nb of random training samples')
+cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:option('-savedataset', false, 'save modified dataset')
@@ -124,9 +124,16 @@ l1net = model:clone()
 -- initialize templates:
 l1net.modules[1]:templates(kernels:reshape(nk, 1, is, is):expand(nk,3,is,is))
 l1net.modules[1].bias = l1net.modules[1].bias *0
-l1net.modules[4].weight = torch.ones(1)*(1/is)
+l1net.modules[4].weight = torch.ones(1)*(1/is)*(1/is)*(1/2)
 
 --tests:
+--tests:
+inp = torch.Tensor(100)
+for t = 1,100 do
+   l1net:forward(trainData.data[t]:double())
+   inp[t] = l1net.modules[4].output:std()
+end
+print('MAX output after nn.Mul:', inp:mean())
 --td_1=torch.zeros(3,32,32)
 --print(l1net:forward(td_1)[1])
 
@@ -162,10 +169,8 @@ trainData2.data = trainData2.data:reshape(trsize, nk, l1netoutsize, l1netoutsize
 testData2.data = testData2.data:reshape(tesize, nk, l1netoutsize, l1netoutsize)
 
 -- relocate pointers to new dataset:
---trainData1 = trainData -- save original dataset
---testData1 = testData
-trainData=nil --save memory
-testData=nil
+trainData1 = trainData -- save original dataset
+testData1 = testData
 trainData = trainData2 -- relocate new dataset
 testData = testData2
 
@@ -177,20 +182,14 @@ if opt.visualize then
 end
 
 print '==> verify statistics'
-channels = {'r','g','b'}
-for i,channel in ipairs(channels) do
-   trainMean = trainData.data[{ {},i }]:mean()
-   trainStd = trainData.data[{ {},i }]:std()
-
-   testMean = testData.data[{ {},i }]:mean()
-   testStd = testData.data[{ {},i }]:std()
-
-   print('training data, '..channel..'-channel, mean: ' .. trainMean)
-   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
-
-   print('test data, '..channel..'-channel, mean: ' .. testMean)
-   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
-end
+trainMean = trainData.data:mean()
+trainStd = trainData.data:std()
+testMean = testData.data:mean()
+testStd = testData.data:std()
+print('training data mean: ' .. trainMean)
+print('training datastandard deviation: ' .. trainStd)
+print('test data mean: ' .. testMean)
+print('test data standard deviation: ' .. testStd)
 
 
 ----------------------------------------------------------------------
