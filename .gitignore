@@ -3,4 +3,6 @@
 .aux
 .bbl
 .synt*
+.out
+.blg
 	

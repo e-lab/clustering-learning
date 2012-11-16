@@ -6,6 +6,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{cite}
+\usepackage{hyperref}
 
 \begin{document}
 
@@ -99,12 +100,13 @@ Clustering learning filters learned on the 2nd layer used as many planes as the 
 
 
 \section{Real-time network}
-We use the same two-layer network architecture used in [Farabet 2012] for insuring real-time operation of ~6 frames/s on a quad-code Intel i7 laptop computer. We focused on this network and restricted ourselves to real-time operation because the goal of this project is the use of deep networks in mobile computers. The network operates on 46 x 46 input images, uses 16 7 x 7 filters on the first layer and 128 7 x 7 filters on the second layer. The network produces a 128 feature vector as output. Learned filters through clustering algorithm of size 9 x 9 were resize to size of 7 x 7 for use in this network.
+The goal of this paper was to provide a simple and fast method to train unsupervised networks for general-purposed robotic vision system. We decided to test our networks in a tracking task, where the network has to be able to track an object of interest based on a  single presentation. For this purpose we use the challenging benchmark TLD dataset \cite{Kalal2011}. From this dataset we selected multiple videos with different properties of occlusions, camera movement, pose, scale and illumination changes.
+
+We use the same two-layer network architecture used in \cite{Farabet2012} for insuring real-time operation of ~6 frames/s on a quad-code Intel i7 laptop computer. We focused on this network and restricted ourselves to real-time operation because the goal of this project is the use of deep networks in mobile computers. The network operates on 46 x 46 input images, uses 16 7 x 7 filters on the first layer and 128 7 x 7 filters on the second layer. The 1st to 2nd layer fan in was 8, and the 2nd to 3rd layer fanin was 64. Both layers were connected with random tables. The network produces a 128 feature vector as output. We trained the same size and number of filters through clustering algorithm for use in this network. We used patches from a contrast normalized version of a few images from the Berkeley image dataset \cite{MartinFTM01}. Any group of natural-scene images can be used to train the general-purpose network presented in this section, and we on purpose chose not to sample patches from the target TLD dataset, in order to demonstrate the learning invariance property of our techniques.
 
 
-TODO:  ADD TRACKING DATA FROM CL NETWORK and compare to convnet and paper \cite{Farabet 2012} 
 
-[why 64 and 128 filters? heuristics?]
+
 
 
 Larger network:
@@ -128,7 +130,7 @@ We report the results in the SVHN dataset in figure \ref{data_svhn}. Here we com
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=0.8\textwidth]{data_svhn.eps}
-\caption{default}
+\caption{Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the SVHN dataset}
 \label{data_svhn}
 \end{center}
 \end{figure}
@@ -149,7 +151,7 @@ We also report here the results in the CIFAR10 dataset in figure \ref{data_cifar
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=0.8\textwidth]{data_cifar.eps}
-\caption{default}
+\caption{Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the CIFAR10 dataset}
 \label{data_cifar}
 \end{center}
 \end{figure}
@@ -157,6 +159,34 @@ We also report here the results in the CIFAR10 dataset in figure \ref{data_cifar
 The results in the CIFAR10 dataset show a gain of more than 10\% from using a single layer convnet to a 2 layer convnet. 
 Clustering learning showed the same behavior as in the SVHN dataset: adding a second layer achieved 3-5\% better accuracy on the test set. This dataset uses very small images and is notoriously difficult, and clustering learning only reported a 50\% accuracy overall with 2 layers.
 All results are much lower than the current state of art in this dataset, which is close to 90\%. But again we stressed our goal was real-time implementation and other researcher have obtained really hight results in this dataset only with very large networks, most of which are not amenable to real-time operation.
+
+The results for the comparison for the real-time tracking network on the TLD dataset \cite{Kalal2011} are given in Table \ref{table1}
+Each video contains only one target. The metric used is the number of correctly tracked frames. More information and images on this dataset can be found here \cite{TLD}.
+As can be seen in Table \ref{table1}, the Clustering Learning (CL) network performs similarly to the convolutional neural network from \cite{Farabet2012} in sequence "Jumping", "Pedestrian 2 and 3", "Pedestrian 3", it also performs better in sequence "Pedestrian 1" and worse in sequence "Car".
+
+While the perfomance of the two networks is approximately the same on the TLD dataset, the convolutional neural network from \cite{Farabet2012} was trained in a week time, while the CL network was tried in ~10 minutes. The CL network proved useful for general purpose vision systems 
+
+
+
+\begin{table}[htdp]
+\caption{Precision comparison between of a Clustering Learning (CL) network  and a convolutional neural network  \cite{Farabet2012} used as trackers in the TLD dataset}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline\hline
+Sequence 	& Frames 	& CL Network precision	& Network from \cite{Farabet2012}  precision \\ 
+\hline
+Jumping 	& 313 	& 0.18 	& \textbf{0.20} \\ 
+Pedestrian 1 	& 140 	& \textbf{0.811} 	& 0.69 \\ 
+Pedestrian 2 	& 338 	& 0.78 	& \textbf{0.79} \\ 
+Pedestrian 3 	& 184 	& 0.35  	& \textbf{0.44} \\ 
+Car 	& 945 	& 0.25  	& \textbf{0.48} \\ 
+\hline\hline
+\end{tabular}
+\end{center}
+\label{table1}
+\end{table}%
+
+
 
 
 MORE:
@@ -293,11 +323,27 @@ pages={1521 -1528}
 
 \bibitem{Netzer2011} Yuval Netzer, Tao Wang, Adam Coates, Alessandro Bissacco, Bo Wu, Andrew Y. Ng Reading Digits in Natural Images with Unsupervised Feature Learning NIPS Workshop on Deep Learning and Unsupervised Feature Learning 2011.
 
-\bibitem{Farabet 2012} C. Farabet, C. Couprie, L. Najman, Y. LeCun, “Scene Parsing with Multiscale Feature Learning, Purity Trees, and Optimal Covers”, in Proc. of the International Conference on Machine Learning (ICML'12), Edinburgh, Scotland, 2012.
+\bibitem{Farabet2012} C. Farabet, C. Couprie, L. Najman, Y. LeCun, “Scene Parsing with Multiscale Feature Learning, Purity Trees, and Optimal Covers”, in Proc. of the International Conference on Machine Learning (ICML'12), Edinburgh, Scotland, 2012.
 
 \bibitem{Netzer2011} Yuval Netzer, Tao Wang, Adam Coates, Alessandro Bissacco, Bo Wu, Andrew Y. Ng Reading Digits in Natural Images with Unsupervised Feature Learning NIPS Workshop on Deep Learning and Unsupervised Feature Learning 2011. 
 
 \bibitem{Wandell95} B. A. Wandell, Foundations of Vision. Sunderland, MA: Sinauer, 1995.
+
+\bibitem{Kalal2011} Z. Kalal, K. Mikolajczyk, and J. Matas, “Tracking-Learning-Detection,” Pattern Analysis and Machine Intelligence, 2011.
+
+\bibitem{MartinFTM01}
+author = {D. Martin and C. Fowlkes and D. Tal and J. Malik},
+title = {A Database of Human Segmented Natural Images and its
+           Application to Evaluating Segmentation Algorithms and
+           Measuring Ecological Statistics},
+booktitle = {Proc. 8th Int'l Conf. Computer Vision},
+year = {2001},
+month = {July},
+volume = {2},
+pages = {416--423}
+
+\bibitem{TLD} \url{http://info.ee.surrey.ac.uk/Personal/Z.Kalal/TLD/TLD_dataset.pdf}
+
 
 
 \end{thebibliography}
