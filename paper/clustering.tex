@@ -22,7 +22,7 @@ In the recent years the fusion of bio-inspired and neuromorphic vision models an
 Bio-inspired deep networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks \cite{lecun-98,hadsell-chopra-lecun-06,gregor-nips-11,Riesenhuber1999,Serre2007,Serre2010}. Most deep network architectures are composed of multiple layers (2, 3 typically), where each layer is composed of: linear two-dimensional filtering, non-linearity, pooling of data, output data normalization \cite{jarrett-iccv-09,lecun-iscas-10,boureau-icml-10}. 
 Recent machine learning research has focused on the task of training such deep networks from the abundant digital data in form of image frames and videos. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representation usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{Karpathy2011, Torralba2011}, the recent focus is on learning these features purely from unlabeled input data \cite{Olshausen1996, Hyvarinen2000, Hinton2006, Vincent2008, Coates2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of leaning models. 
 
-Recent techniques based on unsupervised clustering algorithms are especially promising because they use simple learning methods that quickly converge \cite{Coates2011}. These algorithms are easy to setup and train and are especially suite for robotics research, because less complex knowledge of machine learning is needed, environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks. In addition, real-time operation with efficient networks can be obtained with less than a hour of training and setup, leading to direct experimentation in robotic experiments.
+Recent techniques based on unsupervised clustering algorithms are especially promising because they use simple learning methods that quickly converge \cite{Coates2011}. These algorithms are easy to setup and train and are especially suited for robotics research, because less complex knowledge of machine learning is needed, environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks. In addition, real-time operation with efficient networks can be obtained with only a few minutes of training and setup, leading to quick and direct experimentation in robotic experiments.
 [[[These models are also very interesting to bio-inspired vision research because they provide a close connection between computational neuroscience and machine learning. In particular unsupervised clustering algorithms provide a simplistic model of Hebbian Learning methods, where neurons that respond to the same input are clustered.]]]
 
 In this paper we present results obtained with unsupervised clustering algorithms on the training and operation of deep neural networks for real-time robotic vision systems. We provide simple techniques and open-source software that allows robotic researchers to use deep network in a short setup time and with little or no knowledge of machine learning necessary.
@@ -41,33 +41,32 @@ The paper presents the following key innovations: (1) use of clustering learning
 \label{sec-methods}
 
 In this paper we created and tested a model of unsupervised clustering algorithms (CL) that can quickly learn linear filters weight values, and also is amenable to real-time operation with conventional mobile hardware.
-We used the Torch7 software for all our experiments \cite{Collobert2011}.
+We used the Torch7 software for all our experiments \cite{Collobert2011}, since this software can reduce training and learning of deep networks by 5-10 times compared to similar Matlab and Python tools.
 
 
 \subsection{Input data}
 
 Input image data was obtained from the CIFAR10 \cite{Krizhevsky2009} and the Street View House Numbers (SVHN) \cite{Netzer2011} datasets. The SVHN dataset has a training size of 73,257 32x32 images and test size of 26,032 32x32 images.
-the CIFAR10 dataset has training size of 20,000 32x32 images and test size of 2,000 32x32 images.
+the CIFAR10 dataset has a training size of 20,000 32x32 images and a test size of 2,000 32x32 images. Both datasets offer a 10 categories classification task on 32 x 32 size images. The train dataset was in all cases learned to 100\% accuracy, and training was then stopped. Input data was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.Spatial Contrastive Normalization" function.
 
 As testing data for a general-purposed robotic vision system, we decided to test our networks in a tracking task, where the network has to be able to track an object of interest based on a  single presentation. For this purpose we use the challenging benchmark TLD dataset \cite{Kalal2011}. From this dataset we selected multiple videos with different properties of occlusions, camera movement, pose, scale and illumination changes.
 
-Both datasets offer a 10 categories classification task on 32 x 32 size images. The train dataset was in all cases learned to 100\% accuracy, and training was then stopped. Input data was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.Spatial Contrastive Normalization" function.
+Even if other rgroups showed slight improvements using the YUV color space \cite{jarrett-iccv-09}, we did not use it. Rather we kept the images in their original RGB to keep the model closer to biological human vision, where the retina is broadly sensitive to roughly RGB \cite{Wandell95}. 
 
-In terms of color space, we did not convert the input images to YUV, but rather kept them in RGB to keep the model closer to biological human vision, where the retina is broadly sensitive to roughly RGB \cite{Wandell95}. Other researchers showed slight improvements using the YUV color space \cite{jarrett-iccv-09}.
+Also we did not use whitening of data (such as ZCA whitening) even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique to whiten the input data removing its mean bias and adapting the input dynamic range.
 
-Also we did not use whitening of data (such as ZCA whitening)even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique to whiten the input data removing its mean bias and adapting the input dynamic range.
 
 
 \subsection{Network architecture}
 \label{sec-net-arch}
 
-The deep neural network architecture is composed of 4 layers. Two layers of linear two-dimensional filtering and two layers of output classifier in the form of a fully connected 2-layer neural network. The first two layers were composed of a two-dimensional convolutional linear filtering stage, a L2 norm pooling stage, and a subtractive normalization layer for removing the mean of all outputs. 
-The filters of the first two layers are generated with unsupervised clustering algorithms, as explained below. Training of the last two layers fully connected neural network was performed with approximately 300 epochs on the SVHN dataset on a quad-core Intel i7 laptop, or about 8 hours. Test data convergence usually only needed approximately 15 epochs.
+The deep neural network architecture is composed of 4 layers, not counting pooling and normalization operations. Two layers of linear two-dimensional filtering and two layers of output classifier in the form of a fully connected 2-layer neural network. The first two layers were composed of a two-dimensional convolutional linear filtering stage, a L2 norm pooling stage, and a subtractive normalization layer for removing the mean of all outputs. 
+The filters of the first two layers are generated with unsupervised clustering algorithms, as explained below. Training of the last two fully-connected neural network layers was performed with approximately 50-100 epochs on the SVHN dataset on a quad-core Intel i7 laptop, or about 8 hours. Test data maximum precision usually only needed approximately 15 epochs.
 
 \begin{figure}
 \centering
 \includegraphics[width=5in]{figures/fig-CL-layer.pdf}
-\caption{Architecture of one layer of the CL network. Filters were applied with a sum-abs-diff operations, followed by contrastive normalization, L-2 pooling of features, nonlinearity tanh, and subtractive normalization.}
+\caption{Architecture of one layer of the clustering learning (CL) network. Filters were applied with a sum-abs-diff operations, followed by contrastive normalization, L-2 pooling of features, nonlinearity tanh, and subtractive normalization.}
 \label{fig-CL-layer}
 \end{figure}
 
@@ -81,7 +80,7 @@ The layers in the clustering learning network used the following sequence of ope
 \item Spatial Subtractive Normalization: to zero the data mean
 \end{enumerate}
 
-In order to show the effectiveness of the learning techniques, we compared them to a standard 1-layer and a 2-layers convolutional neural network (CNN) \cite{sermanet-icpr-12,boureau-icml-10,lecun-iscas-10}. The layers in the convolutional neural network used the following sequence of operations:
+In order to show the effectiveness of the learning techniques, we compared them to a standard 1-layer and a 2-layers convolutional neural network (CNN) \cite{sermanet-icpr-12,boureau-icml-10,lecun-iscas-10}, followed by the same 2-layers classifier. The layers in the convolutional neural network used the following sequence of operations:
 \begin{enumerate}
 \item SpatialConvolution module
 \item L2 pooling over 2x2 regions
@@ -92,12 +91,12 @@ In order to show the effectiveness of the learning techniques, we compared them 
 
 All networks used 16 filters on the first layer, 128 filters on the second layer. The final classifier was fixed to 128 hidden units and 10 output classes for CIFAR and SVHN. Clustering learning networks used a fully connected input to 1st, and 1st to 2nd layer, while convolutional neural networks used 1-out-of-3 and 4-out-of-16 random connection table between the input and 1st layer, and 1st and 2nd layer respectively.
 
-Notice that CL networks used sum-abs-diff metrics to correlate filters responses to inputs. This is different to the standard approach of deep networks \cite{lecun-98, Hinton2006, Krizhevsky2009, jarrett-iccv-09} where convolution operations are used. As will be explained later our choice of sum-abs-diff operations was dictated by improved performance of the CL filters with respect to convolutions.
-In a standard modern computer the difference between convolutions (multiplications by weights) and distance metrics (differences, subtractions) is not visible, as multipliers are optimized to perform as fast as the simpler difference operations. On the other hand, when programmable hardware as FPGA is used, the use of differences instead of multipliers can reduce the silicon area utilization, and power up to 15 times on a 32 bit operation. A full comparison of the hardware advantages of using distance operators instead of convolutions will be the subject of future publications.
+Notice that CL networks used sum-abs-diff metrics to correlate filters responses to inputs. This is different to the standard approach of deep networks \cite{lecun-98, Hinton2006, Krizhevsky2009, jarrett-iccv-09} where convolution operations are used. Our choice of sum-abs-diff operations was dictated by improved performance of the CL filters with respect to convolutions.
+In a standard modern computer the difference between convolutions (multiplications by weights) and distance metrics (differences, subtractions) is not visible, as multipliers are optimized to perform as fast as the simpler difference operations. On the other hand, when programmable hardware as FPGA is used, the use of differences instead of multipliers can reduce the silicon area utilization, and power up to 15 times on a 16 bit operation, and more for larger number of bits. A full comparison of the hardware advantages of using distance operators instead of convolutions will be the subject of future publications.
 
 
 \subsection{Learning}
-We use k-means clustering algorithm to learn a set of 16 filters in the first layer, and 128 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels for the SVHN datasets. In CIFAR 1st lair we used 5 x 5 filters, and on the 2nd layer, we used 3 x 3 filters, as features were more spatially constrained in this dataset. Clustering used the same size patches of the normalized images, and we used 1 Million patches from each dataset to train the first layer. The second layer training was performed by passing the entire dataset through the first layer of the deep neural network. The output dataset was then used again with the same script to train another set of linear filters, by using 1 Million patches of the processed dataset.
+We use k-means clustering algorithm to learn a set of 16 filters in the first layer, and 128 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels for the SVHN datasets. In CIFAR 1st lair we used 5 x 5 filters, and on the 2nd layer, we used 3 x 3 filters, as features were more spatially constrained in this dataset. Clustering used the same size patches of the normalized images, and we used 1 M patches from each dataset to train the first layer. The second layer training was performed by passing the entire dataset through the first layer of the deep neural network. The output dataset was then used again with the same script to train another set of linear filters, by using 1 M patches of the processed dataset.
 
 \begin{figure}
         \centering
@@ -142,24 +141,26 @@ We trained the same size and number of filters through clustering algorithm for 
 \section{Results}
 \label{sec-results}
 
+\subsection{Static datasets}
+
 We report the results in the SVHN dataset in figure \ref{data_svhn}. Here we compared results of accuracy in the test set for 4 cases: clustering learning with 1 layer (CL 1 layer), clustering learning with 2 layers (CL 2 layers), a 1-layer and a 2-layers convolutional neural network (CNN 1l, 2l). 
 
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=0.8\textwidth]{figures/data_svhn.eps}
-\caption{Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the SVHN dataset}
+\caption{Test set accuracy comparison for a convolutional neural network (CNN) and a clustering learning (CL) network with 1 and 2 layers on the SVHN dataset}
 \label{data_svhn}
 \end{center}
 \end{figure}
 
 
-The data shows that clustering learning and convnet with 1 layer provide remarkably the same levels of accuracy on the dataset. This shows that at least on the 1st layer, the features learned with clustering learning are very effective.
+The data shows that clustering learning and CNN with 1 layer provide remarkably the same levels of accuracy on the dataset. This shows that at least on the 1st layer, the features learned with clustering learning are very effective.
 Adding a second layer brings the convnet to 91\% levels of accuracy, which are standard without using any sophisticated tricks and with a small network with only 16 filters on the first layer.
-On the other had, the clustering learning network with 2 layers showed more than 2\% increase in accuracy, from ~86\% to ~89\%. This increase is not as large as one would want and expect from adding a second layer, but is consistent with unsupervised learning results \cite{Coates2011,Coates2011b}.
+On the other had, the clustering learning network with 2 layers showed more than 2\% increase in accuracy, from 86\% to 89\%. This increase is not as large as one would want and expect from adding a second layer, but is consistent with unsupervised learning results \cite{Coates2011,Coates2011b}.
 
-It is interesting to note that with in the clustering learning 2 layers network accuracy was above 88\%, and plateaued with the train set accuracy plateauing also at ~92\%. This shows that clustering learning filters also do not over fit, and present non-perfect, but almost identical results on both train and test sets.
+It is interesting to note that with in the clustering learning 2 layers network accuracy was above 88\%, and plateaued with the train set accuracy plateauing also at 92\%. This shows that clustering learning filters also do not over fit, and present non-perfect, but almost identical results on both train and test sets. We note that CNN network trained supervised on SVHN report state-of-the-art performances of 96\% and above.
 
-The results above were all obtained with feed-forward hierarchical networks. We also tried to use multiple layers of clustering learning unsupervised networks in parallel, as recommended by other publications \cite{Coates2011,lecun-iscas-10}, but we did not obtain any benefits from that strategy, on the contrary parallel networks always reported losses of 3-5\% accuracy with respect to a single layer.
+The results above were all obtained with feed-forward hierarchical networks. We also tried to use multiple layers of clustering learning unsupervised networks in parallel, as recommended by other publications \cite{Coates2011,lecun-iscas-10}, but we did not obtain any benefits from that strategy, on the contrary parallel networks always reported losses of 3-5\% accuracy with respect to a single layer. This is different from what reported in \cite{Coates2011,Coates2011b}.
 
 
 We also report here the results in the CIFAR10 dataset in figure \ref{data_cifar}. As in the SVHN case, we compared results of accuracy in the test set for 4 cases: clustering learning with 1 layer (CL 1 layer), clustering learning with 2 layers (CL 2 layers), a 1-layer and a 2-layers convolutional neural network (convnet 1l, 2l). 
@@ -168,20 +169,26 @@ We also report here the results in the CIFAR10 dataset in figure \ref{data_cifar
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=0.8\textwidth]{figures/data_cifar.eps}
-\caption{Test set accuracy comparison for a convolutional neural network (CNN) and a Clustering Learning network with 1 and 2 layers on the CIFAR10 dataset}
+\caption{Test set accuracy comparison for a convolutional neural network (CNN) and a clustering learning (CL) network with 1 and 2 layers on the CIFAR10 dataset}
 \label{data_cifar}
 \end{center}
 \end{figure}
 
 The results in the CIFAR10 dataset show a gain of more than 10\% from using a single layer convnet to a 2 layer convnet. 
 Clustering learning showed the same behavior as in the SVHN dataset: adding a second layer achieved 3-5\% better accuracy on the test set. This dataset uses very small images and is notoriously difficult, and clustering learning only reported a 50\% accuracy overall with 2 layers.
-All results are much lower than the current state of art in this dataset, which is close to 90\% \cite{Ciresan2012} . But again we stressed our goal was real-time implementation and other researcher have obtained record results in this dataset only with very large networks, most of which are not amenable to real-time operation.
+All results are much lower than the current state of art in this dataset, which is close to 90\% \cite{Ciresan2012}. But again we stress that our goal is real-time implementation and other researcher have obtained record results in this dataset only with very large networks, most of which are not amenable to real-time operation.
 
-The results for the comparison for the real-time tracking network on the TLD dataset \cite{Kalal2011} are given in Table \ref{table1}
-Each video contains only one target. The metric used is the number of correctly tracked frames. More information and images on this dataset can be found here \cite{TLD}.
+We also used the filters obtained with CL on a 2-layers standard CNN network. But the use of convolution operation was giving results that were 5-10\% less precise that the results obtained with sum-abs-diff operators.
+
+
+\subsection{Dynamic datasets}
+
+
+The results for the comparison for the real-time tracking network on the TLD dataset \cite{Kalal2011} are given in Table \ref{table1}.
+Each video contains only one target. The metric used is the number of correctly tracked frames. More information and images on this dataset can be found here \cite{TLD}. All network we tested were real-time networks performing at or above 5 frames/s.
 As can be seen in Table \ref{table1}, the Clustering Learning (CL) network performs better than the convolutional neural network from \cite{Farabet2012} in all sequences, and is comparable only in one sequence ("Pedestrian 2"). These results are currently not state-of-the-art, which is currently obtained in reference \cite{Dundar2012}.
 
-While the perfomance of the two networks is approximately the same on the TLD dataset, the convolutional neural network from \cite{Farabet2012} was trained in a week time, while the CL network was tried in ~10 minutes. The CL network proved useful for general purpose vision systems 
+While the perfomance of the two networks is approximately the same on the TLD dataset, the convolutional neural network from \cite{Farabet2012} was trained in a week time, while the CL network was tried in 10 minutes. The CL network proved useful for general purpose vision systems 
 
 
 
@@ -207,53 +214,46 @@ Carchase 		& 9928 	& \textbf{0.38} 	& 0.26 \\
 
 % pedestrian 1,2 use net CL.net, other CL2.net, which is supposed to be the best one to date
 
-
-
-MORE:
-
-x validation:
-- Cifar net tested in SVHN: 1st epoch: 71% train, 76% test (almost like 1st epoch of SVHN: 74 train, 83 test - see above)
-- svhn tested on CIFAr: 1st epoch: 40% train, 51% test (almost like 1st epoch of CIFAR: 37 train, 51 test - see above)
-
-note: YUV is not bio-inspired: our photo-receptors detect intensity on broad frequencies that are similar to RGB~
+%MORE:
+%x validation:
+%- Cifar net tested in SVHN: 1st epoch: 71% train, 76% test (almost like 1st epoch of SVHN: 74 train, 83 test - see above)
+%- svhn tested on CIFAr: 1st epoch: 40% train, 51% test (almost like 1st epoch of CIFAR: 37 train, 51 test - see above)
 
 
 
 \section{Discussion}
 
-I am not sure why people would want to have popularity contests on a single dataset. 
-Since I am  after general robot vision I want nets to be trained for any task.
-So I did a few tests:
+We presented results on clustering learning algorithms for general-purpose vision system. These algorithms can be used to train multi-layer feed-forward neural networks in minutes, with fully automated scripts with non learning parameters. We show results on static dataset and dynamic tracking of objects in videos. We show results that prove that CL techniques are a viable and quick option to training deep networks. In static dataset, although they do not perform at the state-of-the-art because of their small network size, they can however be run in real-time because of the small network size. We also show that on tracking datasets the CL networks outperforms CNN networks. We believe the tracking dataset is a better approximation of robotic tasks, where locking on a target object is required for approach and manipulation.
 
-trained 2 nets on CIFAR10 and SVHN.
-Then I tested the one from CIFAR on the SVHN dataset and vice-versa.
-Results: both give chance performance.
+We show that sum-abs-diff operators can be more effective than convolution operations for filtering in deep networks. We also point that custom hardware with these operators will be more efficient in power and space.
 
-I thought maybe this test is too rough, so I did the same, but kept the output classifier unswitched
-[meaning I took the one from CIFAR and replaced the output classifier with the SVHN net, then tested on SVHN - also vice-versa]
-This is equivalent to 
-Results: still both perform at chance
+Many groups in the field of deep learning work on static dataset to demonstrate the best learning techniques. A lot of these techniques cannot be applied in robotic vision system with the current modern hardware because they cannot perform in real-time ad require too much computational load.
 
-I know these test are unfair because I did not re-train the classifier.
-So I reloaded the CIFAR convnet first 2 layers and did one epoch on SVHN dataset (also vice-versa)
-Results: they provide the same kind of results as the 1st epoch of the untrained network.
-
-So I think this demonstrates my point.
+We argue that more research is needed in the field of applied and real-time deep networks, where shortcuts need to be taken in order to optimize performance for speedy operation. The use of custom hardware is recommended \cite{Farabet2011} but not necessary in many applications. 
 
 
+%I am not sure why people would want to have popularity contests on a single dataset. 
+%Since I am  after general robot vision I want nets to be trained for any task.
+%So I did a few tests:
+%
+%trained 2 nets on CIFAR10 and SVHN.
+%Then I tested the one from CIFAR on the SVHN dataset and vice-versa.
+%Results: both give chance performance.
+%
+%I thought maybe this test is too rough, so I did the same, but kept the output classifier unswitched
+%[meaning I took the one from CIFAR and replaced the output classifier with the SVHN net, then tested on SVHN - also vice-versa]
+%This is equivalent to 
+%Results: still both perform at chance
+%
+%I know these test are unfair because I did not re-train the classifier.
+%So I reloaded the CIFAR convnet first 2 layers and did one epoch on SVHN dataset (also vice-versa)
+%Results: they provide the same kind of results as the 1st epoch of the untrained network.
+%So I think this demonstrates my point.
+%
+%Future work:
+%- extension to temporal filters
+%- Why only 2-4\% more with a second layer? and less even with a  3rd? that is a big question
 
-
-Future work:
-- extension to temporal filters
-
-- Why only 2-4\% more with a second layer? and less even with a  3rd? that is a big question
-
-
-
-
-
-Paper on Convolutional Neural Networks Applied to House Numbers Digit Classification:
-\cite{sermanet-icpr-12}
 
 
 %\section{TODO}
@@ -304,6 +304,8 @@ Proceedings of the National Academy of Science, 2007.
 
 \bibitem{Coates2011b} A. Coates and A. Y. Ng. Selecting receptive fields in deep networks. In Advances in Neural Information Processing Systems, 2011.
 
+\bibitem{Ciresan2012} Dan Ciresan and Ueli Meier and J{\"u}rgen Schmidhuber, Multi-column Deep Neural Networks for Image Classification, CoRR, abs/1202.2745, 2012, http://arxiv.org/abs/1202.2745
+
 \bibitem{neuflow} Eugenio Culurciello, neuFlow synthetic vision systems, http://www.neuflow.org/, 2012.
 
 \bibitem{Olshausen1996} Olshausen, B. A. and Field, D. J. Emergence of simple- cell receptive field properties by learning a sparse code for natural images. Nature, 381(6583):607–609, 1996.
@@ -341,8 +343,7 @@ Torralba, A. and Efros, A.A., Unbiased look at dataset bias, Computer Vision and
 
 \bibitem{Dundar2012} Aysegul Dundar and Jonghoon Jin and Eugenio Culurciello, Visual Tracking with Similarity Matching Ratio, CoRR, abs/1209.2696, 2012, http://arxiv.org/abs/1209.2696.
 
-\bibitem{Ciresan2012} Dan Ciresan and Ueli Meier and J{\"u}rgen Schmidhuber, Multi-column Deep Neural Networks for Image Classification, CoRR, abs/1202.2745, 2012, http://arxiv.org/abs/1202.2745
-
+\bibitem{Farabet2011} C. Farabet, B. Martini, B. Corda, P. Akselrod, E. Culurciello and Y. LeCun, “NeuFlow: A Runtime Reconfigurable Dataflow Processor for Vision”, in Proc. of the Fifth IEEE Workshop on Embedded Computer Vision (ECV'11 @ CVPR'11), IEEE, Colorado Springs, 2011. Invited Paper.
 
 
 \end{thebibliography}
