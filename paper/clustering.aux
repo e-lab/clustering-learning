@@ -20,47 +20,54 @@
 \citation{Olshausen1996,Hyvarinen2000,Hinton2006,Vincent2008,Coates2011}
 \citation{Coates2011}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}}
-\citation{neuflow}
 \citation{Collobert2011}
 \citation{Krizhevsky2009}
 \citation{Netzer2011}
+\citation{Kalal2011}
 \@writefile{toc}{\contentsline {section}{\numberline {2}Methods}{2}{section.2}}
+\newlabel{sec-methods}{{2}{2}{Methods\relax }{section.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Input data}{2}{subsection.2.1}}
 \citation{Wandell95}
-\citation{sermanet-icpr-12,boureau-icml-10,lecun-iscas-10}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Network architecture}{3}{subsection.2.2}}
+\citation{jarrett-iccv-09}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Architecture of one layer of the CL network. Filters were applied with a sum-abs-diff operations, followed by contrastive normalization, L-2 pooling of features, nonlinearity tanh, and subtractive normalization.\relax }}{3}{figure.caption.1}}
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:gull}{{1a}{4}{1st layer filters\relax \relax }{figure.caption.1}{}}
-\newlabel{sub@fig:gull}{{a}{4}{1st layer filters\relax \relax }{figure.caption.1}{}}
-\newlabel{fig:tiger}{{1b}{4}{2nd layer filters\relax \relax }{figure.caption.1}{}}
-\newlabel{sub@fig:tiger}{{b}{4}{2nd layer filters\relax \relax }{figure.caption.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Filters\relax }}{4}{figure.caption.1}}
-\newlabel{filters}{{1}{4}{Filters\relax \relax }{figure.caption.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Learning}{4}{subsection.2.3}}
+\newlabel{fig-CL-layer}{{1}{3}{Architecture of one layer of the CL network. Filters were applied with a sum-abs-diff operations, followed by contrastive normalization, L-2 pooling of features, nonlinearity tanh, and subtractive normalization.\relax \relax }{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Network architecture}{3}{subsection.2.2}}
+\newlabel{sec-net-arch}{{2.2}{3}{Network architecture\relax }{subsection.2.2}{}}
+\citation{sermanet-icpr-12,boureau-icml-10,lecun-iscas-10}
+\citation{lecun-98,Hinton2006,Krizhevsky2009,jarrett-iccv-09}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Filters obtained with clustering learning on the 1st and 2nd layer. The filters obtained on the 1st layer are quite similar to elongated Gabor patches, and what can be obtained with more complex and numerically involved unsupervised techniques. Filter training with CL was obtained in \nobreakspace  {}10 min time on a modern laptop.\relax }}{5}{figure.caption.2}}
+\newlabel{fig-filters}{{2}{5}{Filters obtained with clustering learning on the 1st and 2nd layer. The filters obtained on the 1st layer are quite similar to elongated Gabor patches, and what can be obtained with more complex and numerically involved unsupervised techniques. Filter training with CL was obtained in ~10 min time on a modern laptop.\relax \relax }{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Learning}{5}{subsection.2.3}}
 \citation{Kalal2011}
 \citation{Farabet2012}
+\citation{Farabet2012}
 \citation{MartinFTM01}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Real-time network}{5}{section.3}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{5}{section.4}}
 \citation{Coates2011,Coates2011b}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Real-time network}{6}{section.3}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{6}{section.4}}
+\newlabel{sec-results}{{4}{6}{Results\relax }{section.4}{}}
 \citation{Coates2011,lecun-iscas-10}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the SVHN dataset\relax }}{6}{figure.caption.2}}
-\newlabel{data_svhn}{{2}{6}{Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the SVHN dataset\relax \relax }{figure.caption.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the CIFAR10 dataset\relax }}{7}{figure.caption.3}}
-\newlabel{data_cifar}{{3}{7}{Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the CIFAR10 dataset\relax \relax }{figure.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the SVHN dataset\relax }}{7}{figure.caption.3}}
+\newlabel{data_svhn}{{3}{7}{Test set accuracy comparison for a convolutional neural network and a Clustering Learning network with 1 and 2 layers on the SVHN dataset\relax \relax }{figure.caption.3}{}}
+\citation{Ciresan2012}
 \citation{Kalal2011}
 \citation{TLD}
 \citation{Farabet2012}
+\citation{Dundar2012}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Test set accuracy comparison for a convolutional neural network (CNN) and a Clustering Learning network with 1 and 2 layers on the CIFAR10 dataset\relax }}{8}{figure.caption.4}}
+\newlabel{data_cifar}{{4}{8}{Test set accuracy comparison for a convolutional neural network (CNN) and a Clustering Learning network with 1 and 2 layers on the CIFAR10 dataset\relax \relax }{figure.caption.4}{}}
 \citation{Farabet2012}
 \citation{Farabet2012}
+\citation{Kalal2011}
 \citation{Farabet2012}
+\citation{Kalal2011}
 \citation{Farabet2012}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Precision comparison between of a Clustering Learning (CL) network and a convolutional neural network \cite  {Farabet2012} used as trackers in the TLD dataset\relax }}{8}{table.caption.4}}
-\newlabel{table1}{{1}{8}{Precision comparison between of a Clustering Learning (CL) network and a convolutional neural network \cite {Farabet2012} used as trackers in the TLD dataset\relax \relax }{table.caption.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{8}{section.5}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Precision comparison between of a Clustering Learning (CL) network and a convolutional neural network (CNN)\cite  {Farabet2012} used as trackers in the TLD dataset \cite  {Kalal2011}.\relax }}{9}{table.caption.5}}
+\newlabel{table1}{{1}{9}{Precision comparison between of a Clustering Learning (CL) network and a convolutional neural network (CNN)\cite {Farabet2012} used as trackers in the TLD dataset \cite {Kalal2011}.\relax \relax }{table.caption.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{9}{section.5}}
 \citation{sermanet-icpr-12}
 \bibcite{lecun-98}{1}
-\@writefile{toc}{\contentsline {section}{\numberline {6}TODO}{9}{section.6}}
 \bibcite{hadsell-chopra-lecun-06}{2}
 \bibcite{gregor-nips-11}{3}
 \bibcite{Riesenhuber1999}{4}
@@ -88,3 +95,5 @@
 \bibcite{Kalal2011}{26}
 \bibcite{MartinFTM01}{27}
 \bibcite{TLD}{28}
+\bibcite{Dundar2012}{29}
+\bibcite{Ciresan2012}{30}
