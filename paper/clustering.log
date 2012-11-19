@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  19 NOV 2012 11:25
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  19 NOV 2012 15:13
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -292,33 +292,33 @@ Overfull \hbox (71.2582pt too wide) in paragraph at lines 17--17
 File: figures/fig-CL-layer.pdf Graphic file (type pdf)
 
 <use figures/fig-CL-layer.pdf>
-Package pdftex.def Info: figures/fig-CL-layer.pdf used on input line 66.
+Package pdftex.def Info: figures/fig-CL-layer.pdf used on input line 69.
 (pdftex.def)             Requested size: 361.34999pt x 93.68274pt.
 
-Overfull \hbox (1.34999pt too wide) in paragraph at lines 66--67
+Overfull \hbox (1.34999pt too wide) in paragraph at lines 69--70
  [][] 
  []
 
-[3 <./figures/fig-CL-layer.pdf>] [4]
-<figures/filters-1l.pdf, id=147, 174.6525pt x 174.6525pt>
+[3] [4 <./figures/fig-CL-layer.pdf>]
+<figures/filters-1l.pdf, id=146, 174.6525pt x 174.6525pt>
 File: figures/filters-1l.pdf Graphic file (type pdf)
 
 <use figures/filters-1l.pdf>
-Package pdftex.def Info: figures/filters-1l.pdf used on input line 103.
+Package pdftex.def Info: figures/filters-1l.pdf used on input line 106.
 (pdftex.def)             Requested size: 86.72377pt x 86.72374pt.
 
-<figures/filters-2l.pdf, id=148, 352.31625pt x 352.31625pt>
+<figures/filters-2l.pdf, id=147, 352.31625pt x 352.31625pt>
 File: figures/filters-2l.pdf Graphic file (type pdf)
 
 <use figures/filters-2l.pdf>
-Package pdftex.def Info: figures/filters-2l.pdf used on input line 110.
+Package pdftex.def Info: figures/filters-2l.pdf used on input line 113.
 (pdftex.def)             Requested size: 173.44756pt x 173.44823pt.
 
-Overfull \hbox (4.86667pt too wide) in paragraph at lines 101--113
+Overfull \hbox (4.86667pt too wide) in paragraph at lines 104--116
  [][]  [] 
  []
 
-[5 <./figures/filters-1l.pdf> <./figures/filters-2l.pdf>]
+[5] [6 <./figures/filters-1l.pdf> <./figures/filters-2l.pdf>]
 Package epstopdf Info: Source file: <figures/data_svhn.eps>
 (epstopdf)                    date: 2012-11-19 11:18:44
 (epstopdf)                    size: 30720 bytes
@@ -327,17 +327,17 @@ Package epstopdf Info: Source file: <figures/data_svhn.eps>
 (epstopdf)                    size: 18373 bytes
 (epstopdf)             Command: <epstopdf --outfile=figures/data_svhn-eps-conve
 rted-to.pdf figures/data_svhn.eps>
-(epstopdf)             \includegraphics on input line 146.
+(epstopdf)             \includegraphics on input line 149.
 Package epstopdf Info: Output file is already uptodate.
 
-<figures/data_svhn-eps-converted-to.pdf, id=181, 578.16pt x 433.62pt>
+<figures/data_svhn-eps-converted-to.pdf, id=187, 578.16pt x 433.62pt>
 File: figures/data_svhn-eps-converted-to.pdf Graphic file (type pdf)
 
 <use figures/data_svhn-eps-converted-to.pdf>
 Package pdftex.def Info: figures/data_svhn-eps-converted-to.pdf used on input l
-ine 146.
+ine 149.
 (pdftex.def)             Requested size: 288.0011pt x 215.99564pt.
- [6] [7 <./figures/data_svhn-eps-converted-to.pdf>]
+ [7 <./figures/data_svhn-eps-converted-to.pdf>]
 Package epstopdf Info: Source file: <figures/data_cifar.eps>
 (epstopdf)                    date: 2012-11-19 11:18:36
 (epstopdf)                    size: 26991 bytes
@@ -346,45 +346,45 @@ Package epstopdf Info: Source file: <figures/data_cifar.eps>
 (epstopdf)                    size: 16954 bytes
 (epstopdf)             Command: <epstopdf --outfile=figures/data_cifar-eps-conv
 erted-to.pdf figures/data_cifar.eps>
-(epstopdf)             \includegraphics on input line 167.
+(epstopdf)             \includegraphics on input line 170.
 Package epstopdf Info: Output file is already uptodate.
 
-<figures/data_cifar-eps-converted-to.pdf, id=232, 578.16pt x 433.62pt>
+<figures/data_cifar-eps-converted-to.pdf, id=231, 578.16pt x 433.62pt>
 File: figures/data_cifar-eps-converted-to.pdf Graphic file (type pdf)
 
 <use figures/data_cifar-eps-converted-to.pdf>
 Package pdftex.def Info: figures/data_cifar-eps-converted-to.pdf used on input 
-line 167.
+line 170.
 (pdftex.def)             Requested size: 288.0011pt x 215.99564pt.
  [8 <./figures/data_cifar-eps-converted-to.pdf>]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <10.95> on input line 188.
-Missing character: There is no Ê in font cmr10!
+(Font)              <10.95> on input line 191.
  [9]
+Missing character: There is no Ê in font cmr10!
 Missing character: There is no Ê in font cmr10!
  [10]
 Missing character: There is no Ž in font cmr10!
 
-Underfull \hbox (badness 10000) in paragraph at lines 304--305
+Underfull \hbox (badness 10000) in paragraph at lines 307--308
 []\OT1/cmr/m/n/10.95 Eugenio Cu-lur-ciello, neu-Flow syn-thetic vi-sion sys-tem
 s,
  []
 
 Missing character: There is no Ð in font cmr10!
-
-Underfull \hbox (badness 10000) in paragraph at lines 314--315
+[11]
+Underfull \hbox (badness 10000) in paragraph at lines 317--318
 []\OT1/cmr/m/n/10.95 http://karpathy.ca/myblog/2011/04/27/lessons-learned-from-
 
  []
 
-[11]
-Underfull \hbox (badness 10000) in paragraph at lines 321--322
+
+Underfull \hbox (badness 10000) in paragraph at lines 324--325
 []\OT1/cmr/m/n/10.95 Learning Mul-ti-ple Lay-ers of Fea-tures from Tiny Im-ages
 ,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 321--322
+Underfull \hbox (badness 10000) in paragraph at lines 324--325
 \OT1/cmr/m/n/10.95 http://www.cs.toronto.edu/ kriz/learning-features-2009-TR.pd
 f,
  []
@@ -393,32 +393,32 @@ Missing character: There is no Ò in font cmr10!
 Missing character: There is no Ó in font cmr10!
 Missing character: There is no Ò in font cmr10!
 Missing character: There is no Ó in font cmr10!
-
-Underfull \hbox (badness 10000) in paragraph at lines 337--338
-[][]$\OT1/cmtt/m/n/10.95 http : / / info . ee . surrey . ac . uk / Personal / Z
- . Kalal / TLD / TLD _
- []
-
 [12pdfTeX warning (ext4): destination with the same identifier (name{cite.Netze
 r2011}) has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.342 
-      ]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 349.
- [13]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 349.
+l.340 \bibitem{TLD}
+                    \url{http://info.ee.surrey.ac.uk/Personal/Z.Kalal/TLD/TL...
+]
+Underfull \hbox (badness 10000) in paragraph at lines 340--341
+[][]$\OT1/cmtt/m/n/10.95 http : / / info . ee . surrey . ac . uk / Personal / Z
+ . Kalal / TLD / TLD _
+ []
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 352.
+[13]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 352.
  (./clustering.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 349.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 349.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 352.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 352.
 Package rerunfilecheck Info: File `clustering.out' has not changed.
 (rerunfilecheck)             Checksum: B183DCEDBB76F1449F32CBA7DADCEE60;413.
 
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 349.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 352.
  ) 
 Here is how much of TeX's memory you used:
  6158 strings out of 493633
@@ -434,7 +434,7 @@ Here is how much of TeX's memory you used:
 usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></us
 r/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/
 local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on clustering.pdf (13 pages, 658147 bytes).
+Output written on clustering.pdf (13 pages, 658720 bytes).
 PDF statistics:
  358 PDF objects out of 1000 (max. 8388607)
  253 compressed objects within 3 object streams

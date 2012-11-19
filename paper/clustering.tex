@@ -43,8 +43,10 @@ The paper presents the following key innovations: (1) use of clustering learning
 In this paper we created and tested a model of unsupervised clustering algorithms (CL) that can quickly learn linear filters weight values, and also is amenable to real-time operation with conventional mobile hardware.
 We used the Torch7 software for all our experiments \cite{Collobert2011}.
 
+
 \subsection{Input data}
-Input data was taken from the CIFAR10 \cite{Krizhevsky2009} and the Street View House Numbers (SVHN) \cite{Netzer2011} datasets. The SVHN dataset has a training size of 73,257 32x32 images and test size of 26,032 32x32 images.
+
+Input image data was obtained from the CIFAR10 \cite{Krizhevsky2009} and the Street View House Numbers (SVHN) \cite{Netzer2011} datasets. The SVHN dataset has a training size of 73,257 32x32 images and test size of 26,032 32x32 images.
 the CIFAR10 dataset has training size of 20,000 32x32 images and test size of 2,000 32x32 images.
 
 As testing data for a general-purposed robotic vision system, we decided to test our networks in a tracking task, where the network has to be able to track an object of interest based on a  single presentation. For this purpose we use the challenging benchmark TLD dataset \cite{Kalal2011}. From this dataset we selected multiple videos with different properties of occlusions, camera movement, pose, scale and illumination changes.
@@ -53,6 +55,7 @@ Both datasets offer a 10 categories classification task on 32 x 32 size images. 
 
 In terms of color space, we did not convert the input images to YUV, but rather kept them in RGB to keep the model closer to biological human vision, where the retina is broadly sensitive to roughly RGB \cite{Wandell95}. Other researchers showed slight improvements using the YUV color space \cite{jarrett-iccv-09}.
 
+Also we did not use whitening of data (such as ZCA whitening)even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique to whiten the input data removing its mean bias and adapting the input dynamic range.
 
 
 \subsection{Network architecture}
@@ -94,7 +97,7 @@ In a standard modern computer the difference between convolutions (multiplicatio
 
 
 \subsection{Learning}
-We use k-means clustering algorithm to learn a set of 16 filters in the first layer, and 128 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. Both layers filters size was set to 5 x 5 pixels for the SVHN and CIFAR datasets. In CIFAR, and on the 2nd layer, we used 3 x 3 filters, as features were more spatially constrained in this dataset. Clustering used the same size patches of the normalized images, and we used 1 Million patches from each dataset to train the first layer. The second layer training was performed by passing the entire dataset through the first layer of the deep neural network. The output dataset was then used again with the same script to train another set of linear filters, by using 1 Million patches of the processed dataset.
+We use k-means clustering algorithm to learn a set of 16 filters in the first layer, and 128 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels for the SVHN datasets. In CIFAR 1st lair we used 5 x 5 filters, and on the 2nd layer, we used 3 x 3 filters, as features were more spatially constrained in this dataset. Clustering used the same size patches of the normalized images, and we used 1 Million patches from each dataset to train the first layer. The second layer training was performed by passing the entire dataset through the first layer of the deep neural network. The output dataset was then used again with the same script to train another set of linear filters, by using 1 Million patches of the processed dataset.
 
 \begin{figure}
         \centering
