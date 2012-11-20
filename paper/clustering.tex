@@ -11,7 +11,7 @@
 \begin{document}
 
 \title{Clustering Learning for Robotic Vision}
-\author{Eugenio Culurciello, Jordan Bates, Jose Carrasco, Yann LeCun, Clement Farabet}
+\author{Eugenio Culurciello, Jordan Bates, Jose Carrasco, Clement Farabet, Yann LeCun}
 \date{\today}
 \maketitle
 
@@ -23,7 +23,6 @@ Bio-inspired deep networks are computer-vision and computational-neuroscience mo
 Recent machine learning research has focused on the task of training such deep networks from the abundant digital data in form of image frames and videos. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representation usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{Karpathy2011, Torralba2011, hou2012meta}, the recent focus is on learning these features purely from unlabeled input data \cite{Olshausen1996, Hyvarinen2000, Hinton2006, Vincent2008, Coates2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of leaning models. 
 
 Recent techniques based on unsupervised clustering algorithms are especially promising because they use simple learning methods that quickly converge \cite{Coates2011}. These algorithms are easy to setup and train and are especially suited for robotics research, because less complex knowledge of machine learning is needed, environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks. In addition, real-time operation with efficient networks can be obtained with only a few minutes of training and setup, leading to quick and direct experimentation in robotic experiments.
-[[[These models are also very interesting to bio-inspired vision research because they provide a close connection between computational neuroscience and machine learning. In particular unsupervised clustering algorithms provide a simplistic model of Hebbian Learning methods, where neurons that respond to the same input are clustered.]]]
 
 In this paper we present results obtained with unsupervised clustering algorithms on the training and operation of deep neural networks for real-time robotic vision systems. We provide simple techniques and open-source software that allows robotic researchers to use deep network in a short setup time and with little or no knowledge of machine learning necessary.
 The main goal of the paper is not to present state-of-art results on a specific dataset. Rather we use standard published datasets to evaluate the performance of prototype robotic vision system for general-purpose use, where no dataset is available. It is thus not useful to train the network to perform only on one dataset, when the levels of performance would not carry over to another dataset or real-world images.
@@ -257,6 +256,8 @@ Many groups in the field of deep learning work on static dataset to demonstrate 
 
 We argue that more research is needed in the field of applied and real-time deep networks, where shortcuts need to be taken in order to optimize performance for speedy operation. The use of custom hardware is recommended \cite{Farabet2011} but not necessary in many applications. 
 
+CL models are also very interesting to bio-inspired vision research because they provide a close connection between computational neuroscience and machine learning. In particular unsupervised clustering algorithms provide a simplistic model of Hebbian Learning methods, where neurons that respond to the same input are clustered \cite{Sanger89, Foldiak90, Oja89, Bell97} . Most of previous work was mathematically complex and not efficient to implement. In this paper we thus present one of the first practical application of Hebbian-like learning applied to deep networks. Its fast and simple computation can help researcher quickly train complex neural networks.
+
 
 %I am not sure why people would want to have popularity contests on a single dataset. 
 %Since I am  after general robot vision I want nets to be trained for any task.
@@ -376,6 +377,13 @@ Torralba, A. and Efros, A.A., Unbiased look at dataset bias, Computer Vision and
 
 \bibitem{Farabet2011} C. Farabet, B. Martini, B. Corda, P. Akselrod, E. Culurciello and Y. LeCun, “NeuFlow: A Runtime Reconfigurable Dataflow Processor for Vision”, in Proc. of the Fifth IEEE Workshop on Embedded Computer Vision (ECV'11 @ CVPR'11), IEEE, Colorado Springs, 2011. Invited Paper.
 
+\bibitem{Sanger89} Terence D. Sanger, Optimal Unsupervised Learning in a Single-Layer Linear Feedforward Neural Network, Neural Networks,  Vol.  2,  pp.  459-473,  1989.
+
+\bibitem{Foldiak90} Földiák P., Forming sparse representations by local anti-Hebbian learning, Biol Cybern. 1990;64(2):165-70.
+
+\bibitem{Oja89} Oja E. Neural networks, principal components and linear neural networks. Neural Networks. 1989;5:927–935.
+
+\bibitem{Bell97} Bell A. and T.J.  Sejnoswki, The “Independent Components” of Natural Scenes are Edge Filters, Vision Res. 1997 December; 37(23): 3327–3338.
 
 \end{thebibliography}
 
