@@ -1,5 +1,6 @@
-
-\documentclass[11pt]{article}
+%\documentclass[11pt]{article}
+\documentclass{article} % For LaTeX2e
+\usepackage{nips12submit_e,times}
 
 \usepackage{graphicx}
 \usepackage{epsfig}
@@ -8,12 +9,45 @@
 \usepackage{cite}
 \usepackage{hyperref}
 
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinaltrue
+
 \begin{document}
 
 \title{Clustering Learning for Robotic Vision}
-\author{Eugenio Culurciello, Jordan Bates, Jose Carrasco, Clement Farabet, Yann LeCun}
-\date{\today}
+%\author{Eugenio Culurciello, Jordan Bates, Jose Carrasco, Clement Farabet, Yann LeCun}
+
+\author{
+Eugenio Culurciello\thanks{More information on Eugenio Culurciello's laboratory and research can be found here: http://engineering.purdue.edu/elab/. Real time robotic vision systems: http://www.neuflow.org/} \\
+Purdue University\\
+\texttt{euge@purdue.edu} \\
+\And
+Jordan Bates \\
+Purdue University\\
+\texttt{jtbates@purdue.edu}
+\AND
+Jose Carrasco \\
+Universidad de Sevilla \\
+\texttt{jcarrasco@imse.cnm.es}
+\And
+Clement Farabet \\
+New York university \\
+\texttt{cfarabet@nyu.edu}
+\And
+Yann LeCun \\
+New York University \\
+\texttt{yann@cs.nyu.edu}
+}
+
+%\date{\today}
+
 \maketitle
+
+\begin{abstract}
+We present the clustering learning technique applied to multi-layer feedforward deep neural networks. We show that this unsupervised learning technique can compute network filters with only a few minutes and no parameters. The goal of this paper is to promote the technique for general-purpose robotic vision systems. We report its use in static image datasets and object tracking datasets. We show that networks trained with clustering learning can outperform large networks trained for many hours on complex datasets. 
+\end{abstract}
 
 
 \section{Introduction}
@@ -223,18 +257,18 @@ Publication	&Frames/s 	&Precision	&1st layer filters	&Whitening\\
 \hline
 CL (this work)		&5-10	&89\%, SVHN		&16 			&none \\
 \cite{Farabet2012}	&1-2		&79.5\%, Stanford	&16 			&none \\
-\cite{Socher2012}	&? 		&80.8\%, RGB-D	&128		&ZCA \\
-\cite{Coates2011b}	&?		&82\%, CIFAR10	&1600		&ZCA \\
-\cite{Krizhevsky2012} &?		&98.5\% ImageNet	&96			&none\\
-\cite{Ciresan2012}	&?		&88.8\%, CIFAR10	&300		&none\\
-\cite{jarrett-iccv-09}	&?		&99.5\%, MNIST	&32			&none\\
+\cite{Socher2012}	&1? 		&80.8\%, RGB-D	&128		&ZCA \\
+\cite{Coates2011b}	&0.1?		&82\%, CIFAR10	&1600		&ZCA \\
+\cite{Krizhevsky2012} &1?		&98.5\% ImageNet	&96			&none\\
+\cite{Ciresan2012}	&0.3?		&88.8\%, CIFAR10	&300		&none\\
+\cite{jarrett-iccv-09}	&2-4?		&99.5\%, MNIST	&32			&none\\
 \hline\hline
 \end{tabular}
 \end{center}
 \label{table2}
 \end{table}
 
-The data provided in table  \ref{table2} reports published and informally obtained data on the best results obtained in static datasets.  Cl networks also reported 50\% precision on CIFAR10, a low value compared to \cite{Coates2011b, Ciresan2012}. As reference \cite{Socher2012} precision we used the RGB only data. Most published results did not report computer time. We asked the author to provide us the data for this table, when available. We want to stress the importance of reporting computing time for deep networks, and the use of whitening, as it is the only way to compare large and small networks and try to find the optimal size for robotic vision system, or other tasks.
+The data provided in table  \ref{table2} reports published and informally obtained data on the best results obtained in static datasets.  Cl networks also reported 50\% precision on CIFAR10, a low value compared to \cite{Coates2011b, Ciresan2012}. As reference \cite{Socher2012} precision we used the RGB only data. Most published results did not report computer time. We asked the author to provide us the data for this table, when available. We estimated other network compute time based on the size of the 1st layer of their network, which is usually the most computationally demanding. We estimated frames/s based on the speed of our networks.  We want to stress the importance of reporting computing time for deep networks, and the use of whitening, as it is the only way to compare large and small networks and try to find the optimal size for robotic vision system, or other tasks.
 
 
 % pedestrian 1,2 use net CL.net, other CL2.net, which is supposed to be the best one to date
@@ -302,6 +336,10 @@ CL models are also very interesting to bio-inspired vision research because they
 %- try again on SVHN or CIFAR, first using the new 2nd layer filters and seeing if we get good results.
 %Also feed to classifier BOTH 1st layer and 2nd layer filters, to improve recognition rate.Ê
 %3- Êcan you figure out how to save a net in torch without taking GB?
+
+
+\subsubsection*{Acknowledgments}
+We are especially grateful to the the Torch7 developing team, in particular Ronan Collobert, who first developed this great, easy and efficient tool, Clement Farabet, Koray Kavukcuoglu, Leon Bottou. We could not have done any of this work without standing on these giants shoulders.
 
 
 \begin{thebibliography} {50}
