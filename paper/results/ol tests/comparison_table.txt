@@ -1,4 +1,4 @@
-  Sequence 	& Frames 	& EUGE	& EUGE2	& original\\ 
+  Sequence 	& Frames 	& CL	& CL2	& original\\ 
 David 	& 761 	& 1.00 / 0.00 / 0.00 	& \textbf{0.18 / 0.18 / 0.18} 	& 0.08 / 0.08 / 0.08 \\ 
 Jumping 	& 313 	& 0.18 / 0.18 / 0.18 	& \textbf{0.37 / 0.37 / 0.37} 	& 0.20 / 0.20 / 0.20 \\ 
 Pedestrian 1 	& 140 	& \textbf{0.81 / 0.81 / 0.81} 	& 0.12 / 0.12 / 0.12 	& 0.69 / 0.69 / 0.69 \\ 

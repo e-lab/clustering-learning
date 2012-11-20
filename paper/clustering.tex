@@ -20,7 +20,7 @@
 
 In the recent years the fusion of bio-inspired and neuromorphic vision models and machine learning has dominated the development of artificial vision system for the categorization of multiple objects in static frames.
 Bio-inspired deep networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks \cite{lecun-98,hadsell-chopra-lecun-06,gregor-nips-11,Riesenhuber1999,Serre2007,Serre2010}. Most deep network architectures are composed of multiple layers (2, 3 typically), where each layer is composed of: linear two-dimensional filtering, non-linearity, pooling of data, output data normalization \cite{jarrett-iccv-09,lecun-iscas-10,boureau-icml-10}. 
-Recent machine learning research has focused on the task of training such deep networks from the abundant digital data in form of image frames and videos. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representation usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{Karpathy2011, Torralba2011}, the recent focus is on learning these features purely from unlabeled input data \cite{Olshausen1996, Hyvarinen2000, Hinton2006, Vincent2008, Coates2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of leaning models. 
+Recent machine learning research has focused on the task of training such deep networks from the abundant digital data in form of image frames and videos. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representation usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{Karpathy2011, Torralba2011, hou2012meta}, the recent focus is on learning these features purely from unlabeled input data \cite{Olshausen1996, Hyvarinen2000, Hinton2006, Vincent2008, Coates2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of leaning models. 
 
 Recent techniques based on unsupervised clustering algorithms are especially promising because they use simple learning methods that quickly converge \cite{Coates2011}. These algorithms are easy to setup and train and are especially suited for robotics research, because less complex knowledge of machine learning is needed, environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks. In addition, real-time operation with efficient networks can be obtained with only a few minutes of training and setup, leading to quick and direct experimentation in robotic experiments.
 [[[These models are also very interesting to bio-inspired vision research because they provide a close connection between computational neuroscience and machine learning. In particular unsupervised clustering algorithms provide a simplistic model of Hebbian Learning methods, where neurons that respond to the same input are clustered.]]]
@@ -186,10 +186,9 @@ We also used the filters obtained with CL on a 2-layers standard CNN network. Bu
 
 The results for the comparison for the real-time tracking network on the TLD dataset \cite{Kalal2011} are given in Table \ref{table1}.
 Each video contains only one target. The metric used is the number of correctly tracked frames. More information and images on this dataset can be found here \cite{TLD}. All network we tested were real-time networks performing at or above 5 frames/s.
-As can be seen in Table \ref{table1}, the Clustering Learning (CL) network performs better than the convolutional neural network from \cite{Farabet2012} in all sequences, and is comparable only in one sequence ("Pedestrian 2"). These results are currently not state-of-the-art, which is currently obtained in reference \cite{Dundar2012}.
+As can be seen in Table \ref{table1}, the Clustering Learning (CL) network performs better than the convolutional neural network from \cite{Farabet2012} in all sequences, and is comparable only in one sequence ("Pedestrian 2"). These results are currently not state-of-the-art, which is currently obtained in references \cite{Dundar2012, TLD}.
 
-While the perfomance of the two networks is approximately the same on the TLD dataset, the convolutional neural network from \cite{Farabet2012} was trained in a week time, while the CL network was tried in 10 minutes. The CL network proved useful for general purpose vision systems 
-
+Not only the perfomance of the CL network is higher than CNN on the TLD dataset, but also the CNN from \cite{Farabet2012} was trained in a week time, while the CL network was tried in 10 minutes. There is a clear advantage to using CL networks for general-purpose, dataset-free robotic vision tasks.
 
 
 \begin{table}[htdp]
@@ -210,7 +209,34 @@ Carchase 		& 9928 	& \textbf{0.38} 	& 0.26 \\
 \end{tabular}
 \end{center}
 \label{table1}
-\end{table}%
+\end{table}
+
+
+In addition we present in table \ref{table2} a comparison of running time of the most recent deep network work performing at the state-of-the-art in a variety of static datasets. We provide this comparison to show that although these networks perform extremely well on a specific dataset, we point out that similarly to the experimental results in \ref{table1}, that performance might not carry over to robotic vision tasks such as tracking of previously unseen objects.
+We also want to point out that the satte-of-the-art networks in table \ref{table2} are far from real-time operation, and it is not clear in their publication how that can be achieved down-sizing the networks, and what performance they might attain.
+
+\begin{table}[htdp]
+\caption{Comparison of execution time of state-of-the-art networks as compared to the proposed CL network.}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline\hline
+Publication	&Frames/s 	&Precision	&1st layer filters	&Whitening\\
+\hline
+CL (this work)		&5-10	&89\%, SVHN		&16 			&none \\
+\cite{Farabet2012}	&1-2		&79.5\%, Stanford	&16 			&none \\
+\cite{Socher2012}	&? 		&80.8\%, RGB-D	&128		&ZCA \\
+\cite{Coates2011b}	&?		&82\%, CIFAR10	&1600		&ZCA \\
+\cite{Krizhevsky2012} &?		&98.5\% ImageNet	&96			&none\\
+\cite{Ciresan2012}	&?		&88.8\%, CIFAR10	&300		&none\\
+\cite{jarrett-iccv-09}	&?		&99.5\%, MNIST	&32			&none\\
+\hline\hline
+\end{tabular}
+\end{center}
+\label{table2}
+\end{table}
+
+The data provided in table  \ref{table2} reports published and informally obtained data on the best results obtained in static datasets.  Cl networks also reported 50\% precision on CIFAR10, a low value compared to \cite{Coates2011b, Ciresan2012}. As reference \cite{Socher2012} precision we used the RGB only data. Most published results did not report computer time. We asked the author to provide us the data for this table, when available. We want to stress the importance of reporting computing time for deep networks, and the use of whitening, as it is the only way to compare large and small networks and try to find the optimal size for robotic vision system, or other tasks.
+
 
 % pedestrian 1,2 use net CL.net, other CL2.net, which is supposed to be the best one to date
 
@@ -321,6 +347,8 @@ Proceedings of the National Academy of Science, 2007.
 \bibitem{Torralba2011}
 Torralba, A. and Efros, A.A., Unbiased look at dataset bias, Computer Vision and Pattern Recognition (CVPR), 2011 IEEE Conference on, Jun 2011, pages 1521 -1528.
 
+\bibitem{hou2012meta} Hou, X. and Yuille, A. and Koch, H., A Meta-Theory of Boundary Detection Benchmarks, NIPS Workshop on Human Computation for Science and Computational Sustainability, 2012.
+
 \bibitem{Collobert2011} R. Collobert, K. Kavukcuoglu and C. Farabet. Torch7: A Matlab-like Environment for Machine Learning. In BigLearn, NIPS Workshop, 2011.
 
 \bibitem{Krizhevsky2009} Learning Multiple Layers of Features from Tiny Images, http://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf, Alex Krizhevsky, 2009.
@@ -335,13 +363,16 @@ Torralba, A. and Efros, A.A., Unbiased look at dataset bias, Computer Vision and
 
 \bibitem{Kalal2011} Z. Kalal, K. Mikolajczyk, and J. Matas, “Tracking-Learning-Detection,” Pattern Analysis and Machine Intelligence, 2011.
 
-\bibitem{MartinFTM01} D. Martin and C. Fowlkes and D. Tal and J. Malik, A Database of Human Segmented Natural Images and its
-           Application to Evaluating Segmentation Algorithms and Measuring Ecological Statistics, Proc. 8th Int'l Conf. Computer Vision,
- July 2001, volume 2, pages 416-423.
+\bibitem{MartinFTM01} D. Martin and C. Fowlkes and D. Tal and J. Malik, A Database of Human Segmented Natural Images and its Application to Evaluating Segmentation Algorithms and Measuring Ecological Statistics, Proc. 8th Int'l Conf. Computer Vision, July 2001, volume 2, pages 416-423.
 
 \bibitem{TLD} \url{http://info.ee.surrey.ac.uk/Personal/Z.Kalal/TLD/TLD_dataset.pdf}
 
 \bibitem{Dundar2012} Aysegul Dundar and Jonghoon Jin and Eugenio Culurciello, Visual Tracking with Similarity Matching Ratio, CoRR, abs/1209.2696, 2012, http://arxiv.org/abs/1209.2696.
+
+
+\bibitem{Socher2012} Richard Socher, Brody Huval, Bharath Bhat, Christopher D. Manning, Andrew Y. Ng, Convolutional-Recursive Deep Learning for 3D Object Classification, Neural Information Processing Systems, NIPS 2012.
+
+\bibitem{Krizhevsky2012} Krizhevsky, A., Sutskever, I. and Hinton, G. E., ImageNet Classification with Deep Convolutional Neural Networks, Neural Information Processing Systems, NIPS 2012.
 
 \bibitem{Farabet2011} C. Farabet, B. Martini, B. Corda, P. Akselrod, E. Culurciello and Y. LeCun, “NeuFlow: A Runtime Reconfigurable Dataflow Processor for Vision”, in Proc. of the Fifth IEEE Workshop on Embedded Computer Vision (ECV'11 @ CVPR'11), IEEE, Colorado Springs, 2011. Invited Paper.
 

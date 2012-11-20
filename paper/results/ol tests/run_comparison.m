@@ -3,7 +3,7 @@ clc; clear all; addpath('tools'); close all; warning off;
 Base     = '../';
 Sequence = {'01_david','02_jumping','03_pedestrian1','04_pedestrian2','05_pedestrian3','06_car','07_motocross','09_carchase','10_panda'};
 Name     = {'David','Jumping', 'Pedestrian 1', 'Pedestrian 2', 'Pedestrian 3','Car', 'Motocross', 'Carchase','Panda','mean'};
-Tracker  = {'EUGE', 'EUGE2', 'original'};
+Tracker  = {'Cl', 'CL2', 'original'};
 THR      = 0.25; % threshold on bounding box overlap to declare true positive
 show     = [];   % empty/single number, show figures and trajectories of specific sequence and save it
 color    = {'b','r'};
