@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  20 NOV 2012 16:26
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  27 NOV 2012 15:31
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -348,21 +348,21 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
 [1
 
 {/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-<figures/fig-CL-layer.pdf, id=82, 948.54375pt x 245.91875pt>
+<figures/fig-CL-layer.pdf, id=84, 948.54375pt x 245.91875pt>
 File: figures/fig-CL-layer.pdf Graphic file (type pdf)
 
 <use figures/fig-CL-layer.pdf>
 Package pdftex.def Info: figures/fig-CL-layer.pdf used on input line 101.
 (pdftex.def)             Requested size: 361.34999pt x 93.68274pt.
- [2]
-<figures/filters-1l.pdf, id=99, 174.6525pt x 174.6525pt>
+ [2] [3 <./figures/fig-CL-layer.pdf>]
+<figures/filters-1l.pdf, id=155, 174.6525pt x 174.6525pt>
 File: figures/filters-1l.pdf Graphic file (type pdf)
 
 <use figures/filters-1l.pdf>
 Package pdftex.def Info: figures/filters-1l.pdf used on input line 138.
 (pdftex.def)             Requested size: 86.72377pt x 86.72374pt.
 
-<figures/filters-2l.pdf, id=100, 352.31625pt x 352.31625pt>
+<figures/filters-2l.pdf, id=156, 352.31625pt x 352.31625pt>
 File: figures/filters-2l.pdf Graphic file (type pdf)
 
 <use figures/filters-2l.pdf>
@@ -373,7 +373,7 @@ Overfull \hbox (3.80003pt too wide) in paragraph at lines 136--148
  [][]  [] 
  []
 
-[3 <./figures/fig-CL-layer.pdf>]
+[4 <./figures/filters-1l.pdf> <./figures/filters-2l.pdf>]
 Package epstopdf Info: Source file: <figures/data_svhn.eps>
 (epstopdf)                    date: 2012-11-19 11:18:44
 (epstopdf)                    size: 30720 bytes
@@ -382,20 +382,16 @@ Package epstopdf Info: Source file: <figures/data_svhn.eps>
 (epstopdf)                    size: 18373 bytes
 (epstopdf)             Command: <epstopdf --outfile=figures/data_svhn-eps-conve
 rted-to.pdf figures/data_svhn.eps>
-(epstopdf)             \includegraphics on input line 183.
+(epstopdf)             \includegraphics on input line 187.
 Package epstopdf Info: Output file is already uptodate.
 
-<figures/data_svhn-eps-converted-to.pdf, id=160, 578.16pt x 433.62pt>
+<figures/data_svhn-eps-converted-to.pdf, id=191, 578.16pt x 433.62pt>
 File: figures/data_svhn-eps-converted-to.pdf Graphic file (type pdf)
 
 <use figures/data_svhn-eps-converted-to.pdf>
 Package pdftex.def Info: figures/data_svhn-eps-converted-to.pdf used on input l
-ine 183.
+ine 187.
 (pdftex.def)             Requested size: 317.9892pt x 238.49173pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [4 <./figures/filters-1l.pdf> <./figures/filters-2l.pdf>]
 Package epstopdf Info: Source file: <figures/data_cifar.eps>
 (epstopdf)                    date: 2012-11-19 11:18:36
 (epstopdf)                    size: 26991 bytes
@@ -404,34 +400,32 @@ Package epstopdf Info: Source file: <figures/data_cifar.eps>
 (epstopdf)                    size: 16954 bytes
 (epstopdf)             Command: <epstopdf --outfile=figures/data_cifar-eps-conv
 erted-to.pdf figures/data_cifar.eps>
-(epstopdf)             \includegraphics on input line 204.
+(epstopdf)             \includegraphics on input line 208.
 Package epstopdf Info: Output file is already uptodate.
 
-<figures/data_cifar-eps-converted-to.pdf, id=196, 578.16pt x 433.62pt>
+<figures/data_cifar-eps-converted-to.pdf, id=199, 578.16pt x 433.62pt>
 File: figures/data_cifar-eps-converted-to.pdf Graphic file (type pdf)
 
 <use figures/data_cifar-eps-converted-to.pdf>
 Package pdftex.def Info: figures/data_cifar-eps-converted-to.pdf used on input 
-line 204.
+line 208.
 (pdftex.def)             Requested size: 317.9892pt x 238.49173pt.
- [5 <./figures/data_svhn-eps-converted-to.pdf>]
-Underfull \vbox (badness 3746) has occurred while \output is active []
-
- [6 <./figures/data_cifar-eps-converted-to.pdf>]
-Underfull \vbox (badness 6961) has occurred while \output is active []
+ [5 <./figures/data_svhn-eps-converted-to.pdf>] [6 <./figures/data_cifar-eps-co
+nverted-to.pdf>]
+Underfull \vbox (badness 1824) has occurred while \output is active []
 
  [7]
 Missing character: There is no Ž in font ptmr7t!
 Missing character: There is no Ð in font ptmr7t!
 
 [8]
-Underfull \hbox (badness 10000) in paragraph at lines 384--385
+Underfull \hbox (badness 10000) in paragraph at lines 388--389
 []\OT1/ptm/m/n/10 http://karpathy.ca/myblog/2011/04/27/lessons-learned-from-man
 ually-classifying-cifar-10-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 393--394
+Underfull \hbox (badness 10000) in paragraph at lines 397--398
 []\OT1/ptm/m/n/10 Learning Mul-ti-ple Lay-ers of Fea-tures from Tiny Im-ages,
  []
 
@@ -440,7 +434,7 @@ Missing character: There is no Ó in font ptmr7t!
 Missing character: There is no Ò in font ptmr7t!
 Missing character: There is no Ó in font ptmr7t!
 
-Underfull \hbox (badness 10000) in paragraph at lines 407--408
+Underfull \hbox (badness 10000) in paragraph at lines 411--412
 [][]$\OT1/pcr/m/n/10 http : / / info . ee . surrey . ac . uk / Personal / Z . K
 alal / TLD / TLD _ dataset .
  []
@@ -450,7 +444,7 @@ Missing character: There is no Ó in font ptmr7t!
 Missing character: There is no š in font ptmr7t!
 Missing character: There is no ‡ in font ptmr7t!
 
-Underfull \hbox (badness 1033) in paragraph at lines 420--421
+Underfull \hbox (badness 1033) in paragraph at lines 424--425
 []\OT1/ptm/m/n/10 Fldik P., Form-ing sparse rep-re-sen-ta-tions by lo-cal anti-
 Hebbian learn-ing, Biol Cy-bern.
  []
@@ -459,31 +453,32 @@ Missing character: There is no Ð in font ptmr7t!
 Missing character: There is no Ò in font ptmr7t!
 Missing character: There is no Ó in font ptmr7t!
 Missing character: There is no Ð in font ptmr7t!
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 430.
 [9pdfTeX warning (ext4): destination with the same identifier (name{cite.Netzer
 2011}) has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.430 \end{document}
-                    ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 430.
+l.429 
+      ]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 434.
+ [10]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 434.
  (./clustering.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 430.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 430.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 434.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 434.
 Package rerunfilecheck Info: File `clustering.out' has not changed.
 (rerunfilecheck)             Checksum: 8170C453A881101DB8363D234C32C38D;543.
 
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 430.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 434.
  ) 
 Here is how much of TeX's memory you used:
- 6821 strings out of 493633
- 103167 string characters out of 3143378
- 200841 words of memory out of 3000000
- 9982 multiletter control sequences out of 15000+200000
+ 6823 strings out of 493633
+ 103192 string characters out of 3143378
+ 200882 words of memory out of 3000000
+ 9983 multiletter control sequences out of 15000+200000
  15591 words of font info for 35 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
  37i,10n,39p,958b,415s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -493,10 +488,10 @@ live/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texli
 ve/2011/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2011/
 texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2011/texmf-dist
 /fonts/type1/urw/times/utmr8a.pfb>
-Output written on clustering.pdf (9 pages, 637978 bytes).
+Output written on clustering.pdf (10 pages, 638648 bytes).
 PDF statistics:
- 377 PDF objects out of 1000 (max. 8388607)
- 277 compressed objects within 3 object streams
- 74 named destinations out of 1000 (max. 500000)
+ 384 PDF objects out of 1000 (max. 8388607)
+ 283 compressed objects within 3 object streams
+ 75 named destinations out of 1000 (max. 500000)
  106 words of extra memory for PDF output out of 10000 (max. 10000000)
 

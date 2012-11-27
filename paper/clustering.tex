@@ -46,7 +46,7 @@ New York University \\
 \maketitle
 
 \begin{abstract}
-We present the clustering learning technique applied to multi-layer feedforward deep neural networks. We show that this unsupervised learning technique can compute network filters with only a few minutes and no parameters. The goal of this paper is to promote the technique for general-purpose robotic vision systems. We report its use in static image datasets and object tracking datasets. We show that networks trained with clustering learning can outperform large networks trained for many hours on complex datasets. 
+We present the clustering learning technique applied to multi-layer feedforward deep neural networks. We show that this unsupervised learning technique can compute network filters with only a few minutes and a much reduced set of parameters. The goal of this paper is to promote the technique for general-purpose robotic vision systems. We report its use in static image datasets and object tracking datasets. We show that networks trained with clustering learning can outperform large networks trained for many hours on complex datasets. 
 \end{abstract}
 
 
@@ -62,7 +62,7 @@ In this paper we present results obtained with unsupervised clustering algorithm
 The main goal of the paper is not to present state-of-art results on a specific dataset. Rather we use standard published datasets to evaluate the performance of prototype robotic vision system for general-purpose use, where no dataset is available. It is thus not useful to train the network to perform only on one dataset, when the levels of performance would not carry over to another dataset or real-world images.
 The goal is thus mainly to evaluate the use of unsupervised networks that can support at least ten frames-per-second operation on commercial hardware, such as recent laptop computers.
 
-The paper presents the following key innovations: (1) use of clustering learning for quickly training robotic systems (section \ref{sec-methods}), (2) the use of distance-based filtering, as opposed to the standard convolution (section \ref{sec-net-arch}), (3) the experimental proof that clustering learning networks can outperform supervised networks on general purpose robotic tracking tasks (section \ref{sec-results}).
+The paper presents the following key innovations: (1) use of clustering learning for quickly training robotic systems (Section \ref{sec-methods}), (2) the use of distance-based filtering, as opposed to the standard convolution (Section \ref{sec-net-arch}), (3) the experimental proof that clustering learning networks can outperform supervised networks on general purpose robotic tracking tasks (Section \ref{sec-results}).
 
 
 %The paper also focuses on the advancement of deep network operation in real-time with hardware accelerators \cite{neuflow}.
@@ -82,7 +82,7 @@ We used the Torch7 software for all our experiments \cite{Collobert2011}, since 
 Input image data was obtained from the CIFAR10 \cite{Krizhevsky2009} and the Street View House Numbers (SVHN) \cite{Netzer2011} datasets. The SVHN dataset has a training size of 73,257 32x32 images and test size of 26,032 32x32 images.
 the CIFAR10 dataset has a training size of 20,000 32x32 images and a test size of 2,000 32x32 images. Both datasets offer a 10 categories classification task on 32 x 32 size images. The train dataset was in all cases learned to 100\% accuracy, and training was then stopped. Input data was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.Spatial Contrastive Normalization" function.
 
-As testing data for a general-purposed robotic vision system, we decided to test our networks in a tracking task, where the network has to be able to track an object of interest based on a  single presentation. For this purpose we use the challenging benchmark TLD dataset \cite{Kalal2011}. From this dataset we selected multiple videos with different properties of occlusions, camera movement, pose, scale and illumination changes.
+For the real-time networks in Section \ref{section-realtime}, we used patches from a contrast-normalized version of a few images from the Berkeley image dataset \cite{MartinFTM01}.  As testing data for a general-purposed robotic vision system, we decided to test our networks in a tracking task, where the network has to be able to track an object of interest based on a  single presentation. For this purpose we use the challenging benchmark TLD dataset \cite{Kalal2011}. From this dataset we selected multiple videos with different properties of occlusions, camera movement, pose, scale and illumination changes.
 
 Even if other rgroups showed slight improvements using the YUV color space \cite{jarrett-iccv-09}, we did not use it. Rather we kept the images in their original RGB to keep the model closer to biological human vision, where the retina is broadly sensitive to roughly RGB \cite{Wandell95}. 
 
@@ -152,13 +152,17 @@ Clustering learning filters learned on the 2nd layer used as many planes as the 
 
 Examples of the filters learned with CL techniques on a 1st and 2nd layer are given in figure \ref{fig-filters}. Both layer filters were obtained with training for ~10 minutes on a modern quad-core Intel i7 laptop. A supervised network of this size would require several tens of thousands of image examples and several hours of training time.
 
+Convolutional neural networks were trained with supervised methods using stochastic gradient descent and other techniques as mentioned in \cite{lecun-iscas-10}.
+
 
 \section{Real-time network}
+\label{section-realtime}
+
 The goal of this paper was to provide a simple and fast method to train unsupervised networks for general-purposed robotic vision system.  For real-time experiments we used the TLD dataset \cite{Kalal2011}. We then compared the tracking performance of a real-time deep network both trained supervised \cite{Farabet2012}, and with CL techniques described here.
 
 The CL network for this task had the same two-layer network architecture used in \cite{Farabet2012}. This insured real-time operation of ~6 frames/s on a quad-code Intel i7 laptop computer. We focused on this network and restricted ourselves to real-time operation because the goal of this project is the use of deep networks in mobile computers. The network operates on 46 x 46 input images, uses 16 filters with 7 x 7 receptive field on the first layer and 128 filters with 7 x 7 receptive field on the second layer. The 1st to 2nd layer fan-in was 8, and the 2nd to 3rd layer fan-in was 64. Both layers were connected with random tables. The network produces a 128 feature vector as output. 
 
-We trained the same size and number of filters through clustering algorithm for use in this network. We used patches from a contrast normalized version of a few images from the Berkeley image dataset \cite{MartinFTM01}. Any set of natural-scene images can be used to train the general-purpose network presented in this section, and we on purpose chose not to sample patches from the target TLD dataset, in order to demonstrate the learning invariance properties of our technique.
+We trained the same size and number of filters through clustering algorithm for use in this network. We used patches from a contrast-normalized version of a few images from the Berkeley image dataset \cite{MartinFTM01}. Any set of natural-scene images can be used to train the general-purpose network presented in this section, and we on purpose chose not to sample patches from the target TLD dataset, in order to demonstrate the learning invariance properties of our technique.
 
 %Larger network:
 %This network can be executed in real-time with accelerated hardware [neuflow]
@@ -282,7 +286,7 @@ The data provided in table  \ref{table2} reports published and informally obtain
 
 \section{Discussion}
 
-We presented results on clustering learning algorithms for general-purpose vision system. These algorithms can be used to train multi-layer feed-forward neural networks in minutes, with fully automated scripts with non learning parameters. We show results on static dataset and dynamic tracking of objects in videos. We show results that prove that CL techniques are a viable and quick option to training deep networks. In static dataset, although they do not perform at the state-of-the-art because of their small network size, they can however be run in real-time because of the small network size. We also show that on tracking datasets the CL networks outperforms CNN networks. We believe the tracking dataset is a better approximation of robotic tasks, where locking on a target object is required for approach and manipulation.
+We presented results on clustering learning algorithms for general-purpose vision system. These algorithms can be used to train multi-layer feed-forward neural networks in minutes, with fully automated scripts with a reduced set of learning parameters. We show results on static dataset and dynamic tracking of objects in videos. We show results that prove that CL techniques are a viable and quick option to training deep networks. In static dataset, although they do not perform at the state-of-the-art because of their small network size, they can however be run in real-time because of the small network size. We also show that on tracking datasets the CL networks outperforms CNN networks. We believe the tracking dataset is a better approximation of robotic tasks, where locking on a target object is required for approach and manipulation.
 
 We show that sum-abs-diff operators can be more effective than convolution operations for filtering in deep networks. We also point that custom hardware with these operators will be more efficient in power and space.
 
