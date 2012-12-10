@@ -211,6 +211,8 @@ The results in the CIFAR10 dataset show a gain of more than 10\% from using a si
 Clustering learning showed the same behavior as in the SVHN dataset: adding a second layer achieved 3-5\% better accuracy on the test set. This dataset uses very small images and is notoriously difficult, and clustering learning only reported a 50\% accuracy overall with 2 layers.
 All results are much lower than the current state of art in this dataset, which is close to 90\% \cite{Ciresan2012}. But again we stress that our goal is real-time implementation and other researcher have obtained record results in this dataset only with very large networks, most of which are not amenable to real-time operation.
 
+We tested random filters used on the 2nd layer of the networks  for both SVHN and CIFAR10 datasets. The 1st layer of the network was trained with CL, as mentioned above. The randomly connected 2nd layer used a fixed CNN layer as described in section \ref{sec-net-arch}. The SpatialConvolution module was initialized with uniformly random filters by the Torch7 tool, and left untouched. We have found that random filters on the 2nd layer of this networks perform with the same levels of precision as the 2nd layers trained with CL. This was true for both SVNH and CIFAR10 datasets.
+
 We also used the filters obtained with CL on a 2-layers standard CNN network. But the use of convolution operation was giving results that were 5-10\% less precise that the results obtained with sum-abs-diff operators.
 
 
@@ -291,6 +293,8 @@ Many groups in the field of deep learning work on static dataset to demonstrate 
 We argue that more research is needed in the field of applied and real-time deep networks, where shortcuts need to be taken in order to optimize performance for speedy operation. The use of custom hardware is recommended \cite{Farabet2011} but not necessary in many applications. 
 
 CL models are also very interesting to bio-inspired vision research because they provide a close connection between computational neuroscience and machine learning. In particular unsupervised clustering algorithms provide a simplistic model of Hebbian Learning methods, where neurons that respond to the same input are clustered \cite{Sanger89, Foldiak90, Oja89, Bell97} . Most of previous work was mathematically complex and not efficient to implement. In this paper we thus present one of the first practical application of Hebbian-like learning applied to deep networks. Its fast and simple computation can help researcher quickly train complex neural networks.
+
+Further research is also needed to justify unsupervised learning on the 2nd or later layers. Our experiments indicate that random filters are as good as learned CL filters. This fact was also shown in other papers \cite{Coates2011b,Socher2012} where random filters were used in the 2nd layer, after one CL-trained layer with a large number of features (128 or above).
 
 
 %I am not sure why people would want to have popularity contests on a single dataset.Ê
