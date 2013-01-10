@@ -1,8 +1,9 @@
 .DS_Store
-.blg
 .aux
 .bbl
-.synt*
-.out
 .blg
+.dvi
+.synctex.gz
+.out
+/paper/clustering.log
 /datasets
