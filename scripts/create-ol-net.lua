@@ -58,7 +58,7 @@ elseif opt.nettype == 'SAD2l' then
 -- random [1st], 2nd layer network - currently gives the best results for OL nets   
 elseif opt.nettype == 'random2l' then
 
-   rnd1 = 1  -- random 1st layer?
+   rnd1 = 0  -- random 1st layer?
 
    if not(rnd1) then kernels1 = torch.load('ol-1l-32-weights.net') end
    poolsize = 2
@@ -108,7 +108,7 @@ elseif opt.nettype == 'vol2l' then
    net_new = nn.Sequential()
    --(VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH)
    net_new:add(nn.VolumetricConvolution(3, nk1, 2, is1, is1))
-   net_new:add(nn.Reshape(nk1, -1, -1)) -- set dim to '-1' to infer its size automatically DOES NOT WORK!
+   net_new:add(nn.Reshape(nk1, 58, -1)) -- set dim to '-1' to infer its size automatically DOES NOT WORK!
    net_new:add(nn.Tanh())
    net_new:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize)) 
    --net_new:add(nn.SpatialSubtractiveNormalization(nk1, normkernel)) -- without this also works fine
@@ -123,6 +123,9 @@ elseif opt.nettype == 'vol2l' then
    if not(rnd1) then net_new.modules[1].weight = kernels1 end
    if not(rnd1) then net_new.modules[1].bias = net_new.modules[1].bias*0 end
    
+   -- Volumetric Convolutions tests:
+   inp = torch.Tensor(3,2,64,64) -- 3 planes, 2 frames of 64x64 each
+   out3 = net_new:forward(inp:float()) -- should be 32 x 29 x 29
 
    
 
