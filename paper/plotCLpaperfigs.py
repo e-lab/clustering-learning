@@ -16,9 +16,9 @@ def load_data_file( filename ):
    return data
 
 # load all needed data: CIFAR
-cy1 = load_data_file('results/cifar-CL1l-dist-16filters/test.log')
+cy1 = load_data_file('results/ayse-optimized/cifar-CL-1st.log')
 cx1 = range(0,50)#len(cy1))
-cy2 = load_data_file('results/cifar-CL2l-dist-16-128/test.log')
+cy2 = load_data_file('results/ayse-optimized/cifar-CL-2nd.log')
 #cx2 = range(0,len(cy2))
 cy3 = load_data_file('results/cifar-convnet-1L-16/test.log')
 cx3 = range(0,len(cy3))
@@ -35,9 +35,9 @@ legend(('CL 1 layer', 'CL 2 layers', 'CNN 1l', 'CNN 2l'))
 
 
 # load all needed data: SVHN
-sy1 = load_data_file('results/svhn-CL1l-dist-16filters/test.log')
+sy1 = load_data_file('results/ayse-optimized/svn-CL-1st.log')
 sx1 = range(0,len(sy1))
-sy2 = load_data_file('results/svhn-CL2l-dist-16-128/test.log')
+sy2 = load_data_file('results/ayse-optimized/svn-CL-2nd.log')
 sx2 = range(0,len(sy2))
 sy3 = load_data_file('results/svhn-convnet-1L-16/test.log')
 sx3 = range(0,len(sy3))

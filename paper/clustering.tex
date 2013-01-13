@@ -7,7 +7,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{cite}
-\usepackage{hyperref}
+\usepackage{url}
 
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
@@ -27,6 +27,10 @@ Purdue University\\
 Jordan Bates \\
 Purdue University\\
 \texttt{jtbates@purdue.edu}
+\AND
+Aysegul Dundar \\
+Purdue University\\
+\texttt{adundar@purdue.edu}
 \AND
 Jose Carrasco \\
 Universidad de Sevilla \\
@@ -96,7 +100,7 @@ The filters of the first two layers are generated with unsupervised clustering a
 
 \begin{figure}
 \centering
-\includegraphics[width=5in]{figures/fig-CL-layer.pdf}
+\includegraphics[width=5in]{fig-CL-layer.pdf}
 \caption{Architecture of one layer of the clustering learning (CL) network. Filters were applied with a sum-abs-diff operations, followed by contrastive normalization, L-2 pooling of features, nonlinearity tanh, and subtractive normalization.}
 \label{fig-CL-layer}
 \end{figure}
@@ -133,14 +137,14 @@ We use k-means clustering algorithm to learn a set of 16 filters in the first la
         \centering
         \begin{subfigure}[b]{0.3\textwidth}
                 \centering
-                \includegraphics[width=1.2in]{figures/filters-1l.pdf}
+                \includegraphics[width=1.2in]{filters-1l.pdf}
                 \caption{1st layer filters}
         \end{subfigure}%
         ~ %add desired spacing between images, e. g. ~, \quad, \qquad etc. 
           %(or a blank line to force the subfigure onto a new line)
         \begin{subfigure}[b]{0.7\textwidth}
                 \centering
-                \includegraphics[width=2.4in]{figures/filters-2l.pdf}
+                \includegraphics[width=2.4in]{filters-2l.pdf}
                 \caption{2nd layer filters}
         \end{subfigure}
         \caption{Filters obtained with clustering learning on the 1st and 2nd layer. The filters obtained on the 1st layer are quite similar to elongated Gabor patches, and what can be obtained with more complex and numerically involved unsupervised techniques. Filter training with CL was obtained in ~10 min time on a modern laptop.}\label{fig-filters}
@@ -182,7 +186,7 @@ We report the results in the SVHN dataset in figure \ref{data_svhn}. Here we com
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=0.7\textwidth]{figures/data_svhn.eps}
+\includegraphics[width=0.7\textwidth]{data_svhn.eps}
 \caption{Test set accuracy comparison for a convolutional neural network (CNN) and a clustering learning (CL) network with 1 and 2 layers on the SVHN dataset}
 \label{data_svhn}
 \end{center}
@@ -191,9 +195,9 @@ We report the results in the SVHN dataset in figure \ref{data_svhn}. Here we com
 
 The data shows that clustering learning and CNN with 1 layer provide remarkably the same levels of accuracy on the dataset. This shows that at least on the 1st layer, the features learned with clustering learning are very effective.
 Adding a second layer brings the convnet to 91\% levels of accuracy, which are standard without using any sophisticated tricks and with a small network with only 16 filters on the first layer.
-On the other had, the clustering learning network with 2 layers showed more than 2\% increase in accuracy, from 86\% to 89\%. This increase is not as large as one would want and expect from adding a second layer, but is consistent with unsupervised learning results \cite{coates_analysis_2011,coates_selecting_2011}.
+On the other had, the clustering learning network with 2 layers showed more than 1\% increase in accuracy, from 88\% to 89\%. This increase is not as large as one would want and expect from adding a second layer, but is consistent with unsupervised learning results \cite{coates_analysis_2011,coates_selecting_2011}.
 
-It is interesting to note that with in the clustering learning 2 layers network accuracy was above 88\%, and plateaued with the train set accuracy plateauing also at 92\%. This shows that clustering learning filters also do not over fit, and present non-perfect, but almost identical results on both train and test sets. We note that CNN network trained supervised on SVHN report state-of-the-art performances of 96\% and above.
+It is interesting to note that with the clustering learning 2 layers network accuracy was above 88\%, and plateaued with the train set accuracy plateauing also at 92\%. This shows that clustering learning filters also do not over fit, and present non-perfect, but almost identical results on both train and test sets. We note that CNN network trained supervised on SVHN report state-of-the-art performances of 96\% and above.
 
 The results above were all obtained with feed-forward hierarchical networks. We also tried to use multiple layers of clustering learning unsupervised networks in parallel, as recommended by other publications \cite{coates_analysis_2011,lecun_convolutional_2010}, but we did not obtain any benefits from that strategy, on the contrary parallel networks always reported losses of 3-5\% accuracy with respect to a single layer. This is different from what reported in \cite{coates_analysis_2011,coates_selecting_2011}.
 
@@ -203,7 +207,7 @@ We also report here the results in the CIFAR10 dataset in figure \ref{data_cifar
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=0.7\textwidth]{figures/data_cifar.eps}
+\includegraphics[width=0.7\textwidth]{data_cifar.eps}
 \caption{Test set accuracy comparison for a convolutional neural network (CNN) and a clustering learning (CL) network with 1 and 2 layers on the CIFAR10 dataset}
 \label{data_cifar}
 \end{center}
