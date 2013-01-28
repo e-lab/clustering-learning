@@ -49,7 +49,7 @@ if not opt then
    cmd:option('-seed', 1, 'initial random seed')
    cmd:option('-threads', 8, 'threads')
    cmd:option('-inputsize', 5, 'size of each input patches')
-   cmd:option('-nkernels', 16, 'number of kernels to learn')
+   cmd:option('-nkernels', 32, 'number of kernels to learn')
    cmd:option('-niter', 15, 'nb of k-means iterations')
    cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
    cmd:option('-nsamples', 10*1000, 'nb of random training samples')
@@ -169,7 +169,7 @@ dofile 'CLf-process-ds2.lua'
 -- image.display(trainData[n][1]) -- to see if face or not
 -- if trainData[n][2][1] == 1 --it is a face (if bg returns -1)
 
--- let's average all face output and looom for most active neurons:
+-- let's average all face output and look for most active neurons:
 facefound = 0
 faceave = torch.zeros(#trainData3.data[1])
 for i = 1, trainsize do
@@ -184,21 +184,19 @@ image.display{image=faceavenorm, padding=2, zoom=4}
 
 
 -- average of input image for top face neuron:
-vmav, xm, ym =  GetMax(trainData3.data[1]:sum(1):reshape(5,5))
+vmav, xm, ym =  GetMax(faceavenorm:sum(1):reshape(5,5)) -- max neuron based on average of all faces
 tnave = torch.zeros(#trainData[1][1])
 for i = 1, trainsize do
-   tnave = tnave + trainData[i][1]*trainData3.data[i]:sum(1)[1][ym][xm] -- average faces and bg!
+   tnave = tnave + trainData[i][1]*trainData3.data[i]:sum(1)[1][ym][xm] -- average dataset weighted by top neuron
 end
-
 image.display{image=tnave/trainsize, padding=2, zoom=4}
-
 
 
 -- average of dataset:
 dsave = torch.zeros(#trainData[1][1])
 for i = 1, trainsize do
-   dsave = dsave + trainData[i][1]--*trainData3.data[i]:sum(1)[1][ym][xm] -- average faces and bg!
+   dsave = dsave + trainData[i][1] -- average of all dataset
 end
-
 image.display{image=dsave/trainsize, padding=2, zoom=4}
+
 
