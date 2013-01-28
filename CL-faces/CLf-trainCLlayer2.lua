@@ -7,23 +7,26 @@ require 'unsup'
 print '==> extracting patches'
 rpnum = 0
 data = torch.Tensor(opt.nsamples,is*is)
-for i = 1,opt.nsamples do
+i = 1
+while i <= opt.nsamples do
    img = math.random(1,trainData2.data:size(1))
    img2 = trainData2.data[img] -- trainData1
    z = math.random(1,nk1)
    x = math.random(1,14-is+1)
    y = math.random(1,14-is+1)
    randompatch = img2[{ {z},{y,y+is-1},{x,x+is-1} }]
-   if torch.sum(randompatch-randompatch) ~= 0 then 
-      print('Found NaN randompatch!') 
+   if torch.sum(randompatch-randompatch) ~= 0 or randompatch:std() == 0 then 
+      rpnum=rpnum+1
+      print('Rejected randompatch!') 
    else
       data[i] = randompatch
       -- normalize patches to 0 mean and 1 std:
       data[i]:add(-randompatch:mean())
       data[i]:div(randompatch:std())
+      i = i + 1
    end
 end
-print('Found NaN randompatch, number:', rpnum)
+print('Rejected pathes: ', rpnum)
 
 -- show a few patches:
 if opt.visualize then
