@@ -1,21 +1,6 @@
 ----------------------------------------------------------------------
--- A simple script that trains a conv net on a face detection dataset,
--- using stochastic gradient descent.
---
--- This script demonstrates a classical example of training a simple
--- convolutional network on a binary classification problem. It
--- illustrates several points:
--- 1/ description of the network
--- 2/ choice of a cost function (criterion) to minimize
--- 3/ instantiation of a trainer, with definition of learning rate, 
---    decays, and momentums
--- 4/ creation of a dataset, from multiple directories of PNGs
--- 5/ running the trainer, which consists in showing all PNGs+Labels
---    to the network, and performing stochastic gradient descent 
---    updates
---
--- Clement Farabet, Benoit Corda  |  July  7, 2011, 12:45PM
---
+-- Clustering Learning deep conv net on a face detection dataset
+-- (original: Clement Farabet, Benoit Corda  |  July  7, 2011, 12:45PM)
 -- Clustering Learning CL version: Eugenio Culurciello Jan 24th 2013
 ----------------------------------------------------------------------
 
@@ -190,6 +175,14 @@ for i = 1, trainsize do
    tnave = tnave + trainData[i][1]*trainData3.data[i]:sum(1)[1][ym][xm] -- average dataset weighted by top neuron
 end
 image.display{image=tnave/trainsize, padding=2, zoom=4}
+
+
+-- countertest: random neuron:
+rndave = torch.zeros(#trainData[1][1])
+for i = 1, trainsize do
+   rndave = rndave + trainData[i][1]*trainData3.data[i]:sum(1)[1][1][5] -- average dataset weighted by random neuron
+end
+image.display{image=rndave/trainsize, padding=2, zoom=4}
 
 
 -- average of dataset:
