@@ -129,6 +129,9 @@ l2netoutsize = o2size/poolsize
 
 l2net = nn.Sequential()
 l2net:add(nn.SpatialConvolution(nk1, nk2, is2, is2))
+l2net:add(nn.Reshape(nk2*o2size*o2size))
+l2net:add(nn.Mul(nk2*o2size*o2size))
+l2net:add(nn.Reshape(nk2,o2size,o2size))
 l2net:add(nn.Tanh())
 l2net:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize)) 
 l2net:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
@@ -136,7 +139,7 @@ l2net:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
 -- initialize templates:
 l2net.modules[1].weight = kernels2:reshape(nk2,1,is2,is2):expand(nk2,nk1,is2,is2)
 l2net.modules[1].bias = l2net.modules[1].bias *0
-
+l2net.modules[3].weight = torch.ones(1)*(1/nk)
 --torch.save('l1net.net', l1net)
 
 -- test: break if it fails!
