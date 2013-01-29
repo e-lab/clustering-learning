@@ -177,7 +177,7 @@ tnave = torch.zeros(#trainData[1][1])
 for i = 1, trainsize do
    tnave = tnave + trainData[i][1]*trainData3.data[i]:sum(1)[1][ym][xm] -- average dataset weighted by top neuron
 end
-image.display{image=tnave/trainsize, padding=2, zoom=4}
+image.display{image=tnave/trainsize, padding=2, zoom=4, 'average dataset weighted by top neuron'}
 
 
 -- countertest: random neuron:
@@ -185,7 +185,7 @@ rndave = torch.zeros(#trainData[1][1])
 for i = 1, trainsize do
    rndave = rndave + trainData[i][1]*trainData3.data[i]:sum(1)[1][1][5] -- average dataset weighted by random neuron
 end
-image.display{image=rndave/trainsize, padding=2, zoom=4}
+image.display{image=rndave/trainsize, padding=2, zoom=4, 'average dataset weighted by random neuron'}
 
 
 -- average of dataset:
@@ -193,6 +193,6 @@ dsave = torch.zeros(#trainData[1][1])
 for i = 1, trainsize do
    dsave = dsave + trainData[i][1] -- average of all dataset
 end
-image.display{image=dsave/trainsize, padding=2, zoom=4}
+image.display{image=dsave/trainsize, padding=2, zoom=4, 'average dataset'}
 
 
