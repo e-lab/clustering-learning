@@ -1,3 +1,9 @@
+----------------------------------------------------------------------
+-- Massive online trained network on videos
+-- videoknet functions
+-- E. Culurciello, Feb 1st 2013
+--
+
 function trainLayer(nlayer,trainData, kernels, nk,nnf,is)
    -- input video params:
    local ivch = trainData[1]:size(1) -- channels

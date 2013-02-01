@@ -14,7 +14,7 @@
 -- TODO: extend k-means to multiple "winners" = average on multiple kernels
 -- TODO: create NMaxPool layer: propagate multiple max as winners or average a few of them
 -- TODO: group features for pooling
-
+-- TODO: volumetric nn.Tanh, nn.pooling, etc, so we can add more volumeteric layers
 
 
 require 'nnx'
@@ -63,17 +63,17 @@ print '==> loading and processing (local-contrast-normalization) of dataset'
 --dspath = '/Users/eugenioculurciello/Pictures/2013/1-13-13/VID_20130105_111419.mp4'
 --source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
 
---dspath = '/Users/eugenioculurciello/Desktop/office.mp4'
---source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
+dspath = '/Users/eugenioculurciello/Desktop/driving1.mp4'
+source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
 
 --dspath = '../datasets/TLD/06_car'
---source = ffmpeg.Video{path=dspath, encoding='jpg',loaddump=true, load=false}
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
 
-dspath = '../datasets/TLD/08_volkswagen'
-source = ffmpeg.Video{path=dspath, encoding='jpg',loaddump=true, load=false}
+--dspath = '../datasets/TLD/08_volkswagen'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
 
 --dspath = '../datasets/TLD/09_carchase'
---source = ffmpeg.Video{path=dspath, encoding='jpg',loaddump=true, load=false}
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
 
 rawFrame = source:forward()
 -- input video params:
@@ -206,13 +206,14 @@ print '==> Now test a few loops of online learning on video'
 kernels1_old = kernels1:clone()
 kernels2_old = kernels2:clone()
 
-
 -- generate more samples:
 source.current = source.current - nnf1 -- rewind video
 createDataBatch()
+
 -- update kernels with new data:
 kernels1 = trainLayer(nlayer, trainData, kernels1, nk1, nnf1, is)
 kernels2 = trainLayer(nlayer, trainData2, kernels2, nk2, nnf2, is)
+
 processLayer1()
 
 --report some statistics:
@@ -225,11 +226,11 @@ print('2nd layer max: '..vnet2.modules[1].output:max()..' and min: '..vnet2.modu
 
 
 -- show filters before and after new training:
-image.display{image=kernels1:reshape(nk1,nnf1*is,is), padding=2, symmetric=true,                                            zoom=2, nrow=math.floor(math.sqrt(nk1)), legend='Layer '..nlayer..' filters'}
-image.display{image=kernels1_old:reshape(nk1,nnf1*is,is), padding=2, symmetric=true,                                        zoom=2, nrow=math.floor(math.sqrt(nk1)), legend='Layer '..nlayer..' filters'}
-
-image.display{image=kernels2:reshape(nk2,nnf2*is,is), padding=2, symmetric=true,                                            zoom=2, nrow=math.floor(math.sqrt(nk2)), legend='Layer '..nlayer..' filters'}
-image.display{image=kernels2_old:reshape(nk2,nnf2*is,is), padding=2, symmetric=true,                                        zoom=2, nrow=math.floor(math.sqrt(nk2)), legend='Layer '..nlayer..' filters'}
+--image.display{image=kernels1:reshape(nk1,nnf1*is,is), padding=2, symmetric=true,                                            zoom=2, nrow=math.floor(math.sqrt(nk1)), legend='Layer '..nlayer..' filters'}
+--image.display{image=kernels1_old:reshape(nk1,nnf1*is,is), padding=2, symmetric=true,                                        zoom=2, nrow=math.floor(math.sqrt(nk1)), legend='Layer '..nlayer..' filters'}
+--
+--image.display{image=kernels2:reshape(nk2,nnf2*is,is), padding=2, symmetric=true,                                            zoom=2, nrow=math.floor(math.sqrt(nk2)), legend='Layer '..nlayer..' filters'}
+--image.display{image=kernels2_old:reshape(nk2,nnf2*is,is), padding=2, symmetric=true,                                        zoom=2, nrow=math.floor(math.sqrt(nk2)), legend='Layer '..nlayer..' filters'}
 
 
 
