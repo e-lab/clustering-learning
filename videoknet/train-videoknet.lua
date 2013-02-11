@@ -24,6 +24,9 @@ require 'image'
 require 'online-kmeans'
 require 'ffmpeg'
 require 'trainLayer'
+require 'optim'
+require "slac"
+
 
 cmd = torch.CmdLine()
 cmd:text('Options')
@@ -39,7 +42,22 @@ cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templ
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:option('-savedataset', false, 'save modified dataset')
 cmd:option('-classify', true, 'run classification train/test')
-cmd:option('-nnframes', 4, 'nb of frames uses for temporal learning of features')
+cmd:option('-nnframes', 1, 'nb of frames uses for temporal learning of features')
+cmd:option('-dataset', '../datasets/faces_cut_yuv_32x32/','path to FACE dataset root dir')
+cmd:option('-patches', 'all', 'nb of patches to use')
+-- loss:
+cmd:option('-loss', 'nll', 'type of loss function to minimize: nll | mse | margin')
+-- training:
+cmd:option('-save', 'results', 'subdirectory to save/log experiments in')
+cmd:option('-plot', false, 'live plot')
+cmd:option('-optimization', 'SGD', 'optimization method: SGD | ASGD | CG | LBFGS')
+cmd:option('-learningRate', 1e-3, 'learning rate at t=0')
+cmd:option('-batchSize', 1, 'mini-batch size (1 = pure stochastic)')
+cmd:option('-weightDecay', 0, 'weight decay (SGD only)')
+cmd:option('-momentum', 0, 'momentum (SGD only)')
+cmd:option('-t0', 1, 'start averaging at t0 (ASGD only), in nb of epochs')
+cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
+cmd:option('-type', 'double', 'type: double | float | cuda')
 
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
@@ -63,8 +81,8 @@ print '==> loading and processing (local-contrast-normalization) of dataset'
 --dspath = '/Users/eugenioculurciello/Pictures/2013/1-13-13/VID_20130105_111419.mp4'
 --source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
 
-dspath = '/Users/eugenioculurciello/Desktop/driving1.mp4'
-source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
+--dspath = '/Users/eugenioculurciello/Desktop/driving1.mov'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
 
 --dspath = '../datasets/TLD/06_car'
 --source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
@@ -74,6 +92,9 @@ source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=
 
 --dspath = '../datasets/TLD/09_carchase'
 --source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
+
+dspath = '/Users/eugenioculurciello/Desktop/euge.mov'
+source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
 
 rawFrame = source:forward()
 -- input video params:
@@ -104,23 +125,29 @@ createDataBatch()
 ----------------------------------------------------------------------
 print '==> generating filters for layer 1:'
 nlayer = 1
-kernels1 = trainLayer(nlayer, trainData, nil, nk1,nnf1,is)
+kernels1 = trainLayer(nlayer, trainData, nil, nk1, nnf1, is) --no slac
+-- SLAC: nk1*4 filters to learn, then narrow down to nk1:
+--kernels1 = trainLayer(nlayer, trainData, nil, nk1*4, nnf1, is) -- with slac
+--kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
+--kernels1s, connTable1 = slac(kernels1, nk1*4, nk1, is, is) -- SLAC algorithm to aggregate kernels
+--image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} -- show organization
+--kernels1 = kernels1s[{{1,nk1}}]
 
 ----------------------------------------------------------------------
 print '==> create model 1st layer:'
 
-poolsize = 2
-cvstepsize = 1
+poolsize = 1
+cvstepsize = 2
 normkernel = image.gaussian1D(7)
 ovhe = (ivhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 vnet = nn.Sequential()
 -- usage: VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH)
-vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is))
+vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is, 1, cvstepsize,cvstepsize))
 vnet:add(nn.Sum(2))
 vnet:add(nn.Tanh())
-vnet:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize))
+--vnet:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize))
 vnet:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
 
 -- load kernels into network:
@@ -128,23 +155,25 @@ kernels1:div(nnf1*nk1*ivch) -- divide kernels so output of SpatialConv is about 
 vnet.modules[1].weight = kernels1:reshape(nk1,nnf1,is,is):reshape(nk1,1,nnf1,is,is):expand(nk1,ivch,nnf1,is,is)
 
 
+
 ----------------------------------------------------------------------
 print '==> process video throught 1st layer:'
 
-function processLayer1()
-   trainData2 = torch.Tensor(nfpr, nk1, ovhe, ovwi)
+function processLayer(lv, network, data_in, nkernels, oheight, owidth)
+   data_out = torch.Tensor(nfpr, nkernels, oheight, owidth)
    for i = nnf1, nfpr do -- just get a few frames to begin with
-      procFrames = trainData[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
-      trainData2[i] = vnet:forward(procFrames)
+      if lv == 1 then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
+      else            procFrames = data_in[i] end
+      data_out[i] = network:forward(procFrames)
       xlua.progress(i, nfpr)
       -- do a live display of the input video and output feature maps 
-      wino = image.display{image=trainData[i], win=wino}
-      winm = image.display{image=trainData2[i], padding=2, zoom=1, win=winm, nrow=math.floor(math.sqrt(nk1))}
+      winm = image.display{image=data_out[i], padding=2, zoom=1, win=winm, nrow=math.floor(math.sqrt(nkernels))}
    end
-   -- trainData=nil --free memory if needed
+   -- data_out = nil --free memory if needed
+   return data_out
 end
 
-processLayer1()
+trainData2 = processLayer(1, vnet, trainData, nk1, ovhe, ovwi)
 
 --report some statistics:
 print('1st layer max: '..vnet.modules[1].output:max()..' and min: '..vnet.modules[1].output:min()..' and mean: '..vnet.modules[1].output:mean())
@@ -154,20 +183,20 @@ print '==> generating filters for layer 2:'
 nlayer = 2
 nnf2 = 1
 nk2 = 64
-kernels2 = trainLayer(nlayer,trainData2, nil, nk2,nnf2,is)
+kernels2 = trainLayer(nlayer, trainData2, nil, nk2, nnf2, is)
 
 ----------------------------------------------------------------------
 print '==> create model 2nd layer:'
 
-poolsize = 2
-cvstepsize = 1
+poolsize = 1
+cvstepsize = 2
 ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 vnet2 = nn.Sequential()
-vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is))
+vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize))
 vnet2:add(nn.Tanh())
-vnet2:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
+--vnet2:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
 vnet2:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
 
 -- load kernels into network:
@@ -179,22 +208,18 @@ vnet2.modules[1].weight = kernels2:reshape(nk2,is,is):reshape(nk2,1,is,is):expan
 print '==> process video throught 2nd layer:'
 print 'Initial frames will be blank because of the VolConv on 1st layer~'
 
-function processLayer2()
-   trainData3 = torch.Tensor(nfpr, nk2, ovhe2, ovwi2)
-   for i = nnf1, nfpr do -- just get a few frames to begin with
-      trainData3[i] = vnet2:forward(trainData2[i])
-      xlua.progress(i, nfpr)
-      -- do a live display of the input video and output feature maps 
-      winm2 = image.display{image=trainData3[i], padding=2, zoom=1, win=winm2, nrow=math.floor(math.sqrt(nk2))}
-   end
-   -- trainData2=nil --free memory if needed
-end
-
-processLayer2()
+trainData3 = processLayer(2, vnet2, trainData2, nk2, ovhe2, ovwi2)
 
 --report some statistics:
 print('2nd layer max: '..vnet2.modules[1].output:max()..' and min: '..vnet2.modules[1].output:min()..' and mean: '..vnet2.modules[1].output:mean())
 
+
+----------------------------------------------------------------------
+print '==> Test network'
+dofile 'test-videoknet.lua'
+
+
+torch.load() -- break function
 
 
 ----------------------------------------------------------------------
@@ -211,8 +236,8 @@ source.current = source.current - nnf1 -- rewind video
 createDataBatch()
 
 -- update kernels with new data:
-kernels1 = trainLayer(nlayer, trainData, kernels1, nk1, nnf1, is)
-kernels2 = trainLayer(nlayer, trainData2, kernels2, nk2, nnf2, is)
+kernels1 = trainLayer(1, trainData, kernels1, nk1, nnf1, is)
+kernels2 = trainLayer(2, trainData2, kernels2, nk2, nnf2, is)
 
 processLayer1()
 
