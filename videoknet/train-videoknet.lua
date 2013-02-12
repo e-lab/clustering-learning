@@ -18,6 +18,7 @@
 
 
 require 'nnx'
+require 'eex'
 require 'image'
 --require 'kmec'
 --require 'unsup'
@@ -37,7 +38,7 @@ cmd:option('-inputsize', 9, 'size of each input patches')
 cmd:option('-nkernels', 32, 'number of kernels to learn')
 cmd:option('-niter', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 10*1000, 'nb of random training samples')
+cmd:option('-nsamples', 100*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:option('-savedataset', false, 'save modified dataset')
@@ -104,7 +105,7 @@ ivwi = rawFrame:size(3) -- width
 source.current = 1 -- rewind video frames
 
 -- number of frames to process:
-nfpr = 10 + nnf1 -- batch process size [video frames]
+nfpr = 100 + nnf1 -- batch process size [video frames]
 
 -- normalize and prepare dataset:
 neighborhood = image.gaussian1D(9)
@@ -125,35 +126,37 @@ createDataBatch()
 ----------------------------------------------------------------------
 print '==> generating filters for layer 1:'
 nlayer = 1
-kernels1 = trainLayer(nlayer, trainData, nil, nk1, nnf1, is) --no slac
+kernels1 = trainLayer(nlayer, trainData, nil, nk1*3, nnf1, is) -- learn 3*nk1 filters!better results!--no slac
 -- SLAC: nk1*4 filters to learn, then narrow down to nk1:
 --kernels1 = trainLayer(nlayer, trainData, nil, nk1*4, nnf1, is) -- with slac
---kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
+-- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
 --kernels1s, connTable1 = slac(kernels1, nk1*4, nk1, is, is) -- SLAC algorithm to aggregate kernels
 --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} -- show organization
---kernels1 = kernels1s[{{1,nk1}}]
+--kernels1 = kernels1s--[{{1,nk1}}]
+--nk1s=kernels1s:size(1)
 
 ----------------------------------------------------------------------
 print '==> create model 1st layer:'
 
-poolsize = 1
-cvstepsize = 2
+poolsize = 2
+cvstepsize = 1
 normkernel = image.gaussian1D(7)
 ovhe = (ivhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 vnet = nn.Sequential()
 -- usage: VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH)
-vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is, 1, cvstepsize,cvstepsize))
+vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is, 1, cvstepsize,cvstepsize)) --SLAC with nk1s
 vnet:add(nn.Sum(2))
+--vnet:add(nn.SpatialMaxMap(connTable1))
 vnet:add(nn.Tanh())
---vnet:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize))
+vnet:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize))
 vnet:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
 
 -- load kernels into network:
 kernels1:div(nnf1*nk1*ivch) -- divide kernels so output of SpatialConv is about ~1 or more
-vnet.modules[1].weight = kernels1:reshape(nk1,nnf1,is,is):reshape(nk1,1,nnf1,is,is):expand(nk1,ivch,nnf1,is,is)
-
+vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
+--vnet.modules[1].weight = kernels1:reshape(nk1s,nnf1,is,is):reshape(nk1s,1,nnf1,is,is):expand(nk1s,ivch,nnf1,is,is) -- SLAC
 
 
 ----------------------------------------------------------------------
@@ -183,25 +186,35 @@ print '==> generating filters for layer 2:'
 nlayer = 2
 nnf2 = 1
 nk2 = 64
-kernels2 = trainLayer(nlayer, trainData2, nil, nk2, nnf2, is)
+-- we get better results training more filters for the full connected system. It is increasing the number of diff kenrnels!
+kernels2 = trainLayer(nlayer, trainData2, nil, nk2*nk1, nnf2, is) -- nk2*nk1 to train more filters for full connex
+
 
 ----------------------------------------------------------------------
 print '==> create model 2nd layer:'
 
-poolsize = 1
-cvstepsize = 2
+poolsize = 2
+cvstepsize = 1
 ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
+fanin = 16
 
 vnet2 = nn.Sequential()
-vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize))
+--vnet2:add(nn.SpatialConvolutionMap(nn.tables.random(nk1, nk2, fanin), is, is,cvstepsize,cvstepsize)) -- radom conn table NOT WORKING NOW: we do not know how to set filters for this one
+vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize)) -- fully connected
 vnet2:add(nn.Tanh())
---vnet2:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
+vnet2:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
 vnet2:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
 
 -- load kernels into network:
 kernels2:div(nk2) -- divide kernels so output of SpatialConv is about ~1 or more
-vnet2.modules[1].weight = kernels2:reshape(nk2,is,is):reshape(nk2,1,is,is):expand(nk2,nk1,is,is)
+--vnet2.modules[1].weight = kernels2:reshape(nk2,is,is):reshape(nk2,1,is,is):expand(nk2,nk1,is,is) -- reuse less filters (worse)
+vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
+
+----------------------------------------------------------------------
+-- 2 layer test:
+print '==> Test network'
+dofile 'test-videoknet.lua'
 
 
 ----------------------------------------------------------------------
@@ -215,6 +228,33 @@ print('2nd layer max: '..vnet2.modules[1].output:max()..' and min: '..vnet2.modu
 
 
 ----------------------------------------------------------------------
+print '==> generating filters for layer 3:'
+nlayer = 3
+nnf3 = 1
+nk3 = 128
+kernels3 = trainLayer(nlayer, trainData2, nil, nk3, nnf3, is)
+
+----------------------------------------------------------------------
+print '==> create model 3nd layer:'
+
+poolsize = 2
+cvstepsize = 1
+ovhe3 = (ovhe2-is+1)/poolsize/cvstepsize -- output video feature height
+ovwi3 = (ovwi2-is+1)/poolsize/cvstepsize -- output video feature width
+
+vnet3 = nn.Sequential()
+vnet3:add(nn.SpatialConvolution(nk2, nk3, is, is,cvstepsize,cvstepsize))
+vnet3:add(nn.Tanh())
+vnet3:add(nn.SpatialLPPooling(nk3, 2, poolsize, poolsize, poolsize, poolsize))
+vnet3:add(nn.SpatialSubtractiveNormalization(nk3, normkernel))
+
+-- load kernels into network:
+kernels3:div(nk3) -- divide kernels so output of SpatialConv is about ~1 or more
+vnet3.modules[1].weight = kernels3:reshape(nk3,is,is):reshape(nk3,1,is,is):expand(nk3,nk2,is,is)
+
+
+----------------------------------------------------------------------
+-- 3 layer test:
 print '==> Test network'
 dofile 'test-videoknet.lua'
 
