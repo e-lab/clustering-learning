@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  19 FEB 2013 09:20
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  19 FEB 2013 09:52
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -352,6 +352,9 @@ LaTeX Warning: Citation `jarrett_what_2009' on page 2 undefined on input line 1
 LaTeX Warning: Citation `wandell_foundations_1995' on page 2 undefined on input
  line 100.
 
+
+LaTeX Warning: Citation `lecuniscas10' on page 2 undefined on input line 111.
+
 [2 <./fig-examplevideo.png> <./fig-faceds.png>]
 <fig-filtersproc.png, id=18, 881.2925pt x 628.3475pt>
 File: fig-filtersproc.png Graphic file (type png)
@@ -372,7 +375,10 @@ Overfull \hbox (22.76102pt too wide) in paragraph at lines 162--178
 
 LaTeX Warning: Reference `coates' on page 4 undefined on input line 183.
 
-[4 <./fig-filtersproc.png>]
+
+Underfull \vbox (badness 3343) has occurred while \output is active []
+
+ [4 <./fig-filtersproc.png>]
 
 LaTeX Warning: Reference `coates2012nips' on page 5 undefined on input line 185
 .
@@ -384,26 +390,30 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 3458 strings out of 493633
- 52062 string characters out of 3143378
- 124386 words of memory out of 3000000
- 6714 multiletter control sequences out of 15000+200000
+ 3459 strings out of 493633
+ 52076 string characters out of 3143378
+ 127386 words of memory out of 3000000
+ 6715 multiletter control sequences out of 15000+200000
  17275 words of font info for 37 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
  38i,10n,39p,1062b,397s stack positions out of 5000i,500n,10000p,200000b,50000s
 {/usr/local/texlive/2011/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/t
-exlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/te
-xlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texl
-ive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texliv
-e/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/
-2011/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2011/tex
-mf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2011/texmf-dist/fo
-nts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/
-urw/times/utmri8a.pfb>
-Output written on CL-video.pdf (5 pages, 1171052 bytes).
+exlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/te
+xlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/tex
+live/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texli
+ve/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive
+/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/20
+11/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/201
+1/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2011/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2011/te
+xmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2011/texmf-dist
+/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/typ
+e1/urw/times/utmr8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/urw/tim
+es/utmri8a.pfb>
+Output written on CL-video.pdf (5 pages, 1209126 bytes).
 PDF statistics:
- 58 PDF objects out of 1000 (max. 8388607)
- 38 compressed objects within 1 object stream
+ 74 PDF objects out of 1000 (max. 8388607)
+ 50 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
