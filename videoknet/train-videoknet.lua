@@ -15,6 +15,7 @@
 -- TODO: create NMaxPool layer: propagate multiple max as winners or average a few of them
 -- TODO: group features for pooling
 -- TODO: volumetric nn.Tanh, nn.pooling, etc, so we can add more volumeteric layers
+-- TODO: test with ABS value on layers out
 
 
 require 'nnx'
@@ -34,16 +35,16 @@ cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 9, 'size of each input patches')
+cmd:option('-inputsize', 5, 'size of each input patches')
 cmd:option('-nkernels', 32, 'number of kernels to learn')
 cmd:option('-niter', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 100*1000, 'nb of random training samples')
+cmd:option('-nsamples', 10*1000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:option('-savedataset', false, 'save modified dataset')
 cmd:option('-classify', true, 'run classification train/test')
-cmd:option('-nnframes', 1, 'nb of frames uses for temporal learning of features')
+cmd:option('-nnframes', 2, 'nb of frames uses for temporal learning of features')
 cmd:option('-dataset', '../datasets/faces_cut_yuv_32x32/','path to FACE dataset root dir')
 cmd:option('-patches', 'all', 'nb of patches to use')
 -- loss:
@@ -95,7 +96,9 @@ print '==> loading and processing (local-contrast-normalization) of dataset'
 --source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
 
 dspath = '/Users/eugenioculurciello/Desktop/euge.mov'
-source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
+-- smaller video test:
+source = ffmpeg.Video{path=dspath, width = 120, height = 80, encoding='jpg', fps=24, loaddump=false, load=false}
 
 rawFrame = source:forward()
 -- input video params:
@@ -105,7 +108,7 @@ ivwi = rawFrame:size(3) -- width
 source.current = 1 -- rewind video frames
 
 -- number of frames to process:
-nfpr = 100 + nnf1 -- batch process size [video frames]
+nfpr = 200 + nnf1 -- batch process size [video frames]
 
 -- normalize and prepare dataset:
 neighborhood = image.gaussian1D(9)
@@ -126,14 +129,20 @@ createDataBatch()
 ----------------------------------------------------------------------
 print '==> generating filters for layer 1:'
 nlayer = 1
-kernels1 = trainLayer(nlayer, trainData, nil, nk1*3, nnf1, is) -- learn 3*nk1 filters!better results!--no slac
+
+
+-- FULL CONNECT MODEL:
+kernels1 = trainLayer(nlayer, trainData, opt.nsamples, nil, nk1*3, nnf1, is) -- learn 3*nk1 filters!better results!--no slac
+
+
+-- SLAC MODEL:
 -- SLAC: nk1*4 filters to learn, then narrow down to nk1:
---kernels1 = trainLayer(nlayer, trainData, nil, nk1*4, nnf1, is) -- with slac
--- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
---kernels1s, connTable1 = slac(kernels1, nk1*4, nk1, is, is) -- SLAC algorithm to aggregate kernels
---image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} -- show organization
---kernels1 = kernels1s--[{{1,nk1}}]
+--kernels1 = trainLayer(nlayer, trainData, opt.nsamples, nil, nk1*4, nnf1, is) -- with slac
+---- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
+--kernels1s, connTable1 = slac(kernels1, nk1*4, nk1, 5, 4.5) -- SLAC algorithm to aggregate kernels
+--image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
 --nk1s=kernels1s:size(1)
+
 
 ----------------------------------------------------------------------
 print '==> create model 1st layer:'
@@ -144,19 +153,42 @@ normkernel = image.gaussian1D(7)
 ovhe = (ivhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
 
+
+-- FULL CONNEX MODEL:
 vnet = nn.Sequential()
 -- usage: VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH)
-vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is, 1, cvstepsize,cvstepsize)) --SLAC with nk1s
-vnet:add(nn.Sum(2))
---vnet:add(nn.SpatialMaxMap(connTable1))
+vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is, 1, cvstepsize,cvstepsize))
+vnet:add(nn.Sum(2)) -- needed by volconv
+--vnet:add(nn.SpatialSAD(ivch, nk1, is, is))
+--vnet:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
 vnet:add(nn.Tanh())
-vnet:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize))
-vnet:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
+--vnet:add(nn.HardShrink(0.5)) -- tried: really bad, maybe with SAD ok?
+vnet:add(nn.SpatialMaxPooling(poolsize, poolsize))
+--vnet:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize))
+--vnet:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
+vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3))
 
 -- load kernels into network:
-kernels1:div(nnf1*nk1*ivch) -- divide kernels so output of SpatialConv is about ~1 or more
+kernels1:div(nnf1*nk1*ivch/4) -- divide kernels so output of SpatialConv is about ~1 or more
 vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
---vnet.modules[1].weight = kernels1:reshape(nk1s,nnf1,is,is):reshape(nk1s,1,nnf1,is,is):expand(nk1s,ivch,nnf1,is,is) -- SLAC
+--vnet.modules[1].weight = kernels1:reshape(nk1,ivch,is,is) -- for spatial SAD
+
+
+-- SLAC MODEL:
+--vnet = nn.Sequential()
+---- usage: VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH)
+--vnet:add(nn.VolumetricConvolution(ivch, nk1s, nnf1, is, is, 1, cvstepsize,cvstepsize)) --SLAC with nk1s
+--vnet:add(nn.Sum(2)) -- needed by volconv
+--vnet:add(nn.SpatialMaxMap(connTable1)) -- slac function to pick max(each group) from VolConv layer
+--vnet:add(nn.Tanh())
+--vnet:add(nn.SpatialMaxPooling(poolsize, poolsize))
+----vnet:add(nn.SpatialLPPooling(nk1, 2, poolsize, poolsize, poolsize, poolsize))
+----vnet:add(nn.SpatialSubtractiveNormalization(nk1, normkernel))
+--vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3))
+--
+---- load kernels into network:
+--kernels1s:div(nnf1*nk1*ivch/2) -- divide kernels so output of SpatialConv is about ~1 or more
+--vnet.modules[1].weight = kernels1s:reshape(nk1s,nnf1,is,is):reshape(nk1s,1,nnf1,is,is):expand(nk1s,ivch,nnf1,is,is) -- SLAC
 
 
 ----------------------------------------------------------------------
@@ -179,15 +211,25 @@ end
 trainData2 = processLayer(1, vnet, trainData, nk1, ovhe, ovwi)
 
 --report some statistics:
-print('1st layer max: '..vnet.modules[1].output:max()..' and min: '..vnet.modules[1].output:min()..' and mean: '..vnet.modules[1].output:mean())
+print('1st layer conv out. Max: '..vnet.modules[1].output:max()..' and min: '..vnet.modules[1].output:min()..' and mean: '..vnet.modules[1].output:mean())
+print('1st layer output. Max: '..vnet.output:max()..' and min: '..vnet.output:min()..' and mean: '..vnet.output:mean())
 
 ----------------------------------------------------------------------
 print '==> generating filters for layer 2:'
 nlayer = 2
 nnf2 = 1
 nk2 = 64
+
+-- FULL CONNEX MODEL:
 -- we get better results training more filters for the full connected system. It is increasing the number of diff kenrnels!
-kernels2 = trainLayer(nlayer, trainData2, nil, nk2*nk1, nnf2, is) -- nk2*nk1 to train more filters for full connex
+kernels2 = trainLayer(nlayer, trainData2, opt.nsamples*10, nil, nk2*nk1, nnf2, is) -- nk2*nk1 to train more filters for full connex
+
+-- SLAC MODEL:
+-- SLAC: nk1*4 filters to learn, then narrow down to nk1:
+--kernels2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk2*nk1, nnf2, is) -- with slac
+--kernels2s, connTable2 = slac(kernels2, nk2*nk1, nk2, 5, 4.5) -- SLAC algorithm to aggregate kernels
+--image.display{image=kernels2s:reshape(kernels2s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
+--nk2s=kernels2s:size(1)
 
 
 ----------------------------------------------------------------------
@@ -199,22 +241,38 @@ ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 fanin = 16
 
+
+-- FULL CONNEX MODEL:
 vnet2 = nn.Sequential()
 --vnet2:add(nn.SpatialConvolutionMap(nn.tables.random(nk1, nk2, fanin), is, is,cvstepsize,cvstepsize)) -- radom conn table NOT WORKING NOW: we do not know how to set filters for this one
-vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize)) -- fully connected
+--vnet2:add(nn.SpatialConvolutionMap(createConnexTable(nk1, nk2, 3), is, is,cvstepsize,cvstepsize)) -- use custom connex table by Euge
+vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize)) -- fully connected (BEST NOW)
+--vnet:add(nn.SpatialSAD(nk1, nk2, is, is, cvstepsize,cvstepsize))
+--vnet:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
 vnet2:add(nn.Tanh())
-vnet2:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
-vnet2:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
+--vnet2:add(nn.SpatialLPPooling(nk2, 2, poolsize, poolsize, poolsize, poolsize))
+vnet2:add(nn.SpatialMaxPooling(poolsize, poolsize))
+--vnet2:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
+vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
+
 
 -- load kernels into network:
-kernels2:div(nk2) -- divide kernels so output of SpatialConv is about ~1 or more
+kernels2:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
 --vnet2.modules[1].weight = kernels2:reshape(nk2,is,is):reshape(nk2,1,is,is):expand(nk2,nk1,is,is) -- reuse less filters (worse)
 vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
 
-----------------------------------------------------------------------
--- 2 layer test:
-print '==> Test network'
-dofile 'test-videoknet.lua'
+
+-- SLAC MODEL:
+--vnet2 = nn.Sequential()
+--vnet2:add(nn.SpatialConvolution(nk1, nk2s, is, is,cvstepsize,cvstepsize)) -- nk2s for SLAC
+--vnet2:add(nn.SpatialMaxMap(connTable2)) -- slac function to pick max(each group) from VolConv layer
+--vnet2:add(nn.Tanh())
+--vnet2:add(nn.SpatialMaxPooling(poolsize, poolsize))
+--vnet2:add(nn.SpatialSubtractiveNormalization(nk2, normkernel))
+
+---- load kernels into network:
+--kernels2s:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+--vnet2.modules[1].weight = kernels2s:reshape(nk2s,is,is):reshape(nk2s,1,is,is):expand(nk2s,nk1,is,is) -- SLAC
 
 
 ----------------------------------------------------------------------
@@ -224,7 +282,17 @@ print 'Initial frames will be blank because of the VolConv on 1st layer~'
 trainData3 = processLayer(2, vnet2, trainData2, nk2, ovhe2, ovwi2)
 
 --report some statistics:
-print('2nd layer max: '..vnet2.modules[1].output:max()..' and min: '..vnet2.modules[1].output:min()..' and mean: '..vnet2.modules[1].output:mean())
+print('2nd layer conv out.Max: '..vnet2.modules[1].output:max()..' and min: '..vnet2.modules[1].output:min()..' and mean: '..vnet2.modules[1].output:mean())
+print('1st layer output. Max: '..vnet2.output:max()..' and min: '..vnet2.output:min()..' and mean: '..vnet2.output:mean())
+
+
+
+----------------------------------------------------------------------
+-- 2 layer test:
+print '==> Test network'
+dofile 'test-videoknet.lua'
+
+torch.load() -- break function
 
 
 ----------------------------------------------------------------------
@@ -232,7 +300,7 @@ print '==> generating filters for layer 3:'
 nlayer = 3
 nnf3 = 1
 nk3 = 128
-kernels3 = trainLayer(nlayer, trainData2, nil, nk3, nnf3, is)
+kernels3 = trainLayer(nlayer, trainData2, nsamples, nk3, nnf3, is)
 
 ----------------------------------------------------------------------
 print '==> create model 3nd layer:'

@@ -4,7 +4,9 @@
 -- E. Culurciello, Feb 1st 2013
 --
 
-function trainLayer(nlayer,trainData, kernels, nk,nnf,is)
+function trainLayer(nlayer,trainData, nsamples, kernels, nk, nnf, is)
+   -- computes filter kernels for a layer with Clustering Learning / k-means
+   
    -- input video params:
    local ivch = trainData[1]:size(1) -- channels
    local ivhe = trainData[1]:size(2) -- height
@@ -12,8 +14,8 @@ function trainLayer(nlayer,trainData, kernels, nk,nnf,is)
    
    print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
    local img = torch.Tensor(ivch, nnf, ivhe, ivwi)
-   local data = torch.Tensor(opt.nsamples,nnf*is*is) -- need to learn volumetric filters on multiple frames!
-   for i = 1, opt.nsamples do
+   local data = torch.Tensor(nsamples, nnf*is*is) -- need to learn volumetric filters on multiple frames!
+   for i = 1, nsamples do
       fimg = math.random(nnf,nfpr) -- pointer to current frame
       for j = 1, nnf do
          img[{{},{j}}] = trainData[fimg-j+1] -- pointer to current and all previous frames
@@ -26,7 +28,7 @@ function trainLayer(nlayer,trainData, kernels, nk,nnf,is)
       patches:div(patches:std()+1e-3) -- to prevent divide-by-0
       -- TODO: keep only patches with high SNR?
       data[i] = patches
-      xlua.progress(i, opt.nsamples)
+      xlua.progress(i, nsamples)
    end
    
    -- show a few patches:
@@ -83,6 +85,30 @@ function trainLayer(nlayer,trainData, kernels, nk,nnf,is)
    end
    
    return kernels
+end
+
+
+function createConnexTable(nkP, nkN, level)
+   -- computes a connection matrix LeNet5-style:
+   -- each higher layer neurons are connected to 1,2,4,8,16... in lower level 
+   -- nkP = lower layer features #
+   -- nkN = higher layer feature #
+   -- level = fanin level:
+   -- level 1,2,3,4.. means each nkN gets fanin of 2,4,8,16..
+   -- fanin units are randomized (might not be best option!!!)
+   table_size = 0
+   indexL = 1
+   indexH = 0
+   for i=1,level do
+      table_size = table_size + 2^i*nkN
+   end
+   connTable = torch.Tensor(table_size,2)
+   for i=1,level do
+      indexH = indexH + nn.tables.random(nkP,nkN,2^i):size(1)
+      connTable[{{indexL,indexH}}]=nn.tables.random(nkP,nkN,2^i)
+      indexL = indexL + nn.tables.random(nkP,nkN,2^i):size(1)
+   end
+   return connTable
 end
 
 
