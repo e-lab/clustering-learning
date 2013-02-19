@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  18 FEB 2013 21:08
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  19 FEB 2013 09:19
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -221,160 +221,160 @@ e
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <17.28> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 41.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 45.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 41.
+(Font)              <7> on input line 45.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 41.
+(Font)              <5> on input line 45.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 41.
-LaTeX Font Info:    Try loading font information for OT1+pcr on input line 41.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 45.
+LaTeX Font Info:    Try loading font information for OT1+pcr on input line 45.
 
 (/usr/local/texlive/2011/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <9> on input line 41.
+(Font)              <9> on input line 45.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 41.
+(Font)              <6> on input line 45.
 
-Underfull \hbox (badness 10000) in paragraph at lines 41--41
+Underfull \hbox (badness 10000) in paragraph at lines 45--45
 [][]\OT1/ptm/m/n/9 More in-for-ma-tion on Eu-ge-nio Cu-lur-ciello's lab-o-ra-to
 ry and re-search can be found here:
  []
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 43.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 47.
 
 LaTeX Warning: Citation `lecun_gradient-based_1998' on page 1 undefined on inpu
-t line 51.
+t line 55.
 
 
 LaTeX Warning: Citation `hadsell_dimensionality_2006' on page 1 undefined on in
-put line 51.
+put line 55.
 
 
 LaTeX Warning: Citation `gregor_structured_2011' on page 1 undefined on input l
-ine 51.
+ine 55.
 
 
 LaTeX Warning: Citation `riesenhuber_hierarchical_1999' on page 1 undefined on 
-input line 51.
+input line 55.
 
 
 LaTeX Warning: Citation `serre_feedforward_2007' on page 1 undefined on input l
-ine 51.
+ine 55.
 
 
 LaTeX Warning: Citation `serre_neuromorphic_2010' on page 1 undefined on input 
-line 51.
+line 55.
 
 
 LaTeX Warning: Citation `jarrett_what_2009' on page 1 undefined on input line 5
-1.
+5.
 
 
 LaTeX Warning: Citation `lecun_convolutional_2010' on page 1 undefined on input
- line 51.
+ line 55.
 
 
 LaTeX Warning: Citation `boureau_theoretical_2010' on page 1 undefined on input
- line 51.
+ line 55.
 
 
 LaTeX Warning: Citation `karpathy_lessons_2011' on page 1 undefined on input li
-ne 52.
+ne 56.
 
 
 LaTeX Warning: Citation `torralba_unbiased_2011' on page 1 undefined on input l
-ine 52.
+ine 56.
 
 
 LaTeX Warning: Citation `hou_meta-theory_2012' on page 1 undefined on input lin
-e 52.
+e 56.
 
 
 LaTeX Warning: Citation `olshausen_emergence_1996' on page 1 undefined on input
- line 52.
+ line 56.
 
 
 LaTeX Warning: Citation `hyvarinen_independent_2000' on page 1 undefined on inp
-ut line 52.
+ut line 56.
 
 
-LaTeX Warning: Citation `hinton_fast_2006' on page 1 undefined on input line 52
+LaTeX Warning: Citation `hinton_fast_2006' on page 1 undefined on input line 56
 .
 
 
 LaTeX Warning: Citation `vincent_extracting_2008' on page 1 undefined on input 
-line 52.
+line 56.
 
 
 LaTeX Warning: Citation `coates_analysis_2011' on page 1 undefined on input lin
-e 52.
+e 56.
 
 
 LaTeX Warning: Citation `coates_analysis_2011' on page 1 undefined on input lin
-e 54.
+e 58.
 
 [1
 
 {/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 
-LaTeX Warning: Reference `' on page 2 undefined on input line 62.
+LaTeX Warning: Reference `' on page 2 undefined on input line 66.
 
 
 LaTeX Warning: Citation `collobert_torch7_2011' on page 2 undefined on input li
-ne 70.
+ne 74.
 
 <fig-examplevideo.png, id=11, 642.4pt x 478.78876pt>
 File: fig-examplevideo.png Graphic file (type png)
 
 <use fig-examplevideo.png>
-Package pdftex.def Info: fig-examplevideo.png used on input line 83.
+Package pdftex.def Info: fig-examplevideo.png used on input line 87.
 (pdftex.def)             Requested size: 191.51505pt x 142.73912pt.
  <fig-faceds.png, id=12, 193.72375pt x 192.72pt>
 File: fig-faceds.png Graphic file (type png)
 
 <use fig-faceds.png>
-Package pdftex.def Info: fig-faceds.png used on input line 90.
+Package pdftex.def Info: fig-faceds.png used on input line 94.
 (pdftex.def)             Requested size: 144.54pt x 143.7927pt.
 
-Overfull \hbox (1.90002pt too wide) in paragraph at lines 81--93
+Overfull \hbox (1.90002pt too wide) in paragraph at lines 85--97
  [][] [] 
  []
 
 
-LaTeX Warning: Citation `jarrett_what_2009' on page 2 undefined on input line 9
-6.
+LaTeX Warning: Citation `jarrett_what_2009' on page 2 undefined on input line 1
+00.
 
 
 LaTeX Warning: Citation `wandell_foundations_1995' on page 2 undefined on input
- line 96.
+ line 100.
 
 [2 <./fig-examplevideo.png> <./fig-faceds.png>]
 <fig-filtersproc.png, id=18, 881.2925pt x 628.3475pt>
 File: fig-filtersproc.png Graphic file (type png)
 
 <use fig-filtersproc.png>
-Package pdftex.def Info: fig-filtersproc.png used on input line 131.
+Package pdftex.def Info: fig-filtersproc.png used on input line 135.
 (pdftex.def)             Requested size: 361.34999pt x 257.63373pt.
 
 
-LaTeX Warning: Reference `Coates2012nips' on page 3 undefined on input line 137
+LaTeX Warning: Reference `Coates2012nips' on page 3 undefined on input line 141
 .
 
 [3]
-Overfull \hbox (22.76102pt too wide) in paragraph at lines 158--174
+Overfull \hbox (22.76102pt too wide) in paragraph at lines 162--178
  [] 
  []
 
 
-LaTeX Warning: Reference `coates' on page 4 undefined on input line 179.
+LaTeX Warning: Reference `coates' on page 4 undefined on input line 183.
 
 [4 <./fig-filtersproc.png>]
 
-LaTeX Warning: Reference `coates2012nips' on page 5 undefined on input line 181
+LaTeX Warning: Reference `coates2012nips' on page 5 undefined on input line 185
 .
 
 No file CL-video.bbl.
@@ -400,7 +400,7 @@ e/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/
 mf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2011/texmf-dist/fo
 nts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/
 urw/times/utmri8a.pfb>
-Output written on CL-video.pdf (5 pages, 1170331 bytes).
+Output written on CL-video.pdf (5 pages, 1171052 bytes).
 PDF statistics:
  58 PDF objects out of 1000 (max. 8388607)
  38 compressed objects within 1 object stream

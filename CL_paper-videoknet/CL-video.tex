@@ -34,6 +34,10 @@ Purdue University\\
 Aysegul Dundar \\
 Purdue University\\
 \texttt{adundar@purdue.edu}
+\And
+Clement Farabet \\
+New York University \\
+\texttt{cfarabet@nyu.edu}
 }
 
 %\date{\today}
@@ -167,7 +171,7 @@ We report the results of our experiments in table \ref{table1}. We here compared
 32 		& 64 		& SLAC 1L, LCN	& 1	& 97.63 	& 98.17	& 99.43  \\ 
 32 		& 64 		& SLAC 2L		& 1	& 93.16 	& 91.20	& 95.11  \\ 
 32 		& 64 		& random			& 1	& 93.16 	& 91.20	& 95.11  \\ 
-32 		& 64 		& supervised CNN	& 1	& 99.35 	& 99.16	& 99.53  \\ 
+8 		& 32 		& supervised CNN	& 1	& 99.35 	& 99.16	& 99.53  \\ 
 32x32 	& -- 		& linear on pixels	& 1	& 79.30 	& 83.71	& 93.24  \\ 
 \hline\hline
 \end{tabular}
@@ -176,7 +180,7 @@ We report the results of our experiments in table \ref{table1}. We here compared
 \end{table}
 
 
-The size of the network, the number of each layer of filters,  is given in the table. The type of network was: full = fully connected; LCN = local contrast normalization at the output of each layer (as opposed to a simpler subtractive normalization of the means only); SLAC = single-link agglomerate clustering technique from \ref{coates} to reduce the filters from 128 to 32 on the 1st layer and from 256 to 64 in the 2nd layer; random = test of a random network to compare the learning techniques; supervised CNN = standard 2-layer convolutional neural network used as face detector with 8 features on the 1st layer and 16 on the second layer, followed by a linear classifier; linear on pixels = test of a linear classifier on the bare 32 x 32 input pixels without the use of any deep network for feature extraction.
+The size of the network, the number of each layer of filters,  is given in the table. The type of network was: full = fully connected; LCN = local contrast normalization at the output of each layer (as opposed to a simpler subtractive normalization of the means only); SLAC = single-link agglomerate clustering technique from \ref{coates} to reduce the filters from 128 to 32 on the 1st layer and from 256 to 64 in the 2nd layer; random = test of a random network to compare the learning techniques; supervised CNN = standard 2-layer convolutional neural network used as face detector with 8 features on the 1st layer and 32 on the second layer, max pooling of 4 x 4, connection table with fan in of 8, followed by a linear classifier; linear on pixels = test of a linear classifier on the bare 32 x 32 input pixels without the use of any deep network for feature extraction.
 
 We show here that the SLAC 1-layer with LCN provided the best results, followed closely by the fully connected LCN network. It is clear that proper normalization of the standard deviation at each layer is key to the highest performance. This is due to the fact that this step prepares the best data spread for the nonlinearity at each layer, thus preserving the maximum information content. Similar results are reported by \ref{coates2012nips}. 
 The SLAC algorithm also performed well only on the 1st layer, and reported a loss of 2\% points when used in the second layer. This issue is not well understood and under investigation. 
