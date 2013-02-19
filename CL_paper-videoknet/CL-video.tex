@@ -60,8 +60,8 @@ These algorithms are easy to setup and train and are especially suited for robot
 In addition, real-time operation with efficient networks can be obtained with only a few minutes of training and setup, leading to quick and direct experimentation in robotic experiments.
 
 In this paper we present unsupervised clustering algorithms applied to video sequences to perform training and operation of deep neural networks for general-purpose vision systems. 
-The main goal of the paper is not to present state-of-art results on a specific dataset. Rather we want to present ways to quickly process video sequences to extract a large portion of information without the need of supervision and 
-The goal is also to show that compact unsupervised networks can support at least ten frames-per-second operation on commercial hardware, such as recent laptop computers.
+The main goal of the paper is not to present state-of-art results on a specific dataset. Rather we want to present ways to quickly process video sequences to extract a large portion of information without the need of supervision and heavy learning techniques.
+The goal is also to show that compact video-based unsupervised networks can support at least ten frames-per-second operation on commercial hardware, such as recent laptop computers.
 
 The paper presents the following key innovations: (1) use of clustering learning for learning features from video with fully unsupervised techniques (Section \ref{}), (2) the ability of trained network to perform as well as supervised networks trained on still frames, (3) ability to run in real-time?. 
 
@@ -108,7 +108,7 @@ Also we did not use whitening of data (such as ZCA whitening) even if other grou
 
 We experimented by training an unsupervised deep neural network with 2 layers, not counting pooling and normalization operations. The two layers were composed of a two-dimensional convolutional linear filtering stage, a spatial max pooling stage, and a subtractive and/or divisive normalization layer for removing the mean and resetting the std of all outputs to unity. 
 The filters of the first two layers are generated with unsupervised clustering algorithms, as explained below. 
-Using the naming convention in \cite{lecuniscas10}, for each layer $l$  $x_i$ is an input feature map, $y_i$ is an output feature map. The input of each layer is a 3D array with $n_l$ 2D feature maps of size $n_{l1} \cdot n_{l2}$. Each component (pixel, neuron) is denoted $x_{ijk}$. The output is also a 3D array, $y_i$ composed of $m_l$ feature maps of size $m_{l1} \cdot m_{l2}$.
+Using the naming convention in \cite{lecun_convolutional_2010}, for each layer $l$  $x_i$ is an input feature map, $y_i$ is an output feature map. The input of each layer is a 3D array with $n_l$ 2D feature maps of size $n_{l1} \cdot n_{l2}$. Each component (pixel, neuron) is denoted $x_{ijk}$. The output is also a 3D array, $y_i$ composed of $m_l$ feature maps of size $m_{l1} \cdot m_{l2}$.
 
 The layers in the clustering learning network used the following sequence of operations:
 \begin{enumerate}
@@ -116,11 +116,11 @@ The layers in the clustering learning network used the following sequence of ope
 \item Spatial Convolution module (2nd layer): performing convolutions on images with the learned CL filters: $yc_i=b_j+\sum_i{k_{ij}\ast x_i}$, where $\ast$ is the 2D discrete convolution operator and $b_j$ is a trainable bias parameter.
 \item Spatial Max Pooling module: $yp_i = max_{n \times n}(yc_{ij})$ with $n =  2$ in this work.
 \item Hyperbolic tangent nonlinearity: $ynl_i = tanh(yp_i )$
-\item Spatial Subtractive or Contrastive Normalization: to zero the data mean, reset std to unity. The subtractive normalization operation for a given site $x_{ijk}$ computes: $v_{ijk} = x_{ijk} - \sum_{ipq} w_{pq} \cdot x_{i,j+p,k+q}$, where $w_{pq}$ is a normalized truncated Gaussian weighting window (typically of size 9x9). The divisive normalization computes $y_{ijk} = v_{ijk}/max(mean(\sigma_{jk}),\sigma_{jk})$ where $\sigma_{jk} = (\sum_{ipq} w_{pq} \cdot v^2_{i,j+p,k+q})^{1/2}$. The local contrast normalization layer is inspired by visual neuroscience models.
+\item Spatial Subtractive or Contrastive Normalization: to zero the data mean, reset std to unity. The subtractive normalization operation for a given site $ynl_{ijk}$ computes: $v_{ijk} = ynl_{ijk} - \sum_{ipq} w_{pq} \cdot ynl_{i,j+p,k+q}$, where $w_{pq}$ is a normalized truncated Gaussian weighting window (typically of size 9x9). The divisive normalization computes $y_{ijk} = v_{ijk}/max(mean(\sigma_{jk}),\sigma_{jk})$ where $\sigma_{jk} = (\sum_{ipq} w_{pq} \cdot v^2_{i,j+p,k+q})^{1/2}$. The local contrast normalization layer is inspired by visual neuroscience models.
 \end{enumerate}
 
 
-All networks used 32 filters on the first layer, 64 filters on the second layer. Clustering learning networks used a fully connected input to 1st, and 1st to 2nd layer. We experimented with SLAC connections \cite{}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers.
+All networks used 32 filters on the first layer, 64 filters on the second layer. Clustering learning networks used a fully connected input to 1st, and 1st to 2nd layer. We experimented with SLAC connections \cite{coates2012emergence}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers.
 
 
 
@@ -138,7 +138,7 @@ The input video dataset was processed first by the 1st Volumetric layer, then th
 \end{figure}
 
 
-Examples of the filters learned with the CL technique on a 1st and 2nd layer are given in figure \ref{fig-filterproc}. The volumetric filters are shown on the left of the figure as 5 x 5 x 2 columns, since we used 2 frames in this example figure. We can provide animated-GIF files upon request. We also show in in figure \ref{fig-filterproc}-middle samples of the processed  1st layer outputs. We also report on the right of the figure the 2nd layer filters. These 2nd layer filters are just a subset of the 32 x 64 filter learned with Clustering Learning. We learned this many filters because layer 1 and 2 are fully connected, and thus can benefit from this large number of different filters. This is different from the approach taken by \ref{Coates2012nips} where the output of the 1st layer was reshaped to a vector and fed to the k-means algorithm, thus doing away with inter-network connection matrices. 
+Examples of the filters learned with the CL technique on a 1st and 2nd layer are given in figure \ref{fig-filterproc}. The volumetric filters are shown on the left of the figure as 5 x 5 x 2 columns, since we used 2 frames in this example figure. We can provide animated-GIF files upon request. We also show in in figure \ref{fig-filterproc}-middle samples of the processed  1st layer outputs. We also report on the right of the figure the 2nd layer filters. These 2nd layer filters are just a subset of the 32 x 64 filter learned with Clustering Learning. We learned this many filters because layer 1 and 2 are fully connected, and thus can benefit from this large number of different filters. This is different from the approach taken by \ref{coates2012learning,coates2012learning} where the output of the 1st layer was reshaped to a vector and fed to the k-means algorithm, thus doing away with inter-network connection matrices. 
 
 Both layer filters were obtained with training for ~10 minutes on a modern quad-core Intel i7 laptop. A supervised network of this size would require several tens of thousands of image examples and several hours of training time.
 
@@ -163,16 +163,17 @@ We report the results of our experiments in table \ref{table1}. We here compared
 \hline\hline
 1L filters	& 2L filters	& type	& Frames	& Precision Tot. & Precision Face  & Precision Bg. \\ 
 \hline
-32 		& 64 		& full				& 1	& 94.92  	& 92.26	& 97.58  \\
-32 		& 64 		& full				& 2	& 95.74	& 95.11	& 98.83  \\
-32 		& 64 		& full				& 4	& 93.16  	& 95.78	& 97.13  \\
-32 		& 64 		& full LCN			& 1	& 97.07 	& 97.89	& 99.13  \\ 
-32 		& 64 		& SLAC 1L		& 1	& 95.21  	& 92.60	& 97.81  \\
-32 		& 64 		& SLAC 1L, LCN	& 1	& 97.63 	& 98.17	& 99.43  \\ 
-32 		& 64 		& SLAC 2L		& 1	& 93.16 	& 91.20	& 95.11  \\ 
-32 		& 64 		& random			& 1	& 93.16 	& 91.20	& 95.11  \\ 
-8 		& 32 		& supervised CNN	& 1	& 99.35 	& 99.16	& 99.53  \\ 
-32x32 	& -- 		& linear on pixels	& 1	& 79.30 	& 83.71	& 93.24  \\ 
+32 		& 64 		& full					& 1	& 94.92  		& 92.26		& 97.58  \\
+32 		& 64 		& full LCN				& 1	& 97.07 		& 97.89		& 99.13  \\
+32 		& 64 		& full	 LCN				& 2	& 95.74		& 95.11		& 98.83  \\
+32 		& 64 		& full LCN				& 4	& 93.16  		& 95.78		& 97.13  \\ 
+32 		& 64 		& full LCN noVolConv	& 2	& \bf{97.95}  	& 97.24		& 98.67  \\ 
+32 		& 64 		& SLAC 1L			& 1	& 95.21  		& 92.60		& 97.81  \\
+32 		& 64 		& SLAC 1L, LCN		& 1	& 97.63 		& 98.17		& 99.43  \\ 
+32 		& 64 		& SLAC 2L			& 1	& 93.16 		& 91.20		& 95.11  \\ 
+32 		& 64 		& random				& 1	& 93.16 		& 91.20		& 95.11  \\ 
+8 		& 32 		& supervised CNN		& 1	& 99.35 		& 99.16		& 99.53  \\ 
+32x32 	& -- 		& linear on pixels		& 1	& 79.30 		& 83.71		& 93.24  \\ 
 \hline\hline
 \end{tabular}
 \end{center}
@@ -180,13 +181,15 @@ We report the results of our experiments in table \ref{table1}. We here compared
 \end{table}
 
 
-The size of the network, the number of each layer of filters,  is given in the table. The type of network was: full = fully connected; LCN = local contrast normalization at the output of each layer (as opposed to a simpler subtractive normalization of the means only); SLAC = single-link agglomerate clustering technique from \ref{coates} to reduce the filters from 128 to 32 on the 1st layer and from 256 to 64 in the 2nd layer; random = test of a random network to compare the learning techniques; supervised CNN = standard 2-layer convolutional neural network used as face detector with 8 features on the 1st layer and 32 on the second layer, max pooling of 4 x 4, connection table with fan in of 8, followed by a linear classifier; linear on pixels = test of a linear classifier on the bare 32 x 32 input pixels without the use of any deep network for feature extraction.
+The size of the network, the number of each layer of filters,  is given in the table. The type of network was: full = fully connected; LCN = local contrast normalization at the output of each layer (as opposed to a simpler subtractive normalization of the means only); SLAC = single-link agglomerate clustering technique from \cite{coates2012learning} to reduce the filters from 128 to 32 on the 1st layer and from 256 to 64 in the 2nd layer; random = test of a random network to compare the learning techniques; noVolConv does not compute volumetric filters, but rather uses the same static filters at each frame ;supervised CNN = standard 2-layer convolutional neural network used as face detector with 8 features on the 1st layer and 32 on the second layer, max pooling of 4 x 4, connection table with fan in of 8, followed by a linear classifier; linear on pixels = test of a linear classifier on the bare 32 x 32 input pixels without the use of any deep network for feature extraction.
 
-We show here that the SLAC 1-layer with LCN provided the best results, followed closely by the fully connected LCN network. It is clear that proper normalization of the standard deviation at each layer is key to the highest performance. This is due to the fact that this step prepares the best data spread for the nonlinearity at each layer, thus preserving the maximum information content. Similar results are reported by \ref{coates2012nips}. 
+We show here that the SLAC 1-layer with LCN provided the best results, followed closely by the fully connected LCN network. It is clear that proper normalization of the standard deviation at each layer is key to the highest performance. This is due to the fact that this step prepares the best data spread for the nonlinearity at each layer, thus preserving the maximum information content. Similar results are reported by \cite{coates2012emergence}. 
 The SLAC algorithm also performed well only on the 1st layer, and reported a loss of 2\% points when used in the second layer. This issue is not well understood and under investigation. 
-Random networks gave surprisingly high results, as has been reported by several other groups \cite{}. But the Clustering Learning algorithm was in overall superior. 
+Random networks gave surprisingly high results, as has been reported by several other groups \cite{saxe2011random}. But the Clustering Learning algorithm was in overall superior. 
 A linear layer on the input image was computed as a baseline to give indication of the difficulty of the task. As expected, a face-detection task is hardly the best example for a deep network with much larger capacity. nevertheless the ease of availability of data and the fact that our network was able to learn face features from video is a satisfactory result. In any case the linear network performed much worse at 79\% recognition rate on faces. almost 20 points lower than Clustering Learning networks.
 The supervised CNN gave the top results with above 99\% recognition rates, and by using a smaller network. This is also expected, as gradient descent algorithms are the best at adapting a network architecture to a single task. But we remind the reader that our goal is a general network with little need for supervision, so we are willing to accept a less efficient network for these great advantages. 
+
+The best results of this study was achieved with a fully-connected network with LCN and without the use of Volumetric filters. This network instead computed static filters and used them at each frame. This idea overcomes the problems of feeding a video as input and training on a static dataset, and allows to show the full power of Clustering Learning applied to videos: the ability to cluster features even across frames, be those frames from video or still images.
 
 Notice also that in the case of the fully connected network, we also trained and tested a Volumetric network with 1,2,4 input frames. 
 2 frames showed increased recognition results, due to the fast that the two frames give higher signal-to-noise ratio at the input of the network. 4 frames instead did not perform as well. Partly this is due to the fact that our test dataset was not a video, so most of the learnt spatio-temporal filters were not effectively used in testing.
@@ -207,6 +210,7 @@ We are especially grateful to the the Torch7 developing team, in particular Rona
 
 \bibliography{clustering}
 \bibliographystyle{unsrt}
+
 
 
 \end{document}
