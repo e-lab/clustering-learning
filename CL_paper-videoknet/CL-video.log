@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  19 FEB 2013 15:58
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  20 FEB 2013 10:24
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -281,21 +281,28 @@ LaTeX Warning: Reference `coates2012learning,coates2012learning' on page 3 unde
 fined on input line 141.
 
 [3]
-Overfull \hbox (40.25119pt too wide) in paragraph at lines 162--179
+Overfull \hbox (29.98206pt too wide) in paragraph at lines 162--180
  [] 
  []
 
-[4 <./fig-filtersproc.png>] (./CL-video.bbl [5]
-Missing character: There is no â in font ptmr7t!
-Missing character: There is no € in font ptmr7t!
-Missing character: There is no “ in font ptmr7t!
-Missing character: There is no â in font ptmr7t!
-Missing character: There is no € in font ptmr7t!
-Missing character: There is no “ in font ptmr7t!
-Missing character: There is no â in font ptmr7t!
-Missing character: There is no € in font ptmr7t!
-Missing character: There is no “ in font ptmr7t!
+[4 <./fig-filtersproc.png>]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
+ [5]
+
+LaTeX Warning: Citation `ec_cl_paper1' on page 6 undefined on input line 229.
+
+(./CL-video.bbl
+Missing character: There is no â in font ptmr7t!
+Missing character: There is no € in font ptmr7t!
+Missing character: There is no “ in font ptmr7t!
+Missing character: There is no â in font ptmr7t!
+Missing character: There is no € in font ptmr7t!
+Missing character: There is no “ in font ptmr7t!
+Missing character: There is no â in font ptmr7t!
+Missing character: There is no € in font ptmr7t!
+Missing character: There is no “ in font ptmr7t!
+ [6]
 Underfull \hbox (badness 10000) in paragraph at lines 55--60
 []\OT1/ptm/m/n/10 A. Karpa-thy.  Lessons learned from man-u-ally clas-si-fy-ing
 
@@ -328,16 +335,16 @@ Missing character: There is no “ in font ptmr7t!
 Missing character: There is no â in font ptmr7t!
 Missing character: There is no € in font ptmr7t!
 Missing character: There is no “ in font ptmr7t!
-[6]) [7] (./CL-video.aux)
+) [7] (./CL-video.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 3462 strings out of 493633
- 52152 string characters out of 3143378
- 129465 words of memory out of 3000000
- 6716 multiletter control sequences out of 15000+200000
+ 3464 strings out of 493633
+ 52174 string characters out of 3143378
+ 133473 words of memory out of 3000000
+ 6718 multiletter control sequences out of 15000+200000
  17275 words of font info for 37 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
  38i,10n,39p,1062b,397s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -354,7 +361,7 @@ xmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2011/texmf-dist
 /fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/typ
 e1/urw/times/utmr8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on CL-video.pdf (7 pages, 1222961 bytes).
+Output written on CL-video.pdf (7 pages, 1224919 bytes).
 PDF statistics:
  82 PDF objects out of 1000 (max. 8388607)
  56 compressed objects within 1 object stream
