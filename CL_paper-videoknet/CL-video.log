@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  20 FEB 2013 21:04
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  20 FEB 2013 21:11
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -257,59 +257,59 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
 
 {/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 
-LaTeX Warning: Reference `' on page 2 undefined on input line 67.
+LaTeX Warning: Reference `' on page 2 undefined on input line 69.
 
 <fig-examplevideo.png, id=11, 642.4pt x 478.78876pt>
 File: fig-examplevideo.png Graphic file (type png)
 
 <use fig-examplevideo.png>
-Package pdftex.def Info: fig-examplevideo.png used on input line 88.
+Package pdftex.def Info: fig-examplevideo.png used on input line 90.
 (pdftex.def)             Requested size: 191.51505pt x 142.73912pt.
  <fig-faceds.png, id=12, 193.72375pt x 192.72pt>
 File: fig-faceds.png Graphic file (type png)
 
 <use fig-faceds.png>
-Package pdftex.def Info: fig-faceds.png used on input line 95.
+Package pdftex.def Info: fig-faceds.png used on input line 97.
 (pdftex.def)             Requested size: 144.54pt x 143.7927pt.
 
-Overfull \hbox (1.90002pt too wide) in paragraph at lines 86--98
+Overfull \hbox (1.90002pt too wide) in paragraph at lines 88--100
  [][] [] 
  []
 
-[2 <./fig-examplevideo.png> <./fig-faceds.png>]
-<fig-filtersproc.png, id=18, 881.2925pt x 628.3475pt>
+[2 <./fig-examplevideo.png> <./fig-faceds.png>] [3]
+<fig-filtersproc.png, id=28, 881.2925pt x 628.3475pt>
 File: fig-filtersproc.png Graphic file (type png)
 
 <use fig-filtersproc.png>
-Package pdftex.def Info: fig-filtersproc.png used on input line 136.
+Package pdftex.def Info: fig-filtersproc.png used on input line 138.
 (pdftex.def)             Requested size: 361.34999pt x 257.63373pt.
 
 
-LaTeX Warning: Reference `coates2012learning,coates2012learning' on page 3 unde
-fined on input line 142.
+LaTeX Warning: Reference `coates2012learning,coates2012learning' on page 4 unde
+fined on input line 144.
 
-[3] <fig-bestnface.png, id=29, 128.48pt x 129.48375pt>
+<fig-bestnface.png, id=29, 128.48pt x 129.48375pt>
 File: fig-bestnface.png Graphic file (type png)
  <use fig-bestnface.png>
-Package pdftex.def Info: fig-bestnface.png used on input line 147.
+Package pdftex.def Info: fig-bestnface.png used on input line 149.
 (pdftex.def)             Requested size: 86.72377pt x 87.40169pt.
 
-Overfull \hbox (7.228pt too wide) in paragraph at lines 147--148
+Overfull \hbox (7.228pt too wide) in paragraph at lines 149--150
 [][] 
  []
 
 
-Underfull \hbox (badness 7832) in paragraph at lines 148--148
+Underfull \hbox (badness 7832) in paragraph at lines 150--150
 \OT1/ptm/m/n/10 ron en-cod-ing for
  []
 
 
-Underfull \hbox (badness 4995) in paragraph at lines 148--148
+Underfull \hbox (badness 4995) in paragraph at lines 150--150
 \OT1/ptm/m/n/10 a face found af-
  []
 
 
-Underfull \hbox (badness 2197) in paragraph at lines 148--148
+Underfull \hbox (badness 2197) in paragraph at lines 150--150
 \OT1/ptm/m/n/10 video 2-layer net-
  []
 
@@ -317,15 +317,18 @@ Underfull \hbox (badness 2197) in paragraph at lines 148--148
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [4 <./fig-filtersproc.png> <./fig-bestnface.png>]
-Overfull \hbox (29.98206pt too wide) in paragraph at lines 178--196
+Overfull \hbox (29.98206pt too wide) in paragraph at lines 180--198
  [] 
  []
 
 [5]
 
-LaTeX Warning: Citation `ec_cl_paper1' on page 6 undefined on input line 245.
+LaTeX Warning: Citation `ec_cl_paper1' on page 6 undefined on input line 247.
 
-(./CL-video.bbl [6]
+(./CL-video.bbl
+Underfull \vbox (badness 5832) has occurred while \output is active []
+
+ [6]
 Missing character: There is no â in font ptmr7t!
 Missing character: There is no € in font ptmr7t!
 Missing character: There is no “ in font ptmr7t!
@@ -368,7 +371,7 @@ Missing character: There is no “ in font ptmr7t!
 Missing character: There is no â in font ptmr7t!
 Missing character: There is no € in font ptmr7t!
 Missing character: There is no “ in font ptmr7t!
-) [7] (./CL-video.aux)
+[7]) [8] (./CL-video.aux)
 
 LaTeX Warning: There were undefined references.
 
@@ -376,11 +379,11 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  3529 strings out of 493633
  53121 string characters out of 3143378
- 131691 words of memory out of 3000000
+ 130691 words of memory out of 3000000
  6778 multiletter control sequences out of 15000+200000
  17275 words of font info for 37 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
- 38i,10n,39p,1062b,397s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 38i,10n,39p,1348b,397s stack positions out of 5000i,500n,10000p,200000b,50000s
 {/usr/local/texlive/2011/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/t
 exlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/te
 xlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/tex
@@ -394,10 +397,10 @@ xmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2011/texmf-dist
 /fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/typ
 e1/urw/times/utmr8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on CL-video.pdf (7 pages, 1229935 bytes).
+Output written on CL-video.pdf (8 pages, 1230867 bytes).
 PDF statistics:
- 84 PDF objects out of 1000 (max. 8388607)
- 56 compressed objects within 1 object stream
+ 87 PDF objects out of 1000 (max. 8388607)
+ 58 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
