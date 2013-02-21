@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  20 FEB 2013 10:24
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  20 FEB 2013 21:04
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -140,41 +140,48 @@ Package: cite 2010/09/10  v 5.3
 (/usr/local/texlive/2011/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip10
 Package: url 2006/04/12  ver 3.3  Verb mode for urls, etc.
-) (./CL-video.aux)
+)
+(/usr/local/texlive/2011/texmf-dist/tex/latex/wrapfig/wrapfig.sty
+\wrapoverhang=\dimen116
+\WF@size=\dimen117
+\c@WF@wrappedlines=\count96
+\WF@box=\box28
+\WF@everypar=\toks15
+Package: wrapfig 2003/01/31  v 3.6
+)
+(./CL-video.aux)
 \openout1 = `CL-video.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 17.
-LaTeX Font Info:    ... okay on input line 17.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 17.
-LaTeX Font Info:    ... okay on input line 17.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 17.
-LaTeX Font Info:    ... okay on input line 17.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 17.
-LaTeX Font Info:    ... okay on input line 17.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 17.
-LaTeX Font Info:    ... okay on input line 17.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 17.
-LaTeX Font Info:    ... okay on input line 17.
-LaTeX Font Info:    Try loading font information for OT1+ptm on input line 17.
-
-(/usr/local/texlive/2011/texmf-dist/tex/latex/psnfss/ot1ptm.fd
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 18.
+ (/usr/local/texlive/2011/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
-\AtBeginShipoutBox=\box28
-
-(/usr/local/texlive/2011/texmf-dist/tex/context/base/supp-pdf.mkii
+\AtBeginShipoutBox=\box29
+ (/usr/local/texlive/2011/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count96
-\scratchdimen=\dimen116
-\scratchbox=\box29
-\nofMPsegments=\count97
-\nofMParguments=\count98
-\everyMPshowfont=\toks15
-\MPscratchCnt=\count99
-\MPscratchDim=\dimen117
-\MPnumerator=\count100
-\makeMPintoPDFobject=\count101
-\everyMPtoPDFconversion=\toks16
+\scratchcounter=\count97
+\scratchdimen=\dimen118
+\scratchbox=\box30
+\nofMPsegments=\count98
+\nofMParguments=\count99
+\everyMPshowfont=\toks16
+\MPscratchCnt=\count100
+\MPscratchDim=\dimen119
+\MPnumerator=\count101
+\makeMPintoPDFobject=\count102
+\everyMPtoPDFconversion=\toks17
 ) (/usr/local/texlive/2011/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
 Package: pdftexcmds 2011/04/22 v0.16 Utilities of pdfTeX for LuaTeX (HO)
 
@@ -219,52 +226,53 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
 Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: wrapfig package is loaded.
 Package caption Info: End \AtBeginDocument code.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <17.28> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 45.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 46.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 45.
+(Font)              <7> on input line 46.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 45.
+(Font)              <5> on input line 46.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 45.
-LaTeX Font Info:    Try loading font information for OT1+pcr on input line 45.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 46.
+LaTeX Font Info:    Try loading font information for OT1+pcr on input line 46.
 
 (/usr/local/texlive/2011/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <9> on input line 45.
+(Font)              <9> on input line 46.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 45.
+(Font)              <6> on input line 46.
 
-Underfull \hbox (badness 10000) in paragraph at lines 45--45
+Underfull \hbox (badness 10000) in paragraph at lines 46--46
 [][]\OT1/ptm/m/n/9 More in-for-ma-tion on Eu-ge-nio Cu-lur-ciello's lab-o-ra-to
 ry and re-search can be found here:
  []
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 47.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 48.
 [1
 
 {/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 
-LaTeX Warning: Reference `' on page 2 undefined on input line 66.
+LaTeX Warning: Reference `' on page 2 undefined on input line 67.
 
 <fig-examplevideo.png, id=11, 642.4pt x 478.78876pt>
 File: fig-examplevideo.png Graphic file (type png)
 
 <use fig-examplevideo.png>
-Package pdftex.def Info: fig-examplevideo.png used on input line 87.
+Package pdftex.def Info: fig-examplevideo.png used on input line 88.
 (pdftex.def)             Requested size: 191.51505pt x 142.73912pt.
  <fig-faceds.png, id=12, 193.72375pt x 192.72pt>
 File: fig-faceds.png Graphic file (type png)
 
 <use fig-faceds.png>
-Package pdftex.def Info: fig-faceds.png used on input line 94.
+Package pdftex.def Info: fig-faceds.png used on input line 95.
 (pdftex.def)             Requested size: 144.54pt x 143.7927pt.
 
-Overfull \hbox (1.90002pt too wide) in paragraph at lines 85--97
+Overfull \hbox (1.90002pt too wide) in paragraph at lines 86--98
  [][] [] 
  []
 
@@ -273,26 +281,51 @@ Overfull \hbox (1.90002pt too wide) in paragraph at lines 85--97
 File: fig-filtersproc.png Graphic file (type png)
 
 <use fig-filtersproc.png>
-Package pdftex.def Info: fig-filtersproc.png used on input line 135.
+Package pdftex.def Info: fig-filtersproc.png used on input line 136.
 (pdftex.def)             Requested size: 361.34999pt x 257.63373pt.
 
 
 LaTeX Warning: Reference `coates2012learning,coates2012learning' on page 3 unde
-fined on input line 141.
+fined on input line 142.
 
-[3]
-Overfull \hbox (29.98206pt too wide) in paragraph at lines 162--180
+[3] <fig-bestnface.png, id=29, 128.48pt x 129.48375pt>
+File: fig-bestnface.png Graphic file (type png)
+ <use fig-bestnface.png>
+Package pdftex.def Info: fig-bestnface.png used on input line 147.
+(pdftex.def)             Requested size: 86.72377pt x 87.40169pt.
+
+Overfull \hbox (7.228pt too wide) in paragraph at lines 147--148
+[][] 
+ []
+
+
+Underfull \hbox (badness 7832) in paragraph at lines 148--148
+\OT1/ptm/m/n/10 ron en-cod-ing for
+ []
+
+
+Underfull \hbox (badness 4995) in paragraph at lines 148--148
+\OT1/ptm/m/n/10 a face found af-
+ []
+
+
+Underfull \hbox (badness 2197) in paragraph at lines 148--148
+\OT1/ptm/m/n/10 video 2-layer net-
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [4 <./fig-filtersproc.png> <./fig-bestnface.png>]
+Overfull \hbox (29.98206pt too wide) in paragraph at lines 178--196
  [] 
  []
 
-[4 <./fig-filtersproc.png>]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+[5]
 
- [5]
+LaTeX Warning: Citation `ec_cl_paper1' on page 6 undefined on input line 245.
 
-LaTeX Warning: Citation `ec_cl_paper1' on page 6 undefined on input line 229.
-
-(./CL-video.bbl
+(./CL-video.bbl [6]
 Missing character: There is no â in font ptmr7t!
 Missing character: There is no € in font ptmr7t!
 Missing character: There is no “ in font ptmr7t!
@@ -302,7 +335,7 @@ Missing character: There is no “ in font ptmr7t!
 Missing character: There is no â in font ptmr7t!
 Missing character: There is no € in font ptmr7t!
 Missing character: There is no “ in font ptmr7t!
- [6]
+
 Underfull \hbox (badness 10000) in paragraph at lines 55--60
 []\OT1/ptm/m/n/10 A. Karpa-thy.  Lessons learned from man-u-ally clas-si-fy-ing
 
@@ -341,10 +374,10 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 3464 strings out of 493633
- 52174 string characters out of 3143378
- 133473 words of memory out of 3000000
- 6718 multiletter control sequences out of 15000+200000
+ 3529 strings out of 493633
+ 53121 string characters out of 3143378
+ 131691 words of memory out of 3000000
+ 6778 multiletter control sequences out of 15000+200000
  17275 words of font info for 37 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
  38i,10n,39p,1062b,397s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -361,10 +394,10 @@ xmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2011/texmf-dist
 /fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/typ
 e1/urw/times/utmr8a.pfb></usr/local/texlive/2011/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on CL-video.pdf (7 pages, 1224919 bytes).
+Output written on CL-video.pdf (7 pages, 1229935 bytes).
 PDF statistics:
- 82 PDF objects out of 1000 (max. 8388607)
+ 84 PDF objects out of 1000 (max. 8388607)
  56 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 16 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

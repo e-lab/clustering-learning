@@ -8,6 +8,7 @@
 \usepackage{subcaption}
 \usepackage{cite}
 \usepackage{url}
+\usepackage{wrapfig}
 
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
@@ -142,8 +143,23 @@ Examples of the filters learned with the CL technique on a 1st and 2nd layer are
 
 Both layer filters were obtained with training for ~10 minutes on a modern quad-core Intel i7 laptop. A supervised network of this size would require several tens of thousands of image examples and several hours of training time.
 
+\begin{wrapfigure}{r}{.2\textwidth}
+\includegraphics[width=1.2in]{fig-bestnface.png}
+\caption{Top neuron encoding for a face found after training the CL-video 2-layer network unsupervised.}
+\label{fig-bestnface}
+\end{wrapfigure}
+
 In order to test the network after training, we then used the unsupervised deep network to process a dataset of face from NYU. We passed both the test and train sets through the network. The ~30,000 32 x 32 images were processed in about 7 minutes on a modern quad-core Intel i7 laptop running Torch7. We the used a linear layer (linear regression) and trained it on the 64 x 2 x 2 outputs of the processed face dataset. We used the train set for training. We then verified the precision of the network on the test set.
 As input to the Volumetric networks, we gave the same input to all required frames, but copying the same input samples $N_f$ times. This is not the best test for a Volumetric network that learned spatio-temporal filters, and we are working on more tests with video datasets.
+
+In order to test the ability of our network to learn frequently occurring objects in the video scene, we tested the output of the network after processing the entire NYU face dataset with it. We then found the neuron that in overall responded the most to a face, but not a background. We found the neuron most responsive to face $tn$ by running obtaining the maximum of all output neuron of the network $net$ to the face set, as can be seen in the equation below. 
+
+\begin{equation}
+bf = \sum_i tn(i) \cdot dataset(i),  tn = arg_n max( \sum_i net_n(faceset(i) ) )
+\end{equation}
+
+We then computed a weighted average of $tn$ with the output of the network for each sample of the dateaset, be that a face or a background. The weighted average neuron $bf$ also reported in the equation above. The optimal stimulus for the neuron $bf$ is reported in figure \ref{fig-bestnface}.
+
 
 %Larger network:
 %This network can be executed in real-time with accelerated hardware [neuflow]
