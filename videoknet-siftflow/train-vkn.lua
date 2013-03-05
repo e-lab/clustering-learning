@@ -132,35 +132,13 @@ end
 
 
 
-quicktest = false -- true = small test, false = full code running 
-slacmodel = true -- true = SLAC, false = fully connected layers
+opt.quicktest = false -- true = small test, false = full code running 
+opt.slacmodel = false -- true = SLAC, false = fully connected layers
+opt.cnnmodel = true -- true = convnet model with tanh and normalization, otherwise without
+opt.videodata = false -- true = load video file, otherwise siftflow data
 
-----------------------------------------------------------------------
-print '==> loading videt training-set'
-dspath = '../datasets/driving1.mov'
---source = ffmpeg.Video{path=dspath, width = 120, height = 80, encoding='jpg', fps=24, loaddump=false, load=false}
-source = ffmpeg.Video{path=dspath, width = 320, height = 240, encoding='jpg', fps=24, loaddump=false, load=false}
 
-rawFrame = source:forward()
--- input video params:
-ivch = rawFrame:size(1) -- channels
-ivhe = rawFrame:size(2) -- height
-ivwi = rawFrame:size(3) -- width
-source.current = 1 -- rewind video frames
 
--- number of frames to process:
-if quicktest then nfpr = 10 -- batch process size [video frames]
-else nfpr = 200 end
-
-----------------------------------------------------------------------
--- Classes to learn
---
-classes = {'unknown',
-           'awning', 'balcony', 'bird', 'boat', 'bridge', 'building', 'bus',
-           'car', 'cow', 'crosswalk', 'desert', 'door', 'fence', 'field',
-           'grass', 'moon', 'mountain', 'person', 'plant', 'pole', 'river',
-           'road', 'rock', 'sand', 'sea', 'sidewalk', 'sign', 'sky',
-           'staircase', 'streetlight', 'sun', 'tree', 'window'}
 
 ----------------------------------------------------------------------
 -- define network to train
@@ -228,15 +206,52 @@ if not opt.network then
    end
 
 
+
+
 ----------------------------------------------------------------------
--- normalize inout video data:
+if opt.videodata then
+   print '==> loading videt training-set'
+   dspath = '../datasets/driving1.mov'
+   --source = ffmpeg.Video{path=dspath, width = 120, height = 80, encoding='jpg', fps=24, loaddump=false, load=false}
+   source = ffmpeg.Video{path=dspath, width = 320, height = 240, encoding='jpg', fps=24, loaddump=false, load=false}
+   
+   rawFrame = source:forward()
+   -- input video params:
+   ivch = rawFrame:size(1) -- channels
+   ivhe = rawFrame:size(2) -- height
+   ivwi = rawFrame:size(3) -- width
+   source.current = 1 -- rewind video frames
+
+else 
+   print '==> loading siftflow training-set'
+   dofile('sf-dataset.lua')
+   
+   -- input image dateaset params:
+   ivch = trainData[1][1]:size(1) -- channels
+   ivhe = trainData[1][1]:size(2) -- height
+   ivwi = trainData[1][1]:size(3) -- width
+   
+end
+
+
+-- number of frames to process:
+if opt.quicktest then nfpr = 10 -- batch process size [video frames]
+else nfpr = 50 end
+
+
+
+----------------------------------------------------------------------
+-- normalize input video data:
 
 function createDataBatch()
    videoData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
    for i = 1, nfpr do -- just get a few frames to begin with
-      procFrame = preproc:forward(rawFrame) -- full LCN!
+      -- perform full LCN
+      if opt.videodata then procFrame = preproc:forward(rawFrame) 
+      else procFrame = trainData[i][1]:clone()
+      end
       videoData[i] = procFrame
-      rawFrame = source:forward()
+      if opt.videodata then rawFrame = source:forward() end
    end
    return videoData
 end
@@ -260,7 +275,7 @@ nnf1 = 1 -- number of frames from input video to use
 nk1 = f1_
 nk = nk1
 is = k1_
-if quicktest then opt.nsamples = 300 else opt.nsamples = 10000 end  -- patch samples to use
+if opt.quicktest then opt.nsamples = 300 else opt.nsamples = 10000 end  -- patch samples to use
 opt.initstd = 0.1
 opt.niter = 15
 opt.batchsize = 1000
@@ -271,20 +286,18 @@ ovhe = (ivhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 
-if slacmodel then 
-   -- SLAC MODEL: nk1*4 filters to learn, then narrow down to nk1:
-   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1*2, nnf1, is) -- with slac
+if opt.slacmodel then 
+   -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
+   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1*2, nnf1, is)
    -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
    kernels1s, connTable1 = slac(kernels1, nk1*2, nk1, 5, 4.5) -- SLAC algorithm to aggregate kernels
    --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
    nk1s=kernels1s:size(1)
---else 
---   -- FULL CONNECT MODEL:
---   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is) 
+else 
+   -- AND/OR model or FULL CONNECT MODEL:
+   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is) 
 end
 
--- OR-AND net:
---kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is)
    
 ----------------------------------------------------------------------
 -- 1st layer
@@ -298,11 +311,15 @@ end
    elseif nnf1 == 1 then
       --vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
       -- just pick one map as input:
-      vnet:add(nn.SpatialConvolutionMap(nn.tables.random(ivch, nk1s, 1), is, is, cvstepsize,cvstepsize)) 
+      if opt.slacmodel then 
+         vnet:add(nn.SpatialConvolutionMap(nn.tables.random(ivch, nk1s, 1), is, is, cvstepsize,cvstepsize))
+      else
+         vnet:add(nn.SpatialConvolutionMap(nn.tables.random(ivch, nk1, 1), is, is, cvstepsize,cvstepsize))
+      end 
    end
    -- just pick one map as input
-   if slacmodel then vnet:add(nn.SpatialMaxMap(connTable1)) end -- slac function to pick max(each group) from VolConv layer
-   vnet:add(nn.Tanh())
+   if opt.slacmodel then vnet:add(nn.SpatialMaxMap(connTable1)) end -- slac function to pick max(each group) from VolConv layer
+   if opt.cnnmodel then vnet:add(nn.Tanh()) end
    if opt.pooling == 'max' then
       vnet:add(nn.SpatialMaxPooling(s0_,s0_,s0_,s0_))
    elseif opt.pooling == 'sum' then
@@ -310,36 +327,22 @@ end
    elseif opt.pooling == 'l2' then
       vnet:add(nn.SpatialLPPooling(f1_,2,s0_,s0_,s0_,s0_))
    end
-   vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3))
+   if opt.cnnmodel then vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3)) end
 
 
 
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels1:div(nnf1*nk1*ivch) -- divide kernels so output of SpatialConv is about ~1 or more
+kernels1:div(nnf1*nk1/3) -- divide kernels so output of SpatialConv is about ~1 or more
 if nnf1 > 1 then vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
-elseif nnf1 == 1 then vnet.modules[1].weight = kernels1:reshape(nk1*2,is,is) end  -- max pool 1to1 connex
-
+elseif nnf1 == 1 then 
+   if opt.slacmodel then 
+         vnet.modules[1].weight = kernels1:reshape(nk1*2,is,is) -- max pool 1to1 connex
+      else vnet.modules[1].weight = kernels1:reshape(nk1,is,is) end
+end
 
 ----------------------------------------------------------------------
 print '==> process video throught 1st layer:'
-
-function processLayer(lv, network, data_in, nkernels, oheight, owidth)
-   data_out = torch.Tensor(nfpr, nkernels, oheight, owidth)
-   for i = nnf1, nfpr do -- just get a few frames to begin with
-      if ( nnf1>1 and lv == 1 ) then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
-      else            procFrames = data_in[i] end
-      data_out[i] = network:forward(procFrames)
-      xlua.progress(i, nfpr)
-      -- do a live display of the input video and output feature maps 
-      if opt.display then
-         winm = image.display{image=data_out[i], padding=2, zoom=1, win=winm, nrow=math.floor(math.sqrt(nkernels))}
-      end
-   end
-   -- data_out = nil --free memory if needed
-   return data_out
-end
-
 videoData2 = processLayer(nlayer, vnet, videoData, nk1, ovhe, ovwi)
 
 --report some statistics:
@@ -362,7 +365,7 @@ ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 --
---if slacmodel then 
+--if opt.slacmodel then 
 --   -- SLAC MODEL: nk1*4 filters to learn, then narrow down to nk1:
 --   kernels2p = trainLayer(nlayer, videoData2, opt.nsamples*5, nil, nk2, nnf2, is) -- with slac
 --   -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
@@ -380,8 +383,8 @@ print '==> Computing connection tables based on co-occurence of features'
 cTable1 = createCoCnxTable(videoData2, nk1, nk2, fanin, 'AND') -- connex table based on co-occurence of features
 
 -- train filter for next layer (kernels2) based on groups of cTable!!!
-kernels2 = trainCoCnxLayer(nlayer, videoData2, cTable1, opt.nsamples*5, nk2, fanin, nnf2, is, false)
-
+kernels2 = trainCoCnxLayer(nlayer, videoData2, cTable1, opt.nsamples/50, nk2, fanin, nnf2, is, kernels1, false)
+--kernels2 = trainCoCnxLayerRS(nlayer, videoData2, cTable1, opt.nsamples/50, nk2, fanin, nnf2, is, false)
 
 
 ----------------------------------------------------------------------
@@ -392,8 +395,8 @@ kernels2 = trainCoCnxLayer(nlayer, videoData2, cTable1, opt.nsamples*5, nk2, fan
    --vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize)) -- fully connected (BEST NOW)
    --vnet2:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(nk2), is, is, cvstepsize,cvstepsize)) -- max pool 1to1 connex
    vnet2:add(nn.SpatialConvolutionMap(cTable1, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
-   --if slacmodel then vnet2:add(nn.SpatialMaxMap(connTable2)) end -- slac function to pick max(each group) from VolConv layer
-   vnet2:add(nn.Tanh())
+   --if opt.slacmodel then vnet2:add(nn.SpatialMaxMap(connTable2)) end -- slac function to pick max(each group) from VolConv layer
+   if opt.cnnmodel then vnet2:add(nn.Tanh()) end
    if opt.pooling == 'max' then
       vnet2:add(nn.SpatialMaxPooling(s1_,s1_,s1_,s1_))
    elseif opt.pooling == 'sum' then
@@ -401,12 +404,12 @@ kernels2 = trainCoCnxLayer(nlayer, videoData2, cTable1, opt.nsamples*5, nk2, fan
    elseif opt.pooling == 'l2' then
       vnet2:add(nn.SpatialLPPooling(f2_,2,s1_,s1_,s1_,s1_))
    end
-   vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
+   if opt.cnnmodel then vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3)) end
    
 
 -- setup net/ load kernels into network:
 vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels2:div(nk2*2) -- divide kernels so output of SpatialConv is about ~1 or more
+kernels2:div(nk2*4) -- divide kernels so output of SpatialConv is about ~1 or more
 --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
 vnet2.modules[1].weight = kernels2:reshape(cTable1:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 
@@ -435,7 +438,7 @@ cvstepsize = 1
 
 
 
---if slacmodel then 
+--if opt.slacmodel then 
 --   -- SLAC MODEL: nk1*4 filters to learn, then narrow down to nk1:
 --   kernels3 = trainLayer(nlayer, videoData3, opt.nsamples*20, nil, nk3*4, nnf3, is) -- with slac
 --   -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
@@ -453,8 +456,8 @@ print '==> Computing connection tables based on co-occurence of features'
 cTable2 = createCoCnxTable(videoData3, nk2, nk3, fanin, 'AND') -- connex table based on similarity of features
 
 -- train filter for next layer (kernels2) based on groups of cTable!!!
-kernels3 = trainCoCnxLayer(nlayer, videoData3, cTable2, opt.nsamples*5, nk3, fanin, nnf3, is, false)
-
+kernels3 = trainCoCnxLayer(nlayer, videoData3, cTable2, opt.nsamples/50, nk3, fanin, nnf3, is, kernels2, false)
+--kernels3 = trainCoCnxLayerRS(nlayer, videoData3, cTable2, opt.nsamples/50, nk3, fanin, nnf3, is, false) -- just one random sample
    
 ----------------------------------------------------------------------
 -- 3rd layer   
@@ -565,7 +568,7 @@ convnet = tnet -- pointer to full convnet trained with CL
    --trainable:add(fovea) --train only classifier with Clustering Learning/unsup network
    --trainable:add(classifier) --train only classifier with Clustering Learning/unsup network
    
-   -- average processing time
+   -- compute network creation time time 
    time = sys.clock() - time
    print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 
@@ -610,185 +613,13 @@ print('<trainer> nb of trainable parameters: ' .. parameters:size(1))
 criterion = nn.DistNLLCriterion()
 criterion.targetIsProbability = true
 
-----------------------------------------------------------------------
--- add jitter to dataset
---
-if opt.jitter then
-   print('<trainer> applying (or removing) jitter')
-   transforms = {'-hflip','-rotate 4','-rotate -4'}
-   for _,trans in ipairs(transforms) do
-      os.execute('torch -ng expand.lua ' .. trans .. ' -d ' .. opt.dataset)
-   end
-end
+
 
 ----------------------------------------------------------------------
 -- load/get dataset
---
 
-if not sys.dirp(opt.dataset) then
-   print('<trainer> retrieving dataset')
-   local path = sys.dirname(opt.dataset)
-   local tar = sys.basename(opt.www)
-   os.execute('mkdir -p "' .. path .. '"; '..
-              'cd "' .. path .. '"; '..
-              'wget ' .. opt.www .. '; '..
-              'tar xvf ' .. tar)
-elseif opt.clearcache then
-   print('<trainer> clearing dataset cache')
-   os.execute('rm ' .. opt.dataset .. '/*/subset*/cached*')
-end
-
--- live display
-disp = {}
-livedisp = function(full_sample, full_mask, sample, ctr_target, x, y, size)
-              if fovea.padded[1] then
-                 disp.win1=image.display{image=fovea.padded[1], win=disp.win1,
-                                         legend='normed [' .. disp.class .. ']'}
-                 disp.win1.painter:setcolor(1,0,0)
-                 disp.win1.painter:rectangle(disp.x, disp.y, disp.size, disp.size)
-                 disp.win1.painter:stroke()
-                 disp.win2=image.display{image=fovea.narrowed[1], win=disp.win2,
-                                         legend='focused [' .. disp.class .. ']'}
-                 if fovea.narrowed[2] then
-                    disp.win3=image.display{image=fovea.narrowed[2], win=disp.win3,
-                                            legend='focused [' .. disp.class .. ']'}
-                 end
-                 if fovea.narrowed[3] then
-                    disp.win4=image.display{image=fovea.narrowed[3], win=disp.win4,
-                                            legend='focused [' .. disp.class .. ']'}
-                 end
-              end
-              disp.x = x; disp.y = y; disp.size = size; disp.class = classes[ctr_target]
-              sys.sleep(1)
-           end
-
--- create a distribution of classes in a given patch
-nclasses = #classes
-distribution = function(mask)
-                  local hist = lab.histc(mask,nclasses,0.5,nclasses+0.5,true)
-                  hist:div(hist:sum())
-                  return hist
-               end
-
--- this function generates {sample + target}
-labelGenerator = function(dataset, full_sample, full_mask, sample, mask, ctr_target,
-                          ctr_x, ctr_y, box_x, box_y, box_size)
-                    -- distort?
-                    if opt.distort then
-                       full_sample,full_mask = distort(full_sample,full_mask)
-                    end
-                    -- generate target vector
-                    local target
-                    if opt.distributions then
-                       target = distribution(mask)
-                    else
-                       target = torch.Tensor(#classes):zero()
-                       target[ctr_target] = 1
-                    end
-                    -- display sample
-                    if opt.display then 
-                       livedisp(full_sample, full_mask, sample, ctr_target, ctr_x, ctr_y, box_size) 
-                    end
-                    -- return
-                    return {full_sample, target, ctr_x, ctr_y, box_size}
-                 end
-
--- sampling filter: only sample patches that have at least N% pixels of the class
-local filter = {ratio=0.1, size=25, step=4}
-
--- distort function
-function distort(i,t)
-   -- bernoulli
-   if torch.bernoulli(0.9) == 1 then
-      return i,t
-   end
-
-   -- x/y grids
-   local grid_y = torch.ger( torch.linspace(-1,1,t:size(1)), torch.ones(t:size(2)) )
-   local grid_x = torch.ger( torch.ones(t:size(1)), torch.linspace(-1,1,t:size(2)) )
-
-   -- distort field
-   local gsize = 50
-   local g1 = image.gaussian1D(gsize):resize(gsize,1)
-   local g2 = g1:t()
-   local flow1 = image.convolve(torch.rand(2,t:size(1),t:size(2)):add(-0.5), g1, 'same')
-   flow1 = image.convolve(flow1, g2, 'same')
-   flow1:mul(torch.uniform(0,0.05))
-
-   -- scale field
-   local flow2 = torch.Tensor(2,t:size(1),t:size(2))
-   flow2[1] = grid_y
-   flow2[2] = grid_x
-   flow2[1]:mul(torch.uniform(-30,30))
-   flow2[2]:mul(torch.uniform(-30,30))
-
-   -- rotation field
-   flow3 = torch.Tensor(2,t:size(1),t:size(2))
-   flow3[1] = grid_y * ((t:size(1)-1)/2) * -1
-   flow3[2] = grid_x * ((t:size(2)-1)/2) * -1
-   view = flow3:reshape(2,t:size(1)*t:size(2))
-   local function rmat(deg)
-      local r = deg/180*math.pi
-      return torch.Tensor{{math.cos(r), -math.sin(r)}, 
-                          {math.sin(r), math.cos(r)}}
-   end
-   flow3r = torch.mm(rmat( torch.uniform(-10,10) ), view)
-   flow3 = flow3 - flow3r:reshape( 2, t:size(1), t:size(2) )
-
-   -- apply field
-   local flow = flow2 + flow3
-   local it = image.warp(i,flow,'bilinear')
-   local tt = image.warp(t,flow,'simple')
-
-   -- return transformed image/target
-   return it,tt
-end
-
-
-
-----------------------------------------------------------------------
--- train using SGD
---
-batchSize = opt.batchSize
-
-trainConfusion = optim.ConfusionMatrix(classes)
-testConfusion  = optim.ConfusionMatrix(classes)
-logger         = optim.Logger(sys.dirname(opt.save) .. '/log.txt')
-
--- train data
-trainData = DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
-                           verbose=true,
-                           rawSampleMaxSize=256,
-                           nbClasses=#classes,
-                           classNames=classes,
-                           classToSkip=1,
-                           samplingMode=opt.sampling,
-                           samplingFilter=filter,
-                           infiniteSet=true,
-                           labelGenerator=labelGenerator,
-                           cacheFile='cached-256-'..patchSize..'-'..opt.type,
-                           nbPatchPerSample=5,
-                           preloadSamples=true,
-                           patchSize=patchSize}
-
--- load test set
-testData = DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
-                          verbose=true,
-                          nbClasses=#classes,
-                          rawSampleMaxSize=256,
-                          classNames=classes,
-                          classToSkip=1,
-                          cacheFile='cached-256-'..patchSize..'-'..opt.type,
-                          preloadSamples=true,
-                          patchSize=patchSize}
-
-
--- display set
-if opt.display then
-   trainData:display{title='train set'}
-   testData.colormap = trainData.colormap
-   testData:display{title='test set'}
-end
+--print '==> loading siftflow training-set'
+--dofile('sf-dataset.lua')
 
 
 
@@ -862,185 +693,8 @@ print('testData2[1][1] Max: '..testData2[1][1]:max()..' and min: '..testData2[1]
 
 
 
-------------------------
+-------------------------
+-- do training:
+dofile('sf-vkn-train.lua')
 
-function epoch()
-   -- train for one epoch on current subset
-   print('<trainer> on training set:')
-   time = sys.clock()
-   for t = 1,trainData:size(),batchSize do
-      -- disp progress
-      xlua.progress(t, trainsize)
 
-      -- create mini batch
-      local inputs = {}
-      local targets = {}
-      local options = {}
-      for i = t,math.min(t+batchSize-1,trainsize) do
-         -- load new sample
-         local sample = trainData2[i] -- pick samples processed by unsup network
-         local input = sample[1]
-         local target = sample[2]
---         local sample_x = sample[3]
---         local sample_y = sample[4]
---         local sample_size = sample[5]
-
-         -- store input/target
-         table.insert(inputs, input)
-         table.insert(targets, target)
-         table.insert(options, {x=sample_x, y=sample_y, size=sample_size})
-      end
-
-      -- create closure to evaluate f(X) and df/dX
-      local feval = function(x)
-                       -- get new parameters
-                       if x ~= parameters then
-                          parameters:copy(x)
-                       end
-
-                       -- reset gradients
-                       gradParameters:zero()
-
-                       -- f is the average of all criterions
-                       local f = 0
-
-                       -- evaluate function for complete mini batch
-                       for i = 1,#inputs do
-                          -- focus fovea
-                          --fovea:focus(options[i].x, options[i].y, options[i].size)
-
-                          -- estimate f
-                          local output = trainable:forward(inputs[i])
-                          local err = criterion:forward(output, targets[i])
-                          f = f + err
-
-                          -- estimate df/dW
-                          local df_do = criterion:backward(output, targets[i])
-                          trainable:backward(inputs[i], df_do)
-
-                          -- update confusion matrix
-                          if trainConfusion then
-                             trainConfusion:add(output, targets[i])
-                          end
-
-                          -- visualize?
-                          if opt.visualize then
-                             display(inputs[i])
-                          end
-                       end
-
-                       -- normalize gradients and f(X)
-                       gradParameters:div(#inputs)
-                       f = f/#inputs
-
-                       -- return f and df/dX
-                       return f,gradParameters
-                    end
-
-      -- optimize
-      --if inputs[1]:size(1) == 3 then
-         -- optimize the model given current input/target set
-         config = config or {learningRate = opt.learningRate,
-                             weightDecay = opt.weightDecay,
-                             momentum = opt.momentum,
-                             learningRateDecay = opt.learningRateDecay}
-         _,fx = optim.sgd(feval, parameters, config)
-      --else
-      --   print('<trainer> warning: skipping sample with only ' .. inputs[1]:size(1) .. ' channel(s)')
-      --end
-   end
-
-   -- average processing time
-   time = sys.clock() - time
-   time = time / trainsize
-   print("<trainer> time to learn 1 sample = " .. (time*1000) .. 'ms')
-
-   -- train error/confusion
-   print(trainConfusion)
-
-   -- free up memory
-   fovea.cachedPreProcessed = nil
-   collectgarbage()
-
-   -- create test net
-   testable = trainable:clone()
-   --testable.modules[1]:focus() -- defocus
-   testable = nn.SpatialClassifier(testable) -- spatial classifier
-
-   -- then test
-   time = sys.clock()
-   ntests = 0
-   for i = 1,#testData.rawdata/5 do
-      -- disp progress
-      xlua.progress(i, #testData.rawdata/5)
-
-      -- load new sample
-      --testData:loadSample((i-1)*5+1)
-      local input = testData2[i][1] -- test only one processed by unsup network
-      local mask = testData2[i][2]
-
-      -- test sample
-      local output = testable:forward(input)
-      mask = image.scale(mask, output:size(3), output:size(2))
-
-      -- loop over all locations
-      local target = torch.Tensor(#classes):zero()
-      for y = 1,(#mask)[1] do
-         for x = 1,(#mask)[2] do
-            -- target at x,y location
-            target:zero()
-            target[mask[{ y,x }]] = 1
-
-            -- update confusion matrix / error
-            if mask[{ y,x }] ~= 1 then
-               testConfusion:add(output[{ {},y,x }], target)
-               ntests = ntests + 1
-            end
-         end
-      end
-   end
-
-   -- average processing time
-   time = sys.clock() - time
-   time = time / ntests
-   print("<tester> time to test 1 sample = " .. (time*1000) .. 'ms')
-
-   -- train error/confusion
-   print(testConfusion)
-
-   -- save network if error if test error is better
-   averageValid = averageValid or 0
-   if opt.save and (testConfusion.averageValid > averageValid) then
-      print('<trainer> best average accuracy reached: ' .. (testConfusion.averageValid*100)
-         .. '%, saving network to '..opt.save)
-      fovea:focus()
-      torch.save(opt.save, trainable)
-      averageValid = testConfusion.averageValid
-   end
-
-   -- report on error/confusion
-   logger:add {['Average Per-Class Accuracy [%] (train set)'] = trainConfusion.averageValid * 100,
-               ['Pixelwise Accuracy [%] (train set)'] = trainConfusion.totalValid * 100,
-               ['Average Per-Class Accuracy [%] (test set)'] = testConfusion.averageValid * 100,
-               ['Pixelwise Accuracy [%] (test set)'] = testConfusion.totalValid * 100}
-   if opt.plot then
-      logger:style {['Average Per-Class Accuracy [%] (train set)'] = {'+','~ 1e-3'},
-                    ['Pixelwise Accuracy [%] (train set)'] = {'+','~ 1e-3'},
-                    ['Average Per-Class Accuracy [%] (test set)'] = {'+','~ 1e-3'},
-                    ['Pixelwise Accuracy [%] (test set)'] = {'+','~ 1e-3'}}
-      logger:plot()
-   end
-
-   -- reset matrices
-   trainConfusion:zero()
-   testConfusion:zero()
-
-   -- free up memory
-   fovea.cachedPreProcessed = nil
-   collectgarbage()
-end
-
--- train !
-while true do 
-   epoch() 
-end
