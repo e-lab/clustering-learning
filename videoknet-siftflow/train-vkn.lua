@@ -288,15 +288,16 @@ ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 if opt.slacmodel then 
    -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
-   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1*2, nnf1, is)
+   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1*2, nnf1, is, false)
    -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
    kernels1s, connTable1 = slac(kernels1, nk1*2, nk1, 5, 4.5) -- SLAC algorithm to aggregate kernels
    --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
    nk1s=kernels1s:size(1)
 else 
    -- AND/OR model or FULL CONNECT MODEL:
-   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is) 
+   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is, false) 
 end
+image.display{image=kernels1:reshape(nk1,is,is), padding=2, nrow=8, symmetric=true, zoom=2}
 
    
 ----------------------------------------------------------------------
@@ -312,14 +313,15 @@ end
       --vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
       -- just pick one map as input:
       if opt.slacmodel then 
-         vnet:add(nn.SpatialConvolutionMap(nn.tables.random(ivch, nk1s, 1), is, is, cvstepsize,cvstepsize))
+         vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
       else
-         vnet:add(nn.SpatialConvolutionMap(nn.tables.random(ivch, nk1, 1), is, is, cvstepsize,cvstepsize))
+         vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
       end 
    end
    -- just pick one map as input
    if opt.slacmodel then vnet:add(nn.SpatialMaxMap(connTable1)) end -- slac function to pick max(each group) from VolConv layer
    if opt.cnnmodel then vnet:add(nn.Tanh()) end
+   --vnet:add(nn.HardShrink(0.1))
    if opt.pooling == 'max' then
       vnet:add(nn.SpatialMaxPooling(s0_,s0_,s0_,s0_))
    elseif opt.pooling == 'sum' then
@@ -332,13 +334,13 @@ end
 
 
 -- setup net/ load kernels into network:
-vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels1:div(nnf1*nk1/3) -- divide kernels so output of SpatialConv is about ~1 or more
+vnet.modules[1].bias = torch.zeros(#vnet.modules[1].bias)-- set bias to 0!!! not needed
+kernels1_ = kernels1:clone():div(nk1/8) -- divide kernels so output of SpatialConv is about ~1 or more
 if nnf1 > 1 then vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
 elseif nnf1 == 1 then 
    if opt.slacmodel then 
-         vnet.modules[1].weight = kernels1:reshape(nk1*2,is,is) -- max pool 1to1 connex
-      else vnet.modules[1].weight = kernels1:reshape(nk1,is,is) end
+         vnet.modules[1].weight = kernels1_:reshape(nk1*2,is,is) -- max pool 1to1 connex
+      else vnet.modules[1].weight = kernels1_:reshape(nk1, 1, is,is):expand(nk1,ivch,is,is) end
 end
 
 ----------------------------------------------------------------------
@@ -346,8 +348,8 @@ print '==> process video throught 1st layer:'
 videoData2 = processLayer(nlayer, vnet, videoData, nk1, ovhe, ovwi)
 
 --report some statistics:
-print('1st layer conv out. Max: '..vnet.modules[1].output:max()..' and min: '..vnet.modules[1].output:min()..' and mean: '..vnet.modules[1].output:mean())
-print('1st layer output. Max: '..vnet.output:max()..' and min: '..vnet.output:min()..' and mean: '..vnet.output:mean())
+print('1st layer conv out. std: '..vnet.modules[1].output:std()..' and mean: '..vnet.modules[1].output:mean())
+print('1st layer output. std: '..vnet.output:std()..' and mean: '..vnet.output:mean())
 
 
 
@@ -380,11 +382,9 @@ ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 -- OUTPUT Co-occurence CONNEX MODEL:
 print '==> Computing connection tables based on co-occurence of features'
-cTable1 = createCoCnxTable(videoData2, nk1, nk2, fanin, 'AND') -- connex table based on co-occurence of features
 
--- train filter for next layer (kernels2) based on groups of cTable!!!
-kernels2 = trainCoCnxLayer(nlayer, videoData2, cTable1, opt.nsamples/50, nk2, fanin, nnf2, is, kernels1, false)
---kernels2 = trainCoCnxLayerRS(nlayer, videoData2, cTable1, opt.nsamples/50, nk2, fanin, nnf2, is, false)
+cTable1, kernels2 = createCoCnx(nlayer, videoData2, nk1, nk2, fanin, 'AND', opt.nsamples/50, nnf2, is, kernels1, false)
+image.display{image=kernels2, padding=2, nrow=8,  symmetric=true, zoom=2}
 
 
 ----------------------------------------------------------------------
@@ -397,6 +397,7 @@ kernels2 = trainCoCnxLayer(nlayer, videoData2, cTable1, opt.nsamples/50, nk2, fa
    vnet2:add(nn.SpatialConvolutionMap(cTable1, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
    --if opt.slacmodel then vnet2:add(nn.SpatialMaxMap(connTable2)) end -- slac function to pick max(each group) from VolConv layer
    if opt.cnnmodel then vnet2:add(nn.Tanh()) end
+   --vnet:add(nn.HardShrink(0.1))
    if opt.pooling == 'max' then
       vnet2:add(nn.SpatialMaxPooling(s1_,s1_,s1_,s1_))
    elseif opt.pooling == 'sum' then
@@ -408,10 +409,10 @@ kernels2 = trainCoCnxLayer(nlayer, videoData2, cTable1, opt.nsamples/50, nk2, fa
    
 
 -- setup net/ load kernels into network:
-vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels2:div(nk2*4) -- divide kernels so output of SpatialConv is about ~1 or more
+vnet2.modules[1].bias = torch.zeros(#vnet2.modules[1].bias) -- set bias to 0!!! not needed
+kernels2_ = kernels2:clone():div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
 --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
-vnet2.modules[1].weight = kernels2:reshape(cTable1:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
+vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 
 ----------------------------------------------------------------------
 print '==> process video throught 2nd layer:'
@@ -420,8 +421,8 @@ print 'Initial frames will be blank because of the VolConv on 1st layer~'
 videoData3 = processLayer(nlayer, vnet2, videoData2, nk2, ovhe2, ovwi2)
 
 --report some statistics:
-print('2nd layer conv out.Max: '..vnet2.modules[1].output:max()..' and min: '..vnet2.modules[1].output:min()..' and mean: '..vnet2.modules[1].output:mean())
-print('1st layer output. Max: '..vnet2.output:max()..' and min: '..vnet2.output:min()..' and mean: '..vnet2.output:mean())
+print('2nd layer conv out. std: '..vnet2.modules[1].output:std()..' and mean: '..vnet2.modules[1].output:mean())
+print('2nd layer output. std: '..vnet2.output:std()..' and mean: '..vnet2.output:mean())
 
 
 
@@ -453,11 +454,8 @@ cvstepsize = 1
 
 -- OUTPUT Co-occurence CONNEX MODEL:
 print '==> Computing connection tables based on co-occurence of features'
-cTable2 = createCoCnxTable(videoData3, nk2, nk3, fanin, 'AND') -- connex table based on similarity of features
-
--- train filter for next layer (kernels2) based on groups of cTable!!!
-kernels3 = trainCoCnxLayer(nlayer, videoData3, cTable2, opt.nsamples/50, nk3, fanin, nnf3, is, kernels2, false)
---kernels3 = trainCoCnxLayerRS(nlayer, videoData3, cTable2, opt.nsamples/50, nk3, fanin, nnf3, is, false) -- just one random sample
+cTable2, kernels3 = createCoCnx(nlayer, videoData3, nk2, nk3, fanin, 'AND', opt.nsamples/50, nnf3, is, kernels2, false)
+image.display{image=kernels3, padding=2, nrow=8,  symmetric=true, zoom=2}
    
 ----------------------------------------------------------------------
 -- 3rd layer   
@@ -479,10 +477,24 @@ kernels3 = trainCoCnxLayer(nlayer, videoData3, cTable2, opt.nsamples/50, nk3, fa
 
 
 -- setup net/ load kernels into network:
-vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels3:div(nk3*fanin) -- divide kernels so output of SpatialConv is about ~1 or more
---vnet3.modules[1].weight = kernels3:reshape(nk3,nk2,is,is)
-vnet3.modules[1].weight = kernels3:reshape(cTable2:size(1),is,is)   
+vnet3.modules[1].bias = torch.zeros(#vnet3.modules[1].bias) -- set bias to 0!!! not needed
+kernels3_ = kernels3:clone():div(nk3*fanin) -- divide kernels so output of SpatialConv is about ~1 or more
+--vnet3.modules[1].weight = kernels3_:reshape(nk3,nk2,is,is)
+vnet3.modules[1].weight = kernels3_
+   
+   
+---------------------------------------------------------------------- 
+-- quick sanity check with Lena:
+
+normkernel = image.gaussian1D(15)
+normer=nn.SpatialContrastiveNormalization(3, normkernel,1e-3)
+lvn=normer:forward(image.lena())
+lv1 = vnet:forward(lvn)
+image.display(lv1)
+lv2 = vnet2:forward(lv1)
+image.display(lv2)
+
+
    
 ----------------------------------------------------------------------  
 -- prepare full network with all layers:

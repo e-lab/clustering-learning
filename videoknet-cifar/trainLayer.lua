@@ -129,30 +129,21 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
    local nf = vdata:size(1) --number frames
    local vd2 = torch.zeros(vdata:size(1),1,vdata:size(3),vdata:size(4))
 
-   local covMat = torch.zeros(nkp,nkp) --covariance matrix
-   local connTable = {}
+   covMat = torch.zeros(nkp,nkp) --covariance matrix
+   local connTable = {} -- table of connections
+   local kerTable = {} -- table of kernels/filters
       
+   -- compute covariance matrix:
    for k=1,nf do
       for i=1,nkp do
          for j=i+1,nkp do
             if mode == 'OR' then covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i], vdata[k][j]) -- dist metric
-            elseif mode == 'AND' then covMat[i][j] = covMat[i][j] + torch.cmul(vdata[k][i], vdata[k][j]):sum() -- conv metric
+            elseif mode == 'AND' then covMat[i][j] = covMat[i][j] + torch.cmul(vdata[k][i], vdata[k][j]):abs():sum() -- conv metric
             else print('Error: mode must be AND or OR!') end
             covMat[j][i] = covMat[i][j]
          end
       end
-   end
-   -- current version only computes this number of connex max:
-   local nmaxconnex = nkp*fanin+nkp*fanin*2 -- fanin and 2*fanin connex. need more?
-   local kernels = torch.zeros(nmaxconnex,is,is)
-   
-   -- connect cells one to one with fist layer features and duplicate their filters in 2nd layer:
-   -- NOT A GOOD IDEA/RESULTS!!!
---   for i=1,nkp do
---      table.insert(connTable, torch.Tensor({i,i}))
---   end
---   --replicate previous layer kernels to 1 to 1 connex:
---   kernels[{{1,nkp}}] = prev_ker[{{1,nkp}}]
+   end   
    
    -- connect cells in fanin groups:
    for i=1,nkp do
@@ -161,7 +152,10 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
       
       -- groups of fanin:
       vd2 = vd2*0 -- reset frame buffer!!!!
-      for k=1,fanin do -- the first value may connect to itself!
+      -- add first value:
+      table.insert(connTable, torch.Tensor({i,i}))
+      vd2 = vd2 + vdata[{{},{i}}]
+      for k=1,fanin-1 do -- the first value may connect to itself!
          table.insert(connTable, torch.Tensor({j[k],i}))
          -- sum up all feature maps that co-occur (AND operation)
          vd2 = vd2 + vdata[{{},{j[k]}}]
@@ -169,18 +163,16 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
       -- learn one filter for this connection:
       local kerp = trainLayer(nlayer, vd2, samples, nil, 1, nnf, is, verbose)
       --replicate kernels to all group
-      kernels[{{fanin*(i-1)+1, fanin*i}}] = kerp:reshape(1,is,is):expand(fanin,is,is)
-      
-   end
-   
-      -- connect cells in 2* fanin groups:
-   for i=1,nkp do
-      if mode == 'OR' then max, j = torch.sort(covMat[i]) --want smaller values first (dist)
-      else max, j = torch.sort(covMat[i], true) end -- want larger values first (conv)
-      
+      for k=1,fanin do 
+         table.insert(kerTable, kerp)
+      end
+    
       -- groups of 2 x fanin: (offset in i: 2*nkp)
       vd2 = vd2*0 -- reset frame buffer!!!!
-      for k=1,2*fanin do -- the first value may connect to itself!
+      -- add first value:
+      table.insert(connTable, torch.Tensor({i,i+nkp}))
+      vd2 = vd2 + vdata[{{},{i}}]  
+      for k=1,2*fanin-1 do -- the first value may connect to itself!
          table.insert(connTable, torch.Tensor({j[k],i+nkp}))
          -- sum up all feature maps that co-occur (AND operation)
          vd2 = vd2 + vdata[{{},{j[k]}}]
@@ -188,24 +180,28 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
       -- learn one filter for this connection:
       local kerp = trainLayer(nlayer, vd2, samples, nil, 1, nnf, is, verbose)
       --replicate kernels to all group:
-      kernels[{{2*fanin*(i-1)+2*nkp+1, 2*fanin*i+2*nkp}}] = kerp:reshape(1,is,is):expand(2*fanin,is,is)
-      
+      for k=1, 2*fanin do 
+         table.insert(kerTable, kerp)
+      end
    end
  
-   -- turn table into connect Table tensor, as needed by nn modules
-   connTableTensor = torch.Tensor(#connTable,2)
+   -- turn tables into tensors:
+   local connTableTensor = torch.Tensor(#connTable,2)
+   local kerTensor = torch.zeros(#kerTable,is,is)
    for i, value in ipairs(connTable) do
       connTableTensor[i] = value
    end
-   
-   --renormalize all kernels:
-   for i=1,nmaxconnex do
-      kernels[i] = kernels[i]:add(-kernels[i]:mean()):div(kernels[i]:std())
+   for i, value in ipairs(kerTable) do
+      kerTensor[i] = value
    end
    
-   return connTableTensor[{{1, nmaxconnex}}], kernels
+   --renormalize all kernels:
+   for i=1,kerTensor:size(1) do
+      kerTensor[i] = kerTensor[i]:add(-kerTensor[i]:mean()):div(kerTensor[i]:std())
+   end
+   
+   return connTableTensor, kerTensor
 end
-
 
 --function createConnexTable(nkP, nkN, level)
 --   -- computes a connection matrix LeNet5-style:
