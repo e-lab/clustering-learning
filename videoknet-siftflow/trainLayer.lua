@@ -20,7 +20,7 @@ function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
    local data = torch.Tensor(nsamples, nnf*is*is) -- need to learn volumetric filters on multiple frames!
    local i = 1
    while i <= nsamples do
-      fimg = math.random(nnf,nfpr) -- pointer to current frame
+      fimg = math.random(nnf,trainData:size(1)) -- pointer to current frame
       for j = 1, nnf do
          img[{{},{j}}] = trainData[fimg-j+1] -- pointer to current and all previous frames
       end
@@ -127,7 +127,7 @@ end
 
 
 function processLayer(lv, network, data_in, nkernels, oheight, owidth)
-   data_out = torch.Tensor(nfpr, nkernels, oheight, owidth)
+   data_out = torch.Tensor(data_in:size(1), nkernels, oheight, owidth)
    for i = nnf1, data_in:size(1) do -- just get a few frames to begin with
       if ( nnf1>1 and lv == 1 ) then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
       else procFrames = data_in[i] end
@@ -189,7 +189,7 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
       -- add first value:
       table.insert(connTable, torch.Tensor({i,i}))
       vd2 = vd2 + vdata[{{},{i}}]
-      for k=1,fanin-1 do -- the first value may connect to itself!
+      for k=2,fanin do -- the first value may connect to itself!
          table.insert(connTable, torch.Tensor({j[k],i}))
          -- sum up all feature maps that co-occur (AND operation)
          vd2 = vd2 + vdata[{{},{j[k]}}]
@@ -206,7 +206,7 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
       -- add first value:
       table.insert(connTable, torch.Tensor({i,i+nkp}))
       vd2 = vd2 + vdata[{{},{i}}]  
-      for k=1,2*fanin-1 do -- the first value may connect to itself!
+      for k=2,2*fanin do -- the first value may connect to itself!
          table.insert(connTable, torch.Tensor({j[k],i+nkp}))
          -- sum up all feature maps that co-occur (AND operation)
          vd2 = vd2 + vdata[{{},{j[k]}}]
@@ -240,7 +240,7 @@ end
 
 -- tests:
 -- image.display{image=kernels1:reshape(32,7,7), padding=2, zoom=4,  nrow=8}
--- image.display{image=videoData2[1], padding=2, zoom=1,  nrow=8}
+-- image.display{image=videoData2[6], padding=2, zoom=1,  nrow=8}
 
 
 
@@ -285,19 +285,7 @@ function trainCoCnxLayerRS(nlayer, vdata, connTable, samples, nk, fanin, nnf, is
       --replicate kernels to all group
       kernels[{{(i-1)*fanin+1, i*fanin}}] = kerp:reshape(1,is*is):expand(fanin,is*is)
    end
-   
-   -- connect cells in fanin*2 groups:
---   for i=nk/fanin+1,3*nk/fanin,2 do
---      --kernels2[] = trainlayer on videoData features only from the group!!
---      for j=1,fanin*2 do -- only do kmeans on features of group:
---         -- sum up all feature maps that co-occur (AND operation)
---         vd2 = vd2 + vdata[{{},{connTable[(i-1)*fanin+j][1]}}]
---      end
---      -- learn one filter for this connection:
---      kerp = trainLayerRS(vd2, 1, nnf, is, verbose)
---      --replicate kernels to all group
---      kernels[{{(i-1)*fanin+1,(i+1)*fanin}}] = kerp:reshape(1,is*is):expand(fanin*2,is*is)
---   end
+  
    return kernels
 end
 
