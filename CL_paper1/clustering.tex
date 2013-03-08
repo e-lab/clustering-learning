@@ -86,9 +86,9 @@ The CIFAR10 dataset has a training size of 20,000 32x32 images and a test size o
 
 For the real-time networks in Section \ref{section-realtime}, we used patches from a contrast-normalized version of a few images from the Berkeley image dataset \cite{martin_database_2001}.  As testing data for a general-purposed robotic vision system, we decided to test our networks in a tracking task, where the network has to be able to track an object of interest based on a  single presentation. For this purpose we use the challenging benchmark TLD dataset \cite{kalal_tracking_2012}. From this dataset we selected multiple videos with different properties of occlusions, camera movement, pose, scale and illumination changes.
 
-Even if other groups showed slight improvements using the YUV color space \cite{jarrett_what_2009}, we did not use it. Rather, we kept the images in their original RGB to keep the model closer to biological human vision, where the retina is broadly sensitive to roughly RGB \cite{wandell_foundations_1995}. 
+Even if other groups showed slight improvements using the YUV color space \cite{jarrett_what_2009}, we were not able to reproduce the benefits of YUV, so we kept the images in their original RGB space. 
 
-Also we did not use whitening of data (such as ZCA whitening) even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first, it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second, whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique to whiten the input data removing its mean bias and adapting the input dynamic range.
+Also we did not use whitening of data (such as ZCA whitening) even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first, it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second, whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique \cite{wandell_foundations_1995} to whiten the input data removing its mean bias and adapting the input dynamic range.
 
 
 
@@ -110,7 +110,7 @@ The layers in the clustering learning network used the following sequence of ope
 
 
 \begin{enumerate}
-\item SpatialSAD module: performing sum-abs-diff operation on images convolutionally with the learned CL filters: $yc_i=\sum_i {k_{ij} - x_i}$.
+\item SpatialSAD module: performing sum-abs-diff operation on images convolutionally with the learned CL filters: $yc_i=\sum_i |{k_{ij} - x_i}|$, where $|x|$ is the absolute value of $x$.
 \item Spatial Contrastive Normalization: to zero the data mean and standard deviation
 \item L2 pooling over 2x2 regions: $yp_i = \sum_{n \times n}(yc_{ij} \cdot gn_{ij})$, computing the weighted average of the input in an $n \cdot n$ (here $n=2$) region with a gaussian kernel $gn$.
 \item Tanh nonlinearity: $ynl_i = tanh(yp_i )$
@@ -127,7 +127,7 @@ In order to show the effectiveness of the learning techniques, we compared them 
 \end{enumerate}
 
 
-All networks used 16 filters on the first layer, 128 filters on the second layer. The final classifier was fixed to 128 hidden units and 10 output classes for CIFAR and SVHN. Clustering learning networks used a fully connected input to 1st, and 1st to 2nd layer, while convolutional neural networks used 1-out-of-3 and 4-out-of-16 random connection table between the input and 1st layer, and 1st and 2nd layer respectively.
+All networks used 16 filters on the first layer, 128 filters on the second layer. The final classifier was fixed to 128 hidden units and 10 output classes for CIFAR and SVHN. Clustering learning networks used a fully connected (all channels connected to all channels) input to 1st, and 1st to 2nd layer, while convolutional neural networks used 1-out-of-3 and 4-out-of-16 random connection table between the input and 1st layer, and 1st and 2nd layer respectively.
 
 Notice that CL networks used sum-abs-diff metrics to correlate filters responses to inputs. This is different to the standard approach of deep networks \cite{lecun_gradient-based_1998, hinton_fast_2006, krizhevsky_learning_2009, jarrett_what_2009} where convolution operations are used. Our choice of sum-abs-diff operations was dictated by improved performance of the CL filters with respect to convolutions.
 In a standard modern computer the difference between convolutions (multiplications by weights) and distance metrics (differences, subtractions) is not visible, as multipliers are optimized to perform as fast as the simpler difference operations. On the other hand, when programmable hardware as FPGA is used, the use of differences instead of multipliers can reduce the silicon area utilization, and power up to 15 times on a 16 bit operation, and more for larger number of bits. A full comparison of the hardware advantages of using distance operators instead of convolutions will be the subject of future publications.
@@ -220,7 +220,7 @@ The results in the CIFAR10 dataset show a gain of more than 10\% from using a si
 Clustering learning showed the same behavior as in the SVHN dataset: adding a second layer achieved 3-5\% better accuracy on the test set. This dataset uses very small images and is notoriously difficult, and clustering learning only reported a 50\% accuracy overall with 2 layers.
 All results are much lower than the current state of art in this dataset, which is close to 90\% \cite{ciresan_multi-column_2012}. But again we stress that our goal is real-time implementation and other researcher have obtained record results in this dataset only with very large networks, most of which are not amenable to real-time operation.
 
-We tested random filters used on the 2nd layer of the networks  for both SVHN and CIFAR10 datasets. The 1st layer of the network was trained with CL, as mentioned above. The randomly connected 2nd layer used a fixed CNN layer as described in section \ref{sec-net-arch}. The SpatialConvolution module was initialized with uniformly random filters by the Torch7 tool, and left untouched. % needs better explanation? untouched -- in contrast to being updated with the backprop of the last two layers
+We tested random filters used on the first 2 layers of the networks for both SVHN and CIFAR10 datasets. The 1st layer of the network was trained with CL, as mentioned above. The randomly connected network used a fixed CNN layer as described in section \ref{sec-net-arch}.  Same qualitative results were obtained with a random CL model. The SpatialConvolution module was initialized with uniformly random filters by the Torch7 tool, and left untouched. % needs better explanation? untouched -- in contrast to being updated with the backprop of the last two layers
 We have found that random filters on the 2nd layer of this networks perform with the same levels of precision as the 2nd layers trained with CL. This was true for both SVNH and CIFAR10 datasets.
 
 We also used the filters obtained with CL on a 2-layers standard CNN network. But the use of convolution operation was giving results that were 5-10\% less precise that the results obtained with sum-abs-diff operators.
@@ -294,7 +294,7 @@ The data provided in table  \ref{table2} reports published and informally obtain
 
 \section{Discussion}
 
-We presented results on clustering learning algorithms for general-purpose vision system. These algorithms can be used to train multi-layer feed-forward neural networks in minutes, with fully automated scripts with a reduced set of learning parameters. We show results on static datasets and dynamic tracking of objects in videos. We show results that prove that CL techniques are a viable and quick option to training deep networks. In static datasets, although they do not perform at the state-of-the-art because of their small network size, they can however be run in real-time because of the small network size. We also show that on tracking datasets the CL networks outperforms CNN networks. We believe the tracking dataset is a better approximation of robotic tasks, where locking on a target object is required for approach and manipulation.
+We presented results on clustering learning algorithms for general-purpose vision system. These algorithms can be used to train multi-layer feed-forward neural networks in minutes, with fully automated scripts with a reduced set of learning parameters. We show results on static datasets and dynamic tracking of objects in videos. We show results that prove that CL techniques are a viable and quick option to training deep networks. In static datasets, although they do not perform at the state-of-the-art because of their small network size, they can however be run in real-time because of the small network size. The accuracy gap in recognition can be reduced by using more features, as reported in \cite{coates_analysis_2011}, with an evaluation time linearly proportionalto the number of filters used. We also show that on tracking datasets the CL networks outperforms CNN networks. We believe the tracking dataset is a better approximation of robotic tasks, where locking on a target object is required for approach and manipulation.
 
 We show that sum-abs-diff operators can be more effective than convolution operations for filtering in deep networks. We also point out that custom hardware with these operators will be more efficient in power and space.
 
@@ -305,6 +305,8 @@ We argue that more research is needed in the field of applied and real-time deep
 CL models are also very interesting to bio-inspired vision research because they provide a close connection between computational neuroscience and machine learning. In particular unsupervised clustering algorithms provide a simplistic model of Hebbian Learning methods, where neurons that respond to the same input are clustered \cite{sanger_optimal_1989, foldiak_forming_1990, oja_principal_1992, bell_independent_1997} . Most of previous work was mathematically complex and not efficient to implement. In this paper we thus present one of the first practical application of Hebbian-like learning applied to deep networks. Its fast and simple computation can help researchers quickly train complex neural networks.
 
 Further research is also needed to justify unsupervised learning on the 2nd or later layers. Our experiments indicate that random filters are as good as learned CL filters. This fact was also shown in other papers \cite{coates_selecting_2011,socher_convolutional_2012} where random filters were used in the 2nd layer, after one CL-trained layer with a large number of features (128 or above).
+
+All the code for this paper is available here: \url{https://github.com/culurciello/CL_paper1_code}.
 
 
 %I am not sure why people would want to have popularity contests on a single dataset.Ê
