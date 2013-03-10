@@ -61,7 +61,7 @@ testData = {
 testData.labels = testData.labels + 1
 
 -- resize dataset (if using small version)
-trsize = 20000  -- repeated here for smaller size train/test
+trsize = 50000  -- repeated here for smaller size train/test
 tesize = 2000
 
 trainData.data = trainData.data[{ {1,trsize} }]

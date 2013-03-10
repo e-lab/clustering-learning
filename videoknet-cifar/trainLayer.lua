@@ -17,7 +17,7 @@ function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
    
    if verbose then print '==> extracting patches' end -- only extract on Y channel (or R if RGB) -- all ok
    local img = torch.Tensor(ivch, nnf, ivhe, ivwi)
-   local data = torch.Tensor(nsamples, nnf*is*is) -- need to learn volumetric filters on multiple frames!
+   local data = torch.Tensor(nsamples, ivch*nnf*is*is) -- need to learn volumetric filters on multiple frames!
    local i = 1
    while i <= nsamples do
       fimg = math.random(nnf,trainData:size(1)) -- pointer to current frame
@@ -27,7 +27,7 @@ function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
       local z = math.random(1,ivch)
       local x = math.random(1,ivwi-is+1)
       local y = math.random(1,ivhe-is+1)
-      local patches = img[{ {z},{},{y,y+is-1},{x,x+is-1} }]:clone()
+      local patches = img[{ {},{},{y,y+is-1},{x,x+is-1} }]:clone()
       patches:add(-patches:mean())
       patches:div(patches:std()+1e-3) -- to prevent divide-by-0
       -- keep only patches with high SNR:
@@ -40,7 +40,7 @@ function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
    
    -- show a few patches:
    if verbose then
-      f256S = data[{{1,256}}]:reshape(256,nnf*is,is)
+      f256S = data[{{1,256},{1}}]:reshape(256,nnf*is,is)
       image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches of video frames'}
    end
    
@@ -55,7 +55,7 @@ function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
    end                    
    --kernels = kmec(data, nk, opt.initstd, opt.niter, opt.batchsize, cb, true) -- Euge kmeans (not good init yet)
    --kernels = unsup.kmeans(data, nk, opt.initstd, opt.niter, opt.batchsize, cb, true)
-   kernels = okmeans(data, nk, kernels, opt.initstd, opt.niter, opt.batchsize, cb, verbose) -- online version to upadte filters
+   kernels, counts = okmeans(data, nk, kernels, opt.initstd, opt.niter, opt.batchsize, cb, verbose) -- online version to upadte filters
    if verbose then print('==> saving centroids to disk:') end
    --torch.save('volumetric.t7', kernels)
    
@@ -92,7 +92,7 @@ function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
       os.execute('rm volumetric*.png') -- remove intermediate files
    end
    
-   return kernels
+   return kernels, counts
 end
 
 
@@ -109,7 +109,7 @@ function trainLayerRS(trainData, nk, nnf, is)
    local img = torch.Tensor(ivch, nnf, ivhe, ivwi)
    local data = torch.Tensor(nk, nnf*is*is) -- need to learn volumetric filters on multiple frames!
    for i = 1, nk do
-      fimg = math.random(nnf,nfpr) -- pointer to current frame
+      fimg = math.random(nnf,trainData:size(1)) -- pointer to current frame
       for j = 1, nnf do
          img[{{},{j}}] = trainData[fimg-j+1] -- pointer to current and all previous frames
       end
@@ -142,6 +142,101 @@ function processLayer(lv, network, data_in, nkernels, oheight, owidth)
    return data_out
 end
 
+function createCoCnxAF(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, prev_ker, verbose)
+-- average of input filters version!!!!
+
+   -- create a covariance/co-occurence connection table based on some test data
+   -- input data has multiple planes, compute similarity between these planes
+   -- group planes that are similar
+   -- we connect each group to one neuron in next layer
+   -- mode = 'OR', 'AND'. OR=distance similarity metric, AND=co-occurrence metric
+   -- nkp = features previous layer, nkn = next layer
+   -- fanin = desired connex fanin - this should be also learned from data...
+   
+   -- train filter for next layer based on groups of connTable!!!
+   -- uses co-occurence of features on muliple maps: sum maps, run clustering on them
+   
+   -- nnf = number frames, nk = number kernels, is = kernel size
+   -- verbose = true ==> show images, text messages
+   -- prev_ker= previous layer kernels
+   
+   assert(nkp == vdata:size(2), 'Error: nkp and input video features are not the same number!') -- number features
+   
+   local nf = vdata:size(1) --number frames
+   local vd2 = torch.zeros(vdata:size(1),fanin*2,vdata:size(3),vdata:size(4)) --temp data storage
+
+   covMat = torch.zeros(nkp,nkp) --covariance matrix
+   local connTable = {} -- table of connections
+   local kerTable = {} -- table of kernels/filters
+   
+   if nlayer == 2 then prev_ker = prev_ker:sum(2) end
+   local ave_fil = torch.Tensor(is,is)
+   
+      
+   -- compute covariance matrix:
+   for k=1,nf do
+      for i=1,nkp do
+         for j=i,nkp do
+            if mode == 'OR' then covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i], vdata[k][j]) -- dist metric
+            elseif mode == 'AND' then covMat[i][j] = covMat[i][j] + torch.cmul(vdata[k][i], vdata[k][j]):abs():sum() -- conv metric
+            else print('Error: mode must be AND or OR!') end
+            covMat[j][i] = covMat[i][j]
+         end
+      end
+   end   
+   
+   -- connect cells in fanin groups:
+   for i=1,nkp do
+      if mode == 'OR' then max, inx = torch.sort(covMat[i]) end --want smaller values first (dist)
+      if mode == 'AND' then max, inx = torch.sort(covMat[i], true) end -- want larger values first (conv)
+      
+      -- groups of fanin:
+      local nrepeat = 4
+      for j=1,nrepeat do -- repeat to have multiple filter kernels from this group:
+         ave_fil = prev_ker[i]:clone()
+         for k=1,fanin do -- the first value connects to itself!
+            table.insert(connTable, torch.Tensor({inx[k],i}))
+            -- average input filters in group
+            ave_fil = ave_fil + prev_ker[inx[k]] -- average filter
+         end
+         for k=1,fanin do
+            table.insert(kerTable, ave_fil)
+         end
+      end
+      
+      -- groups of 2 x fanin: (offset in i: 2*nkp)
+      for j=1,nrepeat do -- repeat to have multiple filter kernels from this group:
+         ave_fil = prev_ker[i]:clone()
+         for k=1,2*fanin do -- the first value connects to itself!
+            table.insert(connTable, torch.Tensor({inx[k],i+nkp}))
+            -- average input filters in group
+            ave_fil = ave_fil + prev_ker[inx[k]] -- average filter
+         end
+         for k=1,2*fanin do
+            table.insert(kerTable, ave_fil)
+         end
+      end
+   end
+ 
+   -- turn tables into tensors:
+   local connTableTensor = torch.Tensor(#connTable,2)
+   local kerTensor = torch.zeros(#kerTable,is,is)
+   for i, value in ipairs(connTable) do
+      connTableTensor[i] = value
+   end
+   for i, value in ipairs(kerTable) do
+      kerTensor[i] = value
+   end
+   
+   --renormalize all kernels:
+   for i=1,kerTensor:size(1) do
+      kerTensor[i] = kerTensor[i]:add(-kerTensor[i]:mean()):div(kerTensor[i]:std())
+   end
+   
+   return connTableTensor, kerTensor
+end
+
+
 function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, prev_ker, verbose)
    -- create a covariance/co-occurence connection table based on some test data
    -- input data has multiple planes, compute similarity between these planes
@@ -161,16 +256,16 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
    assert(nkp == vdata:size(2), 'Error: nkp and input video features are not the same number!') -- number features
    
    local nf = vdata:size(1) --number frames
-   local vd2 = torch.zeros(vdata:size(1),1,vdata:size(3),vdata:size(4))
+   local vd2 = torch.zeros(vdata:size(1),fanin*2,vdata:size(3),vdata:size(4)) --temp data storage
 
    covMat = torch.zeros(nkp,nkp) --covariance matrix
    local connTable = {} -- table of connections
-   local kerTable = {} -- table of kernels/filters
+   kerTable = {} -- table of kernels/filters
       
    -- compute covariance matrix:
    for k=1,nf do
       for i=1,nkp do
-         for j=i+1,nkp do
+         for j=i,nkp do
             if mode == 'OR' then covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i], vdata[k][j]) -- dist metric
             elseif mode == 'AND' then covMat[i][j] = covMat[i][j] + torch.cmul(vdata[k][i], vdata[k][j]):abs():sum() -- conv metric
             else print('Error: mode must be AND or OR!') end
@@ -181,41 +276,38 @@ function createCoCnx(nlayer, vdata, nkp, nkn, fanin, mode, samples, nnf, is, pre
    
    -- connect cells in fanin groups:
    for i=1,nkp do
-      if mode == 'OR' then max, j = torch.sort(covMat[i]) --want smaller values first (dist)
-      else max, j = torch.sort(covMat[i], true) end -- want larger values first (conv)
+      if mode == 'OR' then max, inx = torch.sort(covMat[i]) end --want smaller values first (dist)
+      if mode == 'AND' then max, inx = torch.sort(covMat[i], true) end -- want larger values first (conv)
       
       -- groups of fanin:
-      vd2 = vd2*0 -- reset frame buffer!!!!
-      -- add first value:
-      table.insert(connTable, torch.Tensor({i,i}))
-      vd2 = vd2 + vdata[{{},{i}}]
-      for k=2,fanin do -- the first value may connect to itself!
-         table.insert(connTable, torch.Tensor({j[k],i}))
-         -- sum up all feature maps that co-occur (AND operation)
-         vd2 = vd2 + vdata[{{},{j[k]}}]
+      local nrepeat = 4
+      for j=1,nrepeat do -- repeat to have multiple filter kernels from this group:
+         for k=1,fanin do -- the first value connects to itself!
+            table.insert(connTable, torch.Tensor({inx[k],i}))
+            -- group all feature maps that co-occur / are similar
+            vd2[{{},{k}}] = vdata[{{},{inx[k]}}]
+         end
       end
-      -- learn one filter for this connection:
-      local kerp = trainLayer(nlayer, vd2, samples, nil, 1, nnf, is, verbose)
-      --replicate kernels to all group
-      for k=1,fanin do 
-         table.insert(kerTable, kerp)
+      kerp = trainLayer(nlayer, vd2, samples, nil, nrepeat, nnf, is, verbose)
+      for j=1,nrepeat do
+         for k=1,fanin do
+            table.insert(kerTable, kerp:reshape(nrepeat, fanin*2,is*is)[j][k])
+         end
       end
-    
+      
       -- groups of 2 x fanin: (offset in i: 2*nkp)
-      vd2 = vd2*0 -- reset frame buffer!!!!
-      -- add first value:
-      table.insert(connTable, torch.Tensor({i,i+nkp}))
-      vd2 = vd2 + vdata[{{},{i}}]  
-      for k=2,2*fanin do -- the first value may connect to itself!
-         table.insert(connTable, torch.Tensor({j[k],i+nkp}))
-         -- sum up all feature maps that co-occur (AND operation)
-         vd2 = vd2 + vdata[{{},{j[k]}}]
+      for j=1,nrepeat do -- repeat to have multiple filter kernels from this group:
+         for k=1,2*fanin do -- the first value connects to itself!
+            table.insert(connTable, torch.Tensor({inx[k],i+nkp}))
+            -- group all feature maps that co-occur / are similar
+            vd2[{{},{k}}] = vdata[{{},{inx[k]}}]
+         end
       end
-      -- learn one filter for this connection:
-      local kerp = trainLayer(nlayer, vd2, samples, nil, 1, nnf, is, verbose)
-      --replicate kernels to all group:
-      for k=1, 2*fanin do 
-         table.insert(kerTable, kerp)
+      kerp = trainLayer(nlayer, vd2, samples, nil, nrepeat, nnf, is, verbose)
+      for j=1,nrepeat do
+         for k=1,2*fanin do
+            table.insert(kerTable, kerp:reshape(nrepeat, fanin*2,is*is)[j][k])
+         end
       end
    end
  
