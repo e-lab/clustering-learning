@@ -1,0 +1,31 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf340
+{\fonttbl\f0\fswiss\fcharset0 ArialMT;}
+{\colortbl;\red255\green255\blue255;}
+{\info
+{\author Eugenio Culurciello}}\margl1440\margr1440\vieww17500\viewh19200\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs28 \cf0 E Culurciello\
+\
+cifar-10\
+results\
+\
+March 2013\
+\
+test pref.	network type	dir				comments\
+58.2%	one layer only	CL-1l				larger classifier because of only 2x subsampling\
+55.6%	2 layers		CL-2l best			best results with slac and co-occurence\
+55.1%	2 layers		CL-2l	-fullconnect		full connex\
+50.7%	2 layers		CL-2l-no sub2l		full connex only 2x subsampling 2 layers\
+\
+\
+1 layer gives best results (58.2%) due to much larger number of features for final classifier, but slow last classifier\
+\
+2 layers fully connected with 2x only subsampling does not give good results (50.7%).\
+\
+2 layer 4x subsampling and fully connected was about the same as our technique of co-occurence (CL-2l best) connection matrix. Both at ~55%.\
+Fully connected was doing about 16x more operations on 2nd layer.\
+\
+\
+\
+}
