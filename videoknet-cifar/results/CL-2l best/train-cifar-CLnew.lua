@@ -12,7 +12,7 @@ require 'online-kmeans'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
-cmd:option('-display', true, 'display kernels')
+cmd:option('-display', false, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
@@ -39,9 +39,9 @@ cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
---if not qt then
---   opt.display = false
---end
+if not qt then
+   opt.display = false
+end
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
@@ -92,6 +92,7 @@ if opt.slacmodel then
    -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
    nk11 = nk1*2
    kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, nk11, nnf1, is, false)
+   -- sort the kernels by importance and use only top kernels:
    -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
    kernels1s, cTable1 = slac(kernels1u, nk11, nk1, 4, 4.5) -- SLAC algorithm to aggregate kernels
    --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
@@ -102,7 +103,7 @@ else
    -- AND/OR model or FULL CONNECT MODEL:
    -- get twice the kernels, then pick best ones:
    kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, 2*nk1, nnf1, is)
-   -- sort the kernels by importance and use only top kernels:
+   -- sort kernels:
    _, j = torch.sort(counts,true)
    kernels1 = torch.Tensor(nk1,ivch, is,is)
    for i=1,nk1 do
@@ -142,6 +143,7 @@ else
    vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is)
 end
 
+
 ----------------------------------------------------------------------
 print '==> process dataset throught 1st layer:'
 trainData2 = processLayer(nlayer, vnet, trainData.data, nk1, ovhe, ovwi, false)
@@ -160,16 +162,8 @@ if opt.display then
 end
 
 
--- show one out, all features:
-if opt.display then
-   f_y = trainData2[{ {1}, {1,nk1} }]:clone()
-   image.display{image=f_y:reshape(nk1,ovhe,ovwi), nrow=16, nrow=16, padding=2, zoom=2, 
-            legend='Output 1st layer: first 256 examples, 1st feature'}
-end
-
 ----------------------------------------------------------------------
---
-print '==> generating filters for layer 2:'
+--print '==> generating filters for layer 1:'
 nlayer = 2
 nnf2 = 1 -- just one frames goes into layer 2
 is = 3
@@ -182,11 +176,8 @@ cvstepsize = 1
 ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 
-
-
 --if opt.slacmodel then
 --   -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
---   -- has to be fully connected between layers...
 --   nk22 = nk2*2
 --   kernels2u, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk22, nnf2, is, false)
 --   -- sort the kernels by importance and use only top kernels:
@@ -194,50 +185,18 @@ ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 --   kernels2s, cTable2 = slac(kernels2u, nk22, nk2, 4, 4.5) -- SLAC algorithm to aggregate kernels
 --   --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
 --   nk2s=kernels1s:size(1)
---   if opt.display then image.display{image=kernels2s:reshape(kernels2s:size(1)*nk1,is,is), padding=2, nrow = 32, symmetric=true, zoom=4, legend = 'Layer 2 filters'} end
---
+--   if opt.display then image.display{image=kernels1s:reshape(kernels1s:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
+
 --else 
---   -- OUTPUT Co-occurence CONNEX MODEL:
---   print '==> Computing connection tables based on co-occurence of features'
---   cTable21, kernels21 = createCoCnx(nlayer, trainData2[{{1,50}}], nk1, 1, fanin, 1, nnf2, is, kernels1, false) -- no need for filters here
---   nk2 = cTable21:max()
---   nk = nk2
---end
-
---fully connected between layers:
-kernels2, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk2, nnf2, is, false)
 
 
-------------------------------------------------------------------------
----- 2.1nd layer
---   vnet21 = nn.Sequential()
---   vnet21:add(nn.SpatialMaxMap(cTable21))
---
-------------------------------------------------------------------------
---print '==> process dataset throught 2.1nd layer:'
---
---trainData21 = processLayer(nlayer, vnet21, trainData2, nk2, ovhe, ovwi, false)
---testData21 = processLayer(nlayer, vnet21, testData2, nk2, ovhe, ovwi, false)
---
-----report some statistics:
---print('2nd layer conv output std: '..vnet21.modules[1].output:std()..' and mean: '..vnet21.modules[1].output:mean())
---print('2nd layer output std: '..vnet21.output:std()..' and min: '..vnet21.output:min()..' and mean: '..vnet21.output:mean())
---
---
----- show a few outputs:
---if opt.display then
---   f256S_y = trainData21[{ {1,256},1 }]
---   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
---            legend='Output 2nd layer: first 256 examples, 1st feature'}
---end
---
---   -- OUTPUT Co-occurence CONNEX MODEL:
---   print '==> Computing connection tables based on co-occurence of features'
---   cTable2, kernels2 = createCoCnx(nlayer, trainData21[{{1,100}}], nk2, feat_group, fanin, 50, nnf2, is, kernels1, false)
---   nk2 = cTable2:max()
---   nk = nk2
---   if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'} end
 
+   -- OUTPUT Co-occurence CONNEX MODEL:
+   print '==> Computing connection tables based on co-occurence of features'
+   cTable2, kernels2 = createCoCnx(nlayer, trainData2[{{1,100}}], nk1, feat_group, fanin, 50, nnf2, is, kernels1, false)
+   nk2 = cTable2:max()
+   nk = nk2
+   if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'} end
 
 
 ----------------------------------------------------------------------
@@ -247,9 +206,8 @@ kernels2, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk2, nnf2,
 --      vnet2:add(nn.SpatialConvolution(nk1, nk2s, is, is, cvstepsize,cvstepsize)) -- slac 2nd layer
 --      vnet2:add(nn.SpatialMaxMap(cTable2))
 --   else
---      vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+      vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
 --   end
-   vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is, cvstepsize,cvstepsize)) -- full connex 2nd layer
   
    --vnet2:add(nn.Tanh())
    vnet2:add(nn.HardShrink(0.1))
@@ -259,17 +217,15 @@ kernels2, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk2, nnf2,
    
 
 -- setup net/ load kernels into network:
---vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
+vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
 --if opt.slacmodel then 
 --   kernels2_= kernels2s:clone():div(nk2/2)
---   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1), nk1,is,is)
+--   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)
 --else
---   kernels2_= kernels2:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
---   --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
---   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
+   kernels2_= kernels2:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+   --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
+   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 --end
-
-vnet2.modules[1].weight = kernels2:clone():div(150):reshape(nk2,nk1,is,is) --full connex filters
 
 
 ----------------------------------------------------------------------
@@ -343,22 +299,6 @@ if opt.display then
    f256S_y = trainDataF.data[{ {1,256},1 }]
    image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
             legend='Output 2-layer net: first 256 examples, 1st feature'}
-end
-
-print '==> verify statistics'
-channels = {'r','g','b'}
-for i,channel in ipairs(channels) do
-   trainMean = trainData.data[{ {},i }]:mean()
-   trainStd = trainData.data[{ {},i }]:std()
-
-   testMean = testData.data[{ {},i }]:mean()
-   testStd = testData.data[{ {},i }]:std()
-
-   print('training data, '..channel..'-channel, mean: ' .. trainMean)
-   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
-
-   print('test data, '..channel..'-channel, mean: ' .. testMean)
-   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
 

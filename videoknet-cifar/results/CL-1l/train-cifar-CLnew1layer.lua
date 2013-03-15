@@ -12,7 +12,7 @@ require 'online-kmeans'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
-cmd:option('-display', true, 'display kernels')
+cmd:option('-display', false, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
@@ -39,9 +39,9 @@ cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
---if not qt then
---   opt.display = false
---end
+if not qt then
+   opt.display = false
+end
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
@@ -142,10 +142,12 @@ else
    vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is)
 end
 
+
+
 ----------------------------------------------------------------------
 print '==> process dataset throught 1st layer:'
-trainData2 = processLayer(nlayer, vnet, trainData.data, nk1, ovhe, ovwi, false)
-testData2 = processLayer(nlayer, vnet, testData.data, nk1, ovhe, ovwi, false)
+trainData2 = processLayer(nlayer, vnet, trainData.data, nk1, ovhe, ovwi)
+testData2 = processLayer(nlayer, vnet, testData.data, nk1, ovhe, ovwi)
 
 --report some statistics:
 print('1st layer conv output std: '..vnet.modules[1].output:std()..' and mean: '..vnet.modules[1].output:mean())
@@ -153,144 +155,69 @@ print('1st layer output std: '..vnet.output:std()..' and mean: '..vnet.output:me
 
 
 -- show a few outputs:
-if opt.display then
+if opt.visualize then
    f256S_y = trainData2[{ {1,256},1 }]
    image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
             legend='Output 1st layer: first 256 examples, 1st feature'}
 end
-
-
--- show one out, all features:
-if opt.display then
-   f_y = trainData2[{ {1}, {1,nk1} }]:clone()
-   image.display{image=f_y:reshape(nk1,ovhe,ovwi), nrow=16, nrow=16, padding=2, zoom=2, 
-            legend='Output 1st layer: first 256 examples, 1st feature'}
-end
-
-----------------------------------------------------------------------
 --
-print '==> generating filters for layer 2:'
-nlayer = 2
-nnf2 = 1 -- just one frames goes into layer 2
-is = 3
-fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
-feat_group = 4 --features per group
-nk2 = 64
-nk = nk2
-poolsize = 2
-cvstepsize = 1
-ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
-ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
-
-
-
---if opt.slacmodel then
---   -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
---   -- has to be fully connected between layers...
---   nk22 = nk2*2
---   kernels2u, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk22, nnf2, is, false)
---   -- sort the kernels by importance and use only top kernels:
---   -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
---   kernels2s, cTable2 = slac(kernels2u, nk22, nk2, 4, 4.5) -- SLAC algorithm to aggregate kernels
---   --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
---   nk2s=kernels1s:size(1)
---   if opt.display then image.display{image=kernels2s:reshape(kernels2s:size(1)*nk1,is,is), padding=2, nrow = 32, symmetric=true, zoom=4, legend = 'Layer 2 filters'} end
---
---else 
---   -- OUTPUT Co-occurence CONNEX MODEL:
---   print '==> Computing connection tables based on co-occurence of features'
---   cTable21, kernels21 = createCoCnx(nlayer, trainData2[{{1,50}}], nk1, 1, fanin, 1, nnf2, is, kernels1, false) -- no need for filters here
---   nk2 = cTable21:max()
---   nk = nk2
---end
-
---fully connected between layers:
-kernels2, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk2, nnf2, is, false)
-
-
-------------------------------------------------------------------------
----- 2.1nd layer
---   vnet21 = nn.Sequential()
---   vnet21:add(nn.SpatialMaxMap(cTable21))
 --
 ------------------------------------------------------------------------
---print '==> process dataset throught 2.1nd layer:'
+----print '==> generating filters for layer 1:'
+--nlayer = 2
+--nnf2 = 1 -- just one frames goes into layer 2
+--nk2 = 64
+--nk = nk2
+--is = 5
+--fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
+--poolsize = 2
+--cvstepsize = 1
+--ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
+--ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 --
---trainData21 = processLayer(nlayer, vnet21, trainData2, nk2, ovhe, ovwi, false)
---testData21 = processLayer(nlayer, vnet21, testData2, nk2, ovhe, ovwi, false)
+--
+---- OUTPUT Co-occurence CONNEX MODEL:
+--print '==> Computing connection tables based on co-occurence of features'
+--cTable1, kernels2 = createCoCnx(nlayer, trainData2[{{1,100}}], nk1, nk2, fanin, 'AND', opt.nsamples, nnf2, is, kernels1, false)
+--
+--image.display{image=kernels2:reshape(kernels2:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'}
+--
+--
+------------------------------------------------------------------------
+---- 2nd layer
+--
+--   vnet2 = nn.Sequential()
+--   vnet2:add(nn.SpatialConvolutionMap(cTable1, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+--   vnet2:add(nn.Tanh())
+--   vnet2:add(nn.SpatialMaxPooling(2,2,2,2))
+--   --vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
+--   
+--
+---- setup net/ load kernels into network:
+--vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
+--kernels2_= kernels2:clone():div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+----vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
+--vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
+--
+------------------------------------------------------------------------
+--print '==> process dataset throught 2nd layer:'
+--
+--trainData3 = processLayer(nlayer, vnet2, trainData2, nk2, ovhe2, ovwi2)
+--testData3 = processLayer(nlayer, vnet2, testData2, nk2, ovhe2, ovwi2)
 --
 ----report some statistics:
---print('2nd layer conv output std: '..vnet21.modules[1].output:std()..' and mean: '..vnet21.modules[1].output:mean())
---print('2nd layer output std: '..vnet21.output:std()..' and min: '..vnet21.output:min()..' and mean: '..vnet21.output:mean())
+--print('2nd layer conv output std: '..vnet2.modules[1].output:std()..' and mean: '..vnet2.modules[1].output:mean())
+--print('2nd layer output std: '..vnet2.output:std()..' and min: '..vnet2.output:min()..' and mean: '..vnet2.output:mean())
 --
 --
 ---- show a few outputs:
---if opt.display then
---   f256S_y = trainData21[{ {1,256},1 }]
+--if opt.visualize then
+--   f256S_y = trainData3[{ {1,256},1 }]
 --   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
 --            legend='Output 2nd layer: first 256 examples, 1st feature'}
 --end
 --
---   -- OUTPUT Co-occurence CONNEX MODEL:
---   print '==> Computing connection tables based on co-occurence of features'
---   cTable2, kernels2 = createCoCnx(nlayer, trainData21[{{1,100}}], nk2, feat_group, fanin, 50, nnf2, is, kernels1, false)
---   nk2 = cTable2:max()
---   nk = nk2
---   if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'} end
-
-
-
-----------------------------------------------------------------------
--- 2nd layer
-   vnet2 = nn.Sequential()
---   if opt.slacmodel then 
---      vnet2:add(nn.SpatialConvolution(nk1, nk2s, is, is, cvstepsize,cvstepsize)) -- slac 2nd layer
---      vnet2:add(nn.SpatialMaxMap(cTable2))
---   else
---      vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
---   end
-   vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is, cvstepsize,cvstepsize)) -- full connex 2nd layer
-  
-   --vnet2:add(nn.Tanh())
-   vnet2:add(nn.HardShrink(0.1))
-   --vnet2:add(nn.HardTanh())
-   vnet2:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
-   --vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
-   
-
--- setup net/ load kernels into network:
---vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
---if opt.slacmodel then 
---   kernels2_= kernels2s:clone():div(nk2/2)
---   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1), nk1,is,is)
---else
---   kernels2_= kernels2:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
---   --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
---   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
---end
-
-vnet2.modules[1].weight = kernels2:clone():div(150):reshape(nk2,nk1,is,is) --full connex filters
-
-
-----------------------------------------------------------------------
-print '==> process dataset throught 2nd layer:'
-
-trainData3 = processLayer(nlayer, vnet2, trainData2, nk2, ovhe2, ovwi2, false)
-testData3 = processLayer(nlayer, vnet2, testData2, nk2, ovhe2, ovwi2, false)
-
---report some statistics:
-print('2nd layer conv output std: '..vnet2.modules[1].output:std()..' and mean: '..vnet2.modules[1].output:mean())
-print('2nd layer output std: '..vnet2.output:std()..' and min: '..vnet2.output:min()..' and mean: '..vnet2.output:mean())
-
-
--- show a few outputs:
-if opt.display then
-   f256S_y = trainData3[{ {1,256},1 }]
-   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
-            legend='Output 2nd layer: first 256 examples, 1st feature'}
-end
-
-
+--
 -- compute network creation time time 
 time = sys.clock() - time
 print("<net> time to CL train network = " .. (time*1000) .. 'ms')
@@ -300,8 +227,8 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 ----------------------------------------------------------------------
 print "==> creating final test dataset"
 
-l1netoutsize = ovhe2 -- 2 layers:
-
+l1netoutsize = ovhe -- 2 layers:
+nk = nk1
 
 trainDataF = {
    data = torch.Tensor(trsize, nk*(l1netoutsize)^2),
@@ -316,21 +243,21 @@ testDataF = {
    size = function() return tesize end
 }
 
-trainDataF.data = trainData3
+trainDataF.data = trainData2
 for t = 1,trainDataF:size() do
    --trainData2.data[t] = l1net:forward(trainData.data[t]:double())
    --xlua.progress(t, trainData:size())
 end
 
-testDataF.data = testData3
+testDataF.data = testData2
 for t = 1,testDataF:size() do
    --testData2.data[t] = l1net:forward(testData.data[t]:double())
    --xlua.progress(t, testData:size())
 end
 
 
-trainDataF.data = trainDataF.data:reshape(trsize, nk2, l1netoutsize, l1netoutsize)
-testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
+trainDataF.data = trainDataF.data:reshape(trsize, nk1, l1netoutsize, l1netoutsize)
+testDataF.data = testDataF.data:reshape(tesize, nk1, l1netoutsize, l1netoutsize)
 
 -- relocate pointers to new dataset:
 --trainData1 = trainData -- save original dataset
@@ -339,7 +266,7 @@ trainData = trainDataF -- relocate new dataset
 testData = testDataF
 
 -- show a few outputs:
-if opt.display then
+if opt.visualize then
    f256S_y = trainDataF.data[{ {1,256},1 }]
    image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
             legend='Output 2-layer net: first 256 examples, 1st feature'}

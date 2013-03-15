@@ -8,7 +8,7 @@ function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
    -- computes filter kernels for a layer with Clustering Learning / k-means
    -- verbose = true ==> show images, text messages
    
-   local patchminstd = 0.75 -- min std require to use patch! IMPORTANT PARAM!!!
+   local patchminstd = 0--.75 -- min std require to use patch! IMPORTANT PARAM!!!
    
    -- input video params:
    local ivch = trainData[1]:size(1) -- channels
@@ -98,7 +98,7 @@ end
 
 
 
-function processLayer(lv, network, data_in, nkernels, oheight, owidth, verbose)
+function processLayer(lv, network, data_in, nkernels, oheight, owidth)
    data_out = torch.Tensor(data_in:size(1), nkernels, oheight, owidth)
    for i = nnf1, data_in:size(1) do -- just get a few frames to begin with
       if ( nnf1>1 and lv == 1 ) then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
@@ -106,7 +106,7 @@ function processLayer(lv, network, data_in, nkernels, oheight, owidth, verbose)
       data_out[i] = network:forward(procFrames)
       xlua.progress(i, data_in:size(1))
       -- do a live display of the input video and output feature maps 
-      if verbose then
+      if opt.display then
          winm = image.display{image=data_out[i], padding=2, zoom=1, win=winm, nrow=math.floor(math.sqrt(nkernels))}
       end
    end

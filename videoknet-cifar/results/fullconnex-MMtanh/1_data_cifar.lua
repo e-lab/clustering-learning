@@ -152,22 +152,21 @@ print '==> preprocessing data: normalize all three channels locally'
 -- Define the normalization neighborhood:
 --if not is then is = 7 end -- find is value from call-out script
 --print("Normalizing kernel size is:", is)
-neighborhood = image.gaussian1D(7)
+neighborhood = image.gaussian1D(9)
 
 -- Define our local normalization operator (It is an actual nn module, 
 -- which could be inserted into a trainable model):
 normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 
 -- Normalize all channels locally:
---for c in ipairs(channels) do
-c = 1
+for c in ipairs(channels) do
    for i = 1,trsize do
       trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
    end
    for i = 1,tesize do
       testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
    end
---end
+end
 
 ----------------------------------------------------------------------
 print '==> verify statistics'

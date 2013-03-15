@@ -179,8 +179,8 @@ nk2 = 64
 nk = nk2
 poolsize = 2
 cvstepsize = 1
-ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
-ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
+ovhe2 = (ovhe-is+1)--/poolsize/cvstepsize -- output video feature height
+ovwi2 = (ovwi-is+1)--/poolsize/cvstepsize -- output video feature width
 
 
 
@@ -254,7 +254,7 @@ kernels2, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk2, nnf2,
    --vnet2:add(nn.Tanh())
    vnet2:add(nn.HardShrink(0.1))
    --vnet2:add(nn.HardTanh())
-   vnet2:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
+   --vnet2:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
    --vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
    
 
