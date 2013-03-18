@@ -4,43 +4,43 @@
 -- E. Culurciello, Feb 1st 2013
 --
 
-function trainLayer(nlayer, trainData, nsamples, kernels, nk, nnf, is, verbose)
+function trainLayer(nlayer, invdata, nsamples, kernels, nk, nnf, is, verbose)
    -- computes filter kernels for a layer with Clustering Learning / k-means
    -- verbose = true ==> show images, text messages
-   
-   local patchminstd = 0.75 -- min std require to use patch! IMPORTANT PARAM!!!
-   
+  
    -- input video params:
-   local ivch = trainData[1]:size(1) -- channels
-   local ivhe = trainData[1]:size(2) -- height
-   local ivwi = trainData[1]:size(3) -- width
+   local ivch = invdata[1]:size(1) -- channels
+   local ivhe = invdata[1]:size(2) -- height
+   local ivwi = invdata[1]:size(3) -- width
    
-   if verbose then print '==> extracting patches' end -- only extract on Y channel (or R if RGB) -- all ok
+   local patchminstd = 0--.25 -- min std require to use patch! IMPORTANT PARAM!!!
+   
+   if verbose then  print '==> extracting patches' end -- only extract on Y channel (or R if RGB) -- all ok
    local img = torch.Tensor(ivch, nnf, ivhe, ivwi)
    local data = torch.Tensor(nsamples, ivch*nnf*is*is) -- need to learn volumetric filters on multiple frames!
    local i = 1
    while i <= nsamples do
-      fimg = math.random(nnf,trainData:size(1)) -- pointer to current frame
+      fimg = math.random(nnf,invdata:size(1)) -- pointer to current frame
       for j = 1, nnf do
-         img[{{},{j}}] = trainData[fimg-j+1] -- pointer to current and all previous frames
+         img[{{},{j}}] = invdata[fimg-j+1] -- pointer to current and all previous frames
       end
       local z = math.random(1,ivch)
       local x = math.random(1,ivwi-is+1)
       local y = math.random(1,ivhe-is+1)
       local patches = img[{ {},{},{y,y+is-1},{x,x+is-1} }]:clone()
-      patches:add(-patches:mean())
-      patches:div(patches:std()+1e-3) -- to prevent divide-by-0
       -- keep only patches with high SNR:
-      if patches:std() > patchminstd then
-         data[i] = patches
+      if patches[{{1}}]:std() > patchminstd then
+         patches:add(-patches:mean())
+         patches:div(patches:std()+1e-3) -- to prevent divide-by-0
+         -- shape by gaussian:
+         data[i] = torch.cmul(patches, image.gaussian(is, 0.5):reshape(1,1,is,is):expand(ivch,nnf,is,is))
          i = i+1 -- if patches is used then count up
-      end
+      end      
       if verbose then xlua.progress(i, nsamples) end
    end
    
    -- show a few patches:
    if verbose then
-   print(#data[{{1,256}}])
       f256S = data[{{1,256}}]:reshape(256,ivch,nnf*is,is)
       image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches of input data before clustering'}
    end
@@ -137,7 +137,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    local vd1 = torch.zeros(vdata:size(1),fanin,vdata:size(3),vdata:size(4)) --temp data storage
    local vd2 = torch.zeros(vdata:size(1),2*fanin,vdata:size(3),vdata:size(4)) --temp data storage
    
-   covMat = torch.zeros(nkp,nkp) --covariance matrix
+   local covMat = torch.zeros(nkp,nkp) --covariance matrix
    local connTable = {} -- table of connections
    local kerTable = {} -- table of kernels/filters
       
@@ -163,6 +163,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
             vd1[{{},{k}}] = vdata[{{},{inx[k]}}]
          end
       end
+
       kerp = trainLayer(nlayer, vd1, samples, nil, fpgroup, nnf, is, verbose)
       for j=1,fpgroup do
          for k=1,fanin do

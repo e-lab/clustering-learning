@@ -160,13 +160,13 @@ normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float(
 
 -- Normalize all channels locally:
 --for c in ipairs(channels) do
-c = 1
-   for i = 1,trsize do
-      trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
-   end
-   for i = 1,tesize do
-      testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
-   end
+--c = 1
+--   for i = 1,trsize do
+--      trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
+--   end
+--   for i = 1,tesize do
+--      testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
+--   end
 --end
 
 ----------------------------------------------------------------------
