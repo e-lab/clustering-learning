@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
-%%Title: /export/home/a/elabshare/users/euge/results/train.log.eps
-%%Creator: gnuplot 4.4 patchlevel 2
-%%CreationDate: Thu Mar 14 17:55:05 2013
+%%Title: /Users/eugenioculurciello/Code/torch/videoknet-cifar/results/train.log.eps
+%%Creator: gnuplot 4.6 patchlevel 1
+%%CreationDate: Tue Mar 19 16:02:52 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 410 302
 %%EndComments
@@ -20,10 +20,12 @@ gnudict begin
 /Level1 false def
 /Rounded false def
 /ClipToBoundingBox false def
+/SuppressPDFMark false def
 /TransparentPatterns false def
 /gnulinewidth 5.000 def
 /userlinewidth gnulinewidth def
 /Gamma 1.0 def
+/BackgroundColor {-1.000 -1.000 -1.000} def
 %
 /vshift -46 def
 /dl1 {
@@ -38,22 +40,6 @@ gnudict begin
 /vpt_ 31.5 def
 /hpt hpt_ def
 /vpt vpt_ def
-Level1 {} {
-/SDict 10 dict def
-systemdict /pdfmark known not {
-  userdict /pdfmark systemdict /cleartomark get put
-} if
-SDict begin [
-  /Title (/export/home/a/elabshare/users/euge/results/train.log.eps)
-  /Subject (gnuplot plot)
-  /Creator (gnuplot 4.4 patchlevel 2)
-  /Author (euge)
-%  /Producer (gnuplot)
-%  /Keywords ()
-  /CreationDate (Thu Mar 14 17:55:05 2013)
-  /DOCINFO pdfmark
-end
-} ifelse
 /doclip {
   ClipToBoundingBox {
     newpath 50 50 moveto 410 50 lineto 410 302 lineto 50 302 lineto closepath
@@ -61,7 +47,7 @@ end
   } if
 } def
 %
-% Gnuplot Prolog Version 4.4 (August 2010)
+% Gnuplot Prolog Version 4.6 (September 2012)
 %
 %/SuppressPDFMark true def
 %
@@ -328,7 +314,8 @@ end
 /PatternFill {gsave /PFa [ 9 2 roll ] def
   PFa 0 get PFa 2 get 2 div add PFa 1 get PFa 3 get 2 div add translate
   PFa 2 get -2 div PFa 3 get -2 div PFa 2 get PFa 3 get Rec
-  gsave 1 setgray fill grestore clip
+  TransparentPatterns {} {gsave 1 setgray fill grestore} ifelse
+  clip
   currentlinewidth 0.5 mul setlinewidth
   /PFs PFa 2 get dup mul PFa 3 get dup mul add sqrt def
   0 0 M PFa 5 get rotate PFs -2 div dup translate
@@ -461,8 +448,26 @@ currentdict end definefont pop
   Blacktext {gsave 0 setgray MFshow grestore} {MFshow} ifelse } bind def
 /XYsave    { [( ) 1 2 true false 3 ()] } bind def
 /XYrestore { [( ) 1 2 true false 4 ()] } bind def
+Level1 SuppressPDFMark or 
+{} {
+/SDict 10 dict def
+systemdict /pdfmark known not {
+  userdict /pdfmark systemdict /cleartomark get put
+} if
+SDict begin [
+  /Title (/Users/eugenioculurciello/Code/torch/videoknet-cifar/results/train.log.eps)
+  /Subject (gnuplot plot)
+  /Creator (gnuplot 4.6 patchlevel 1)
+  /Author (eugenioculurciello)
+%  /Producer (gnuplot)
+%  /Keywords ()
+  /CreationDate (Tue Mar 19 16:02:52 2013)
+  /DOCINFO pdfmark
+end
+} ifelse
 end
 %%EndProlog
+%%Page: 1 1
 gnudict begin
 gsave
 doclip
@@ -471,6 +476,7 @@ doclip
 0 setgray
 newpath
 (Helvetica) findfont 140 scalefont setfont
+BackgroundColor 0 lt 3 1 roll 0 lt exch 0 lt or or not {BackgroundColor C 1.000 0 0 7200.00 5040.00 BoxColFill} if
 1.000 UL
 LTb
 546 280 M
@@ -479,66 +485,56 @@ LTb
 -63 0 V
 stroke
 462 280 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 30)]
-] -46.7 MRshow
-1.000 UL
-LTb
-546 900 M
-63 0 V
-6338 0 R
--63 0 V
-stroke
-462 900 M
 [ [(Helvetica) 140.0 0.0 true true 0 ( 40)]
 ] -46.7 MRshow
 1.000 UL
 LTb
-546 1520 M
+546 1003 M
 63 0 V
 6338 0 R
 -63 0 V
 stroke
-462 1520 M
+462 1003 M
 [ [(Helvetica) 140.0 0.0 true true 0 ( 50)]
 ] -46.7 MRshow
 1.000 UL
 LTb
-546 2140 M
+546 1726 M
 63 0 V
 6338 0 R
 -63 0 V
 stroke
-462 2140 M
+462 1726 M
 [ [(Helvetica) 140.0 0.0 true true 0 ( 60)]
 ] -46.7 MRshow
 1.000 UL
 LTb
-546 2759 M
+546 2450 M
 63 0 V
 6338 0 R
 -63 0 V
 stroke
-462 2759 M
+462 2450 M
 [ [(Helvetica) 140.0 0.0 true true 0 ( 70)]
 ] -46.7 MRshow
 1.000 UL
 LTb
-546 3379 M
+546 3173 M
 63 0 V
 6338 0 R
 -63 0 V
 stroke
-462 3379 M
+462 3173 M
 [ [(Helvetica) 140.0 0.0 true true 0 ( 80)]
 ] -46.7 MRshow
 1.000 UL
 LTb
-546 3999 M
+546 3896 M
 63 0 V
 6338 0 R
 -63 0 V
 stroke
-462 3999 M
+462 3896 M
 [ [(Helvetica) 140.0 0.0 true true 0 ( 90)]
 ] -46.7 MRshow
 1.000 UL
@@ -563,33 +559,13 @@ stroke
 ] -46.7 MCshow
 1.000 UL
 LTb
-1186 280 M
-0 63 V
-0 4276 R
-0 -63 V
-stroke
-1186 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 20)]
-] -46.7 MCshow
-1.000 UL
-LTb
 1826 280 M
 0 63 V
 0 4276 R
 0 -63 V
 stroke
 1826 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 40)]
-] -46.7 MCshow
-1.000 UL
-LTb
-2466 280 M
-0 63 V
-0 4276 R
-0 -63 V
-stroke
-2466 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 60)]
+[ [(Helvetica) 140.0 0.0 true true 0 ( 5)]
 ] -46.7 MCshow
 1.000 UL
 LTb
@@ -599,17 +575,7 @@ LTb
 0 -63 V
 stroke
 3106 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 80)]
-] -46.7 MCshow
-1.000 UL
-LTb
-3747 280 M
-0 63 V
-0 4276 R
-0 -63 V
-stroke
-3747 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 100)]
+[ [(Helvetica) 140.0 0.0 true true 0 ( 10)]
 ] -46.7 MCshow
 1.000 UL
 LTb
@@ -619,17 +585,7 @@ LTb
 0 -63 V
 stroke
 4387 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 120)]
-] -46.7 MCshow
-1.000 UL
-LTb
-5027 280 M
-0 63 V
-0 4276 R
-0 -63 V
-stroke
-5027 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 140)]
+[ [(Helvetica) 140.0 0.0 true true 0 ( 15)]
 ] -46.7 MCshow
 1.000 UL
 LTb
@@ -639,17 +595,7 @@ LTb
 0 -63 V
 stroke
 5667 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 160)]
-] -46.7 MCshow
-1.000 UL
-LTb
-6307 280 M
-0 63 V
-0 4276 R
-0 -63 V
-stroke
-6307 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 180)]
+[ [(Helvetica) 140.0 0.0 true true 0 ( 20)]
 ] -46.7 MCshow
 1.000 UL
 LTb
@@ -659,7 +605,7 @@ LTb
 0 -63 V
 stroke
 6947 140 M
-[ [(Helvetica) 140.0 0.0 true true 0 ( 200)]
+[ [(Helvetica) 140.0 0.0 true true 0 ( 25)]
 ] -46.7 MCshow
 1.000 UL
 LTb
@@ -672,7 +618,7 @@ LTb
 -6401 0 V
 Z stroke
 3746 4829 M
-[ [(Helvetica) 140.0 0.0 true true 0 (<Logger::/export/home/a/elabshare/users/euge/results/train.log>)]
+[ [(Helvetica) 140.0 0.0 true true 0 (<Logger::/Users/eugenioculurciello/Code/torch/videoknet-cifar/results/train.log>)]
 ] -46.7 MCshow
 1.000 UP
 1.000 UL
@@ -687,203 +633,29 @@ LCb setrgbcolor
 LT0
 6380 4486 M
 399 0 V
-578 396 M
-32 750 V
-32 297 V
-32 153 V
-32 110 V
-32 76 V
-32 58 V
-32 47 V
-32 45 V
-32 44 V
-32 53 V
-32 26 V
-32 34 V
-32 29 V
-32 35 V
-32 24 V
-32 37 V
-32 20 V
-32 23 V
-32 21 V
-32 25 V
-32 23 V
-32 19 V
-32 34 V
-32 12 V
-32 26 V
-32 12 V
-32 29 V
-32 16 V
-32 20 V
-32 16 V
-32 30 V
-32 11 V
-32 14 V
-32 32 V
-32 -1 V
-32 35 V
-32 9 V
-32 27 V
-32 4 V
-32 16 V
-32 14 V
-32 21 V
-32 12 V
-32 32 V
-32 7 V
-32 17 V
-32 26 V
-32 11 V
-32 8 V
-32 17 V
-32 21 V
-32 14 V
-32 18 V
-32 17 V
-32 16 V
-32 18 V
-32 5 V
-32 20 V
-32 23 V
-32 4 V
-32 20 V
-32 4 V
-32 26 V
-32 3 V
-32 21 V
-32 10 V
-32 10 V
-32 26 V
-32 8 V
-32 8 V
-32 16 V
-32 13 V
-32 14 V
-32 5 V
-32 26 V
-32 0 V
-32 17 V
-32 16 V
-32 9 V
-32 20 V
-32 5 V
-32 12 V
-32 13 V
-32 18 V
-32 5 V
-32 10 V
-32 13 V
-32 9 V
-32 20 V
-32 6 V
-32 14 V
-32 8 V
-32 12 V
-32 10 V
-32 7 V
-32 18 V
-32 13 V
-32 4 V
-33 7 V
-32 11 V
-32 16 V
-32 9 V
-stroke 3843 3520 M
-32 11 V
-32 17 V
-32 8 V
-32 2 V
-32 8 V
-32 16 V
-32 6 V
-32 10 V
-32 8 V
-32 4 V
-32 13 V
-32 13 V
-32 4 V
-32 14 V
-32 13 V
-32 2 V
-32 7 V
-32 17 V
-32 5 V
-32 7 V
-32 7 V
-32 17 V
-32 1 V
-32 14 V
-32 4 V
-32 14 V
-32 1 V
-32 12 V
-32 9 V
-32 5 V
-32 7 V
-32 6 V
-32 12 V
-32 8 V
-32 11 V
-32 0 V
-32 13 V
-32 7 V
-32 5 V
-32 9 V
-32 7 V
-32 1 V
-32 13 V
-32 3 V
-32 12 V
-32 11 V
-32 5 V
-32 6 V
-32 6 V
-32 11 V
-32 4 V
-32 7 V
-32 -1 V
-32 13 V
-32 7 V
-32 -1 V
-32 15 V
-32 9 V
-32 0 V
-32 9 V
-32 13 V
-32 -2 V
-32 7 V
-32 7 V
-32 9 V
-32 4 V
-32 -2 V
-32 14 V
-32 3 V
-32 6 V
-32 7 V
-32 13 V
-32 -6 V
-32 12 V
-32 6 V
-32 6 V
-32 -3 V
-32 19 V
-32 -7 V
-32 11 V
-32 3 V
-32 6 V
-32 8 V
-32 2 V
-32 7 V
-32 8 V
-32 10 V
-32 0 V
-32 3 V
-32 6 V
-32 -1 V
-32 16 V
-32 2 V
+802 584 M
+256 737 V
+256 313 V
+256 224 V
+256 221 V
+256 176 V
+256 178 V
+256 134 V
+256 178 V
+256 143 V
+256 128 V
+256 150 V
+257 120 V
+256 137 V
+256 118 V
+256 109 V
+256 105 V
+256 108 V
+256 87 V
+256 104 V
+256 85 V
+256 76 V
+256 59 V
 % End plot #1
 stroke
 LTb

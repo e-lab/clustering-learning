@@ -65,6 +65,8 @@ ivwi = trainData.data[1]:size(3) -- width
 trainData.data = trainData.data:double()
 testData.data = testData.data:double()
 
+nfpr = trainData:size() -- batch process size [video frames]
+
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
@@ -79,7 +81,6 @@ nlayer = 1
 nnf1 = 1 -- number of frames from input video to use
 nk1 = 32
 nk = nk1
-is = 5
 poolsize = 2
 cvstepsize = 1
 normkernel = image.gaussian1D(7)
@@ -168,7 +169,7 @@ nlayer = 2
 nnf2 = 1 -- just one frames goes into layer 2
 is = 3
 fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
-feat_group = 32 --features per group (32=best in CIFAR, fanin=2)
+feat_group = 4 --features per group
 nk2 = 64
 nk = nk2
 poolsize = 2
@@ -189,9 +190,7 @@ ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 --else 
 
-   
--- NOTE: one param here: 50 or opt.nsamples is the nunmber of samples needed to train the k-means of each group
--- this number 50 might not be ideal, needs to be explored!
+
 
    -- OUTPUT Co-occurence CONNEX MODEL:
    print '==> Computing connection tables based on co-occurence of features'
@@ -257,61 +256,61 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 
 
 ----------------------------------------------------------------------
---print '==> generating filters for layer 3:'
---nlayer = 3
---nnf3 = 1 -- just one frames goes into layer 2
---is = 3
---fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
---feat_group = 4 --features per group
---nk3 = 128
---nk = nk3
---poolsize = 2
---cvstepsize = 1
---ovhe3 = (ovhe2-is+1)/poolsize/cvstepsize -- output video feature height
---ovwi3 = (ovwi2-is+1)/poolsize/cvstepsize -- output video feature width
---
---
---   -- OUTPUT Co-occurence CONNEX MODEL:
---   print '==> Computing connection tables based on co-occurence of features'
---   cTable3, kernels3 = createCoCnx(nlayer, trainData3[{{1,100}}], nk2, feat_group, fanin, 50, nnf3, is, kernels2, false)
---   nk3 = cTable3:max()
---   nk = nk3
---   if opt.display then image.display{image=kernels3:reshape(kernels3:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 3 filters'} end
---
---
-------------------------------------------------------------------------
----- 2nd layer
---   vnet3 = nn.Sequential()
---   vnet3:add(nn.SpatialConvolutionMap(cTable3, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
---   vnet3:add(nn.Threshold())
---   vnet3:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
---   
---
----- setup net/ load kernels into network:
---vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
---kernels3_= kernels3:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
---vnet3.modules[1].weight = kernels3_:reshape(kernels3_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
---
---
---
---
-------------------------------------------------------------------------
---print '==> process dataset throught 3rd layer:'
---
---trainData4 = processLayer(nlayer, vnet3, trainData3, nk3, ovhe3, ovwi3, false)
---testData4 = processLayer(nlayer, vnet3, testData3, nk3, ovhe3, ovwi3, false)
---
-----report some statistics:
---print('3rd layer conv output std: '..vnet3.modules[1].output:std()..' and mean: '..vnet3.modules[1].output:mean())
---print('3rd layer output std: '..vnet3.output:std()..' and mean: '..vnet3.output:mean())
---
---
----- show a few outputs:
---if opt.display then
---   f256S_y = trainData4[{ {1,256},1 }]
---   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
---            legend='Output 3rd layer: first 256 examples, 1st feature'}
---end
+print '==> generating filters for layer 3:'
+nlayer = 3
+nnf3 = 1 -- just one frames goes into layer 2
+is = 3
+fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
+feat_group = 4 --features per group
+nk3 = 128
+nk = nk3
+poolsize = 2
+cvstepsize = 1
+ovhe3 = (ovhe2-is+1)/poolsize/cvstepsize -- output video feature height
+ovwi3 = (ovwi2-is+1)/poolsize/cvstepsize -- output video feature width
+
+
+   -- OUTPUT Co-occurence CONNEX MODEL:
+   print '==> Computing connection tables based on co-occurence of features'
+   cTable3, kernels3 = createCoCnx(nlayer, trainData3[{{1,100}}], nk2, feat_group, fanin, 50, nnf3, is, kernels2, false)
+   nk3 = cTable3:max()
+   nk = nk3
+   if opt.display then image.display{image=kernels3:reshape(kernels3:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 3 filters'} end
+
+
+----------------------------------------------------------------------
+-- 2nd layer
+   vnet3 = nn.Sequential()
+   vnet3:add(nn.SpatialConvolutionMap(cTable3, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+   vnet3:add(nn.Threshold())
+   vnet3:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
+   
+
+-- setup net/ load kernels into network:
+vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
+kernels3_= kernels3:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+vnet3.modules[1].weight = kernels3_:reshape(kernels3_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
+
+
+
+
+----------------------------------------------------------------------
+print '==> process dataset throught 3rd layer:'
+
+trainData4 = processLayer(nlayer, vnet3, trainData3, nk3, ovhe3, ovwi3, false)
+testData4 = processLayer(nlayer, vnet3, testData3, nk3, ovhe3, ovwi3, false)
+
+--report some statistics:
+print('3rd layer conv output std: '..vnet3.modules[1].output:std()..' and mean: '..vnet3.modules[1].output:mean())
+print('3rd layer output std: '..vnet3.output:std()..' and mean: '..vnet3.output:mean())
+
+
+-- show a few outputs:
+if opt.display then
+   f256S_y = trainData4[{ {1,256},1 }]
+   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
+            legend='Output 3rd layer: first 256 examples, 1st feature'}
+end
 
 
 -- compute network creation time time 
@@ -323,7 +322,7 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 ----------------------------------------------------------------------
 print "==> creating final test dataset"
 
-l1netoutsize = ovhe2 -- 2 layers:
+l1netoutsize = ovhe3 -- 2 layers:
 
 
 trainDataF = {
@@ -339,21 +338,21 @@ testDataF = {
    size = function() return tesize end
 }
 
-trainDataF.data = trainData3
+trainDataF.data = trainData4
 for t = 1,trainDataF:size() do
    --trainData2.data[t] = l1net:forward(trainData.data[t]:double())
    --xlua.progress(t, trainData:size())
 end
 
-testDataF.data = testData3
+testDataF.data = testData4
 for t = 1,testDataF:size() do
    --testData2.data[t] = l1net:forward(testData.data[t]:double())
    --xlua.progress(t, testData:size())
 end
 
 
-trainDataF.data = trainDataF.data:reshape(trsize, nk2, l1netoutsize, l1netoutsize)
-testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
+trainDataF.data = trainDataF.data:reshape(trsize, nk3, l1netoutsize, l1netoutsize)
+testDataF.data = testDataF.data:reshape(tesize, nk3, l1netoutsize, l1netoutsize)
 
 -- relocate pointers to new dataset:
 --trainData1 = trainData -- save original dataset
@@ -381,7 +380,7 @@ if opt.classify then
 --   opt.model = '2mlp-classifier'
 --   dofile '2_model.lua' 
    
-   nhiddens = 256
+   nhiddens = 512
    outsize = 10 -- in CIFAR, SVHN datasets
 
    model = nn.Sequential()

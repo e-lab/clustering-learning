@@ -5,16 +5,24 @@
 {\author Eugenio Culurciello}}\margl1440\margr1440\vieww17500\viewh19200\viewkind0
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
 
-\f0\fs28 \cf0 E Culurciello\
+\f0\fs28 \cf0 \
+E. Culurciello\
 \
-cifar-10\
-results\
+Cifar-10\
+Results\
 \
 March 2013\
 \
+LCN is not used, not even at input: best results!\
+\
+\
+\
+\
 test pref.	network type	dir				comments\
 58.2%	one layer only	CL-1l				larger classifier because of only 2x subsampling\
+54%		one layer		CL-1l				training with random patches 1 layer\
 55.6%	2 layers		CL-2l best			best results with slac and co-occurence\
+55.2%	2 layers		CL-2l best 2l patches	use patches on 2nd layer: no clustering learning on 2nd layer\
 55.1%	2 layers		CL-2l	-fullconnect		full connex\
 50.7%	2 layers		CL-2l-no sub2l		full connex only 2x subsampling 2 layers\
 \
@@ -25,6 +33,10 @@ test pref.	network type	dir				comments\
 \
 2 layer 4x subsampling and fully connected was about the same as our technique of co-occurence (CL-2l best) connection matrix. Both at ~55%.\
 Fully connected was doing about 16x more operations on 2nd layer.\
+\
+Using just patches of the 2nd layer outputs, still with the co-occurence connex does as well as with clustering: 55.2%\
+\
+\
 \
 \
 \

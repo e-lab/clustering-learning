@@ -12,7 +12,7 @@ require 'online-kmeans'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
-cmd:option('-display', true, 'display kernels')
+cmd:option('-display', false, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
@@ -77,7 +77,7 @@ print '==> generating CL unsupervised network:'
 print '==> generating filters for layer 1:'
 nlayer = 1
 nnf1 = 1 -- number of frames from input video to use
-nk1 = 32
+nk1 = 64
 nk = nk1
 is = 5
 poolsize = 2
@@ -168,8 +168,8 @@ nlayer = 2
 nnf2 = 1 -- just one frames goes into layer 2
 is = 3
 fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
-feat_group = 32 --features per group (32=best in CIFAR, fanin=2)
-nk2 = 64
+feat_group = nk1 --features per group (32=best in CIFAR, nk1=32, fanin=2)
+nk2 = 128
 nk = nk2
 poolsize = 2
 cvstepsize = 1
@@ -381,7 +381,7 @@ if opt.classify then
 --   opt.model = '2mlp-classifier'
 --   dofile '2_model.lua' 
    
-   nhiddens = 256
+   nhiddens = 512
    outsize = 10 -- in CIFAR, SVHN datasets
 
    model = nn.Sequential()

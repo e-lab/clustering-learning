@@ -1,13 +1,10 @@
-
--- 
-
 ----------------------------------------------------------------------
 -- Run k-means on CIFAR10 dataset - 1st layer generation/load and test
 ----------------------------------------------------------------------
 
 require 'image'
 require 'nnx'
-require 'unsup'
+--require 'unsup'
 require 'eex'
 require 'trainLayer' -- functions for Clustering Learning on video
 require 'slac'
@@ -15,14 +12,14 @@ require 'online-kmeans'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
-cmd:option('-visualize', false, 'display kernels')
+cmd:option('-display', false, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
 cmd:option('-nkernels', 16, 'number of kernels to learn')
 cmd:option('-niter', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 1000, 'nb of random training samples')
+cmd:option('-nsamples', 10000, 'nb of random training samples')
 cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:option('-savedataset', false, 'save modified dataset')
@@ -43,7 +40,7 @@ cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
 if not qt then
-   opt.visualize = false
+   opt.display = false
 end
 
 torch.manualSeed(opt.seed)
@@ -53,9 +50,8 @@ torch.setdefaulttensortype('torch.DoubleTensor')
 is = opt.inputsize
 nk = opt.nkernels
 
-opt.display = false
 opt.niter = 15
-opt.slacmodel = false
+opt.slacmodel = true
 
 ----------------------------------------------------------------------
 -- loading and processing dataset:
@@ -91,25 +87,32 @@ normkernel = image.gaussian1D(7)
 ovhe = (ivhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
 
+
 if opt.slacmodel then
    -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
-   kernels1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, nk1*2, nnf1, is, true)
+   nk11 = nk1*2
+   kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, nk11, nnf1, is, false)
+   -- sort the kernels by importance and use only top kernels:
    -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
-   kernels1s, connTable1 = slac(kernels1, nk1*2, nk1, 4, 4.5) -- SLAC algorithm to aggregate kernels
+   kernels1s, cTable1 = slac(kernels1u, nk11, nk1, 4, 4.5) -- SLAC algorithm to aggregate kernels
    --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
    nk1s=kernels1s:size(1)
+   if opt.display then image.display{image=kernels1s:reshape(kernels1s:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
+
 else 
    -- AND/OR model or FULL CONNECT MODEL:
    -- get twice the kernels, then pick best ones:
    kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, 2*nk1, nnf1, is)
+   -- sort kernels:
+   _, j = torch.sort(counts,true)
+   kernels1 = torch.Tensor(nk1,ivch, is,is)
+   for i=1,nk1 do
+      kernels1[i] = kernels1u[j[i]]
+   end
+   if opt.display then
+      image.display{image=kernels1:reshape(kernels1:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
 end
 
--- sort the kernels by importance and use only top kernels:
-_, j = torch.sort(counts1,true)
-kernels1 = torch.Tensor(nk1,ivch*is*is)
-for i=1,nk1 do
-   kernels1[i] = kernels1u[j[i]]
-end
 
    
 ----------------------------------------------------------------------
@@ -118,33 +121,33 @@ end
    -- Trainable Network
    vnet = nn.Sequential()
    if opt.slacmodel then 
-      vnet:add(nn.SpatialConvolutionMM(ivch, nk1s, is, is, cvstepsize,cvstepsize))
+      vnet:add(nn.SpatialConvolution(ivch, nk1s, is, is, cvstepsize,cvstepsize))
+      vnet:add(nn.SpatialMaxMap(cTable1))
    else
-      vnet:add(nn.SpatialConvolutionMM(ivch, nk1, is, is, cvstepsize,cvstepsize))
+      vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
    end
-   -- just pick one map as input
-   if opt.slacmodel then vnet:add(nn.SpatialMaxMap(connTable1)) end -- slac function to pick max(each group) from VolConv layer
-   vnet:add(nn.Tanh())
-   vnet:add(nn.SpatialMaxPooling(2,2,2,2))
+   --vnet:add(nn.Tanh())
+   vnet:add(nn.HardShrink(0.1))
+   --vnet:add(nn.HardTanh())
+   vnet:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
    --vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3))
 
 
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels1_ = kernels1:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv is about ~1 or more
-if opt.slacmodel then vnet.modules[1].weight = kernels1s
-      else vnet.modules[1].weight = kernels1_
+if opt.slacmodel then 
+   kernels1_ = kernels1s:clone():div(nnf1*nk1*3) -- divide kernels so output of SpatialConv is about ~1 or more
+   vnet.modules[1].weight = kernels1_:reshape(nk1s, ivch, is,is)
+else 
+   kernels1_ = kernels1:clone():div(nnf1*nk1*3) -- divide kernels so output of SpatialConv is about ~1 or more
+   vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is)
 end
-
-
-image.display{image=vnet.modules[1].weight:reshape(kernels1:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'}
-
 
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 1st layer:'
-trainData2 = processLayer(nlayer, vnet, trainData.data, nk1, ovhe, ovwi)
-testData2 = processLayer(nlayer, vnet, testData.data, nk1, ovhe, ovwi)
+trainData2 = processLayer(nlayer, vnet, trainData.data, nk1, ovhe, ovwi, false)
+testData2 = processLayer(nlayer, vnet, testData.data, nk1, ovhe, ovwi, false)
 
 --report some statistics:
 print('1st layer conv output std: '..vnet.modules[1].output:std()..' and mean: '..vnet.modules[1].output:mean())
@@ -152,7 +155,7 @@ print('1st layer output std: '..vnet.output:std()..' and mean: '..vnet.output:me
 
 
 -- show a few outputs:
-if opt.visualize then
+if opt.display then
    f256S_y = trainData2[{ {1,256},1 }]
    image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
             legend='Output 1st layer: first 256 examples, 1st feature'}
@@ -163,47 +166,74 @@ end
 --print '==> generating filters for layer 1:'
 nlayer = 2
 nnf2 = 1 -- just one frames goes into layer 2
+is = 3
+fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
+feat_group = 4 --features per group
 nk2 = 64
 nk = nk2
-is = 5
-fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
 poolsize = 2
 cvstepsize = 1
 ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 
+--if opt.slacmodel then
+--   -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
+--   nk22 = nk2*2
+--   kernels2u, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk22, nnf2, is, false)
+--   -- sort the kernels by importance and use only top kernels:
+--   -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
+--   kernels2s, cTable2 = slac(kernels2u, nk22, nk2, 4, 4.5) -- SLAC algorithm to aggregate kernels
+--   --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
+--   nk2s=kernels1s:size(1)
+--   if opt.display then image.display{image=kernels1s:reshape(kernels1s:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
 
-kernels2u, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, 2*nk2, nnf2, is)
+--else 
 
--- sort the kernels by importance and use only top kernels:
-_, j = torch.sort(counts2,true)
-kernels2 = torch.Tensor(nk2, nk1*is*is)
-for i=1,nk2 do
-   kernels2[i] = kernels2u[j[i]]
-end
+
+
+   -- OUTPUT Co-occurence CONNEX MODEL:
+   print '==> Computing connection tables based on co-occurence of features'
+   --cTable2, kernels2 = createCoCnx(nlayer, trainData2[{{1,100}}], nk1, feat_group, fanin, 50, nnf2, is, kernels1, false)
+   cTable2, kernels2 = createCoCnx(nlayer, trainData2[{{1,100}}], nk1, feat_group, fanin, 1, nnf2, is, kernels1, false) -- random patches
+   nk2 = cTable2:max()
+   nk = nk2
+   if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'} end
+
 
 ----------------------------------------------------------------------
 -- 2nd layer
-
    vnet2 = nn.Sequential()
-   --vnet2:add(nn.SpatialConvolutionMap(cTable1, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
-   vnet2:add(nn.SpatialConvolutionMM(nk1,nk2, is, is, cvstepsize,cvstepsize))
-   vnet2:add(nn.Tanh())
-   vnet2:add(nn.SpatialMaxPooling(2,2,2,2))
+--   if opt.slacmodel then 
+--      vnet2:add(nn.SpatialConvolution(nk1, nk2s, is, is, cvstepsize,cvstepsize)) -- slac 2nd layer
+--      vnet2:add(nn.SpatialMaxMap(cTable2))
+--   else
+      vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+--   end
+  
+   --vnet2:add(nn.Tanh())
+   vnet2:add(nn.HardShrink(0.1))
+   --vnet2:add(nn.HardTanh())
+   vnet2:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
    --vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
    
 
 -- setup net/ load kernels into network:
 vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels2_= kernels2:clone():div(nk2*2) -- divide kernels so output of SpatialConv is about ~1 or more
---vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
-vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
+--if opt.slacmodel then 
+--   kernels2_= kernels2s:clone():div(nk2/2)
+--   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)
+--else
+   kernels2_= kernels2:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+   --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
+   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
+--end
+
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 2nd layer:'
 
-trainData3 = processLayer(nlayer, vnet2, trainData2, nk2, ovhe2, ovwi2)
-testData3 = processLayer(nlayer, vnet2, testData2, nk2, ovhe2, ovwi2)
+trainData3 = processLayer(nlayer, vnet2, trainData2, nk2, ovhe2, ovwi2, false)
+testData3 = processLayer(nlayer, vnet2, testData2, nk2, ovhe2, ovwi2, false)
 
 --report some statistics:
 print('2nd layer conv output std: '..vnet2.modules[1].output:std()..' and mean: '..vnet2.modules[1].output:mean())
@@ -211,9 +241,9 @@ print('2nd layer output std: '..vnet2.output:std()..' and min: '..vnet2.output:m
 
 
 -- show a few outputs:
-if opt.visualize then
+if opt.display then
    f256S_y = trainData3[{ {1,256},1 }]
-   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
+   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
             legend='Output 2nd layer: first 256 examples, 1st feature'}
 end
 
@@ -266,26 +296,10 @@ trainData = trainDataF -- relocate new dataset
 testData = testDataF
 
 -- show a few outputs:
-if opt.visualize then
+if opt.display then
    f256S_y = trainDataF.data[{ {1,256},1 }]
    image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
             legend='Output 2-layer net: first 256 examples, 1st feature'}
-end
-
-print '==> verify statistics'
-channels = {'r','g','b'}
-for i,channel in ipairs(channels) do
-   trainMean = trainData.data[{ {},i }]:mean()
-   trainStd = trainData.data[{ {},i }]:std()
-
-   testMean = testData.data[{ {},i }]:mean()
-   testStd = testData.data[{ {},i }]:std()
-
-   print('training data, '..channel..'-channel, mean: ' .. trainMean)
-   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
-
-   print('test data, '..channel..'-channel, mean: ' .. testMean)
-   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
 

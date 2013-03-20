@@ -108,13 +108,14 @@ testData.data = testData.data:float()
 --     as a result, each color component has 0-mean and 1-norm across the dataset.
 
 -- Convert all images to YUV
---print '==> preprocessing data: colorspace RGB -> YUV'
---for i = 1,trsize do
---   trainData.data[i] = image.rgb2yuv(trainData.data[i])
---end
---for i = 1,tesize do
---   testData.data[i] = image.rgb2yuv(testData.data[i])
---end
+-- EC: removed not bio-inspired!
+print '==> preprocessing data: colorspace RGB -> YUV'
+for i = 1,trsize do
+   trainData.data[i] = image.rgb2yuv(trainData.data[i])
+end
+for i = 1,tesize do
+   testData.data[i] = image.rgb2yuv(testData.data[i])
+end
 
 -- Name channels for convenience
 channels = {'y','u','v'}
@@ -146,14 +147,16 @@ end
 -- (note: the global normalization is useless, if this local normalization
 -- is applied on all channels... the global normalization code is kept just
 -- for the tutorial's purpose)
---print '==> preprocessing data: normalize all three channels locally'
+print '==> preprocessing data: normalize all three channels locally'
 
 -- Define the normalization neighborhood:
---neighborhood = image.gaussian1D(7)
+--if not is then is = 7 end -- find is value from call-out script
+--print("Normalizing kernel size is:", is)
+neighborhood = image.gaussian1D(7)
 
 -- Define our local normalization operator (It is an actual nn module, 
 -- which could be inserted into a trainable model):
---normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
+normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 
 -- Normalize all channels locally:
 --for c in ipairs(channels) do
