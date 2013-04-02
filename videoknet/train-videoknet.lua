@@ -32,7 +32,7 @@ require "slac"
 
 cmd = torch.CmdLine()
 cmd:text('Options')
-cmd:option('-visualize', true, 'display kernels')
+cmd:option('-visualize', true, 'display kernels') --WRONG! This will always be true because the parsing of the command line is giving STRINGS as output and everything but <false> and <nil> are <true>!!! So 'flase' IS <true>!!!
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
@@ -44,7 +44,7 @@ cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templ
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:option('-savedataset', false, 'save modified dataset')
 cmd:option('-classify', true, 'run classification train/test')
-cmd:option('-nnframes', 2, 'nb of frames uses for temporal learning of features')
+cmd:option('-nnframes', 2, 'nb of frames uses for temporal learning of features') --TODO change definition! It is really better to speak about Temporal Receptive Field instead of frames..
 cmd:option('-dataset', '../datasets/faces_cut_yuv_32x32/','path to FACE dataset root dir')
 cmd:option('-patches', 'all', 'nb of patches to use')
 -- loss:
@@ -80,24 +80,8 @@ print 'SUPER-NET script!'
 ----------------------------------------------------------------------
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
---dspath = '/Users/eugenioculurciello/Pictures/2013/1-13-13/VID_20130105_111419.mp4'
---source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
-
---dspath = '/Users/eugenioculurciello/Desktop/driving1.mov'
---source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
-
---dspath = '../datasets/TLD/06_car'
---source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
-
---dspath = '../datasets/TLD/08_volkswagen'
---source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
-
---dspath = '../datasets/TLD/09_carchase'
---source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
-
+-- video test:
 dspath = '/Users/eugenioculurciello/Desktop/euge.mov'
---source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
--- smaller video test:
 source = ffmpeg.Video{path=dspath, width = 120, height = 80, encoding='jpg', fps=24, loaddump=false, load=false}
 
 rawFrame = source:forward()
@@ -105,10 +89,10 @@ rawFrame = source:forward()
 ivch = rawFrame:size(1) -- channels
 ivhe = rawFrame:size(2) -- height
 ivwi = rawFrame:size(3) -- width
-source.current = 1 -- rewind video frames
+--source.current = 1 -- rewind video frames
 
 -- number of frames to process:
-nfpr = 200 + nnf1 -- batch process size [video frames]
+nfpr = 200 + (nnf1 - 1) -- batch process size [video frames]
 
 -- normalize and prepare dataset:
 neighborhood = image.gaussian1D(9)
