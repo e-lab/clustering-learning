@@ -153,7 +153,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
       for i=1,nkp do
          for j=i,nkp do
             covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i]:clone():abs(), vdata[k][j]:clone():abs()) -- dist metric
-            covMat[j][i] = covMat[i][j]
+            covMat[j][i] = covMat[i][j] -- replicate on lower part of matrix, since symmetric
          end
       end
    end   

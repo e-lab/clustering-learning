@@ -69,8 +69,8 @@ function trainLayer(nlayer, invdata, nsamples, kernels, nk, nnf, is, verbose)
    
    for i=1,nk do
       -- normalize kernels to 0 mean and 1 std:
-      kernels[i]:add(-kernels[i]:mean())
-      kernels[i]:div(kernels[i]:std())
+      --kernels[i]:add(-kernels[i]:mean())
+      --kernels[i]:div(kernels[i]:std())
    
       -- clear nan kernels   
       if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
@@ -153,7 +153,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
       for i=1,nkp do
          for j=i,nkp do
             covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i]:clone():abs(), vdata[k][j]:clone():abs()) -- dist metric
-            covMat[j][i] = covMat[i][j]
+            covMat[j][i] = covMat[i][j] -- replicate on lower part of matrix, since symmetric
          end
       end
    end   
@@ -209,7 +209,6 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    --renormalize all kernels:
    for i=1,kerTensor:size(1) do
       kerTensor[i] = kerTensor[i]:add(-kerTensor[i]:mean()):div(kerTensor[i]:std())
-      --kerTensor[i] = kerTensor[i]:add(-kerTensor[i]:mean())
    end
    
    return connTableTensor, kerTensor

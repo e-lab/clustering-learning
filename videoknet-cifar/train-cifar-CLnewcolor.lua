@@ -1,6 +1,7 @@
 ----------------------------------------------------------------------
 -- Run k-means on CIFAR10 dataset - 1st layer generation/load and test
 ----------------------------------------------------------------------
+-- bypass route color version: pass color info to final classifier AND net input!
 
 require 'image'
 require 'nnx'
@@ -12,7 +13,7 @@ require 'online-kmeans'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
-cmd:option('-display', false, 'display kernels')
+cmd:option('-display', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 5, 'size of each input patches')
@@ -77,7 +78,7 @@ print '==> generating CL unsupervised network:'
 print '==> generating filters for layer 1:'
 nlayer = 1
 nnf1 = 1 -- number of frames from input video to use
-nk1 = 64
+nk1 = 32
 nk = nk1
 is = 5
 poolsize = 2
@@ -136,10 +137,10 @@ end
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
 if opt.slacmodel then 
-   kernels1_ = kernels1s:clone():div(nnf1*nk1*3) -- divide kernels so output of SpatialConv is about ~1 or more
+   kernels1_ = kernels1s:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
    vnet.modules[1].weight = kernels1_:reshape(nk1s, ivch, is,is)
 else 
-   kernels1_ = kernels1:clone():div(nnf1*nk1*3) -- divide kernels so output of SpatialConv is about ~1 or more
+   kernels1_ = kernels1:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
    vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is)
 end
 
@@ -169,7 +170,7 @@ nnf2 = 1 -- just one frames goes into layer 2
 is = 3
 fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
 feat_group = nk1 --features per group (32=best in CIFAR, nk1=32, fanin=2)
-nk2 = 128
+nk2 = 64
 nk = nk2
 poolsize = 2
 cvstepsize = 1
@@ -225,7 +226,7 @@ vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
 --   kernels2_= kernels2s:clone():div(nk2/2)
 --   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)
 --else
-   kernels2_= kernels2:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+   kernels2_= kernels2:clone():div(15) -- divide kernels so output of SpatialConv std =~0.5
    --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
    vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 --end
@@ -289,7 +290,7 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 --
 ---- setup net/ load kernels into network:
 --vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
---kernels3_= kernels3:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+--kernels3_= kernels3:clone():div(5) -- divide kernels so output of SpatialConv std =~0.5
 --vnet3.modules[1].weight = kernels3_:reshape(kernels3_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 --
 --
@@ -326,34 +327,58 @@ print "==> creating final test dataset"
 l1netoutsize = ovhe2 -- 2 layers:
 
 
+
+-- color bypass: downsamples color info and pass it to final classifier:
+nlayer=1
+cnpoolsize=4
+colornet = nn.Sequential()
+colornet:add(nn.SpatialDownSampling(cnpoolsize,cnpoolsize,cnpoolsize,cnpoolsize))
+cdatasize = 3*(ivhe/cnpoolsize)^2 -- size of the color data
+
+
+-- process dataset throught net:
+
 trainDataF = {
-   data = torch.Tensor(trsize, nk*(l1netoutsize)^2),
+   data = torch.Tensor(trsize, nk*(l1netoutsize)^2+cdatasize),
+   color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
    labels = trainData.labels:clone(),
    size = function() return trsize end
   
 }
 
 testDataF = {
-   data = torch.Tensor(tesize, nk*(l1netoutsize)^2),
+   data = torch.Tensor(tesize, nk*(l1netoutsize)^2+cdatasize),
+   color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
    labels = testData.labels:clone(),
    size = function() return tesize end
 }
 
-trainDataF.data = trainData3
-for t = 1,trainDataF:size() do
-   --trainData2.data[t] = l1net:forward(trainData.data[t]:double())
-   --xlua.progress(t, trainData:size())
+--trainDataF.data = trainData3
+--testDataF.data = testData3
+
+print '==> process color info of dataset throught colornet:'
+for t = 1,trsize do
+   trainDataF.color[t] = colornet:forward(trainData.data[t][{{1,3}}])
+   xlua.progress(t, trainData:size())
+end
+for t = 1,tesize do
+   testDataF.color[t] = colornet:forward(testData.data[t][{{1,3}}])
+   xlua.progress(t, testData:size())
 end
 
-testDataF.data = testData3
-for t = 1,testDataF:size() do
-   --testData2.data[t] = l1net:forward(testData.data[t]:double())
-   --xlua.progress(t, testData:size())
+
+for t = 1,trsize do
+   trainDataF.data[t] = torch.cat(trainData3[t]:reshape(nk*(l1netoutsize)^2), trainDataF.color[t])
+   xlua.progress(t, trainData:size())
+end
+for t = 1,tesize do
+   testDataF.data[t] = torch.cat(testData3[t]:reshape(nk*(l1netoutsize)^2), testDataF.color[t])
+   xlua.progress(t, testData:size())
 end
 
 
-trainDataF.data = trainDataF.data:reshape(trsize, nk2, l1netoutsize, l1netoutsize)
-testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
+--trainDataF.data = trainDataF.data:reshape(trsize, nk2, l1netoutsize, l1netoutsize)
+--testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
 
 -- relocate pointers to new dataset:
 --trainData1 = trainData -- save original dataset
@@ -374,12 +399,12 @@ if opt.classify then
 --   opt.model = '2mlp-classifier'
 --   dofile '2_model.lua' 
    
-   nhiddens = 512
+   nhiddens = 256
    outsize = 10 -- in CIFAR, SVHN datasets
 
    model = nn.Sequential()
-   model:add(nn.Reshape(nk*l1netoutsize^2))
-   model:add(nn.Linear(nk*l1netoutsize^2, nhiddens))
+   model:add(nn.Reshape(nk*l1netoutsize^2+cdatasize))
+   model:add(nn.Linear(nk*l1netoutsize^2+cdatasize, nhiddens))
    model:add(nn.Threshold())
    model:add(nn.Linear(nhiddens,outsize))
    
