@@ -28,6 +28,14 @@ temp = image.scale(trainData[1][1], in_sz, in_sz)
 vkn_osz = tnet:forward(temp:resize(1,1,in_sz,in_sz):expand(3,1,in_sz,in_sz):expand(3,nnf1,in_sz,in_sz)):size(2) -- output size of network
 
 
+print '==> testing compute time'
+testima = torch.Tensor(3, nnf1, 320, 240) -- test image of 320x240 3 colors/planes
+time = sys.clock()
+outima = tnet:forward(testima)
+time = sys.clock() - time
+print('==> Compute Time = ' .. (time*1000) .. 'ms')
+
+
 --trainsize = 10000
 --testsize = 2000
 trainsize = trainData:size()

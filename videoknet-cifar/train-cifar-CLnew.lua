@@ -51,7 +51,7 @@ is = opt.inputsize
 nk = opt.nkernels
 
 opt.niter = 15
-opt.slacmodel = true
+opt.slacmodel = false
 
 ----------------------------------------------------------------------
 -- loading and processing dataset:
@@ -136,10 +136,10 @@ end
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
 if opt.slacmodel then 
-   kernels1_ = kernels1s:clone():div(nnf1*nk1*3) -- divide kernels so output of SpatialConv is about ~1 or more
+   kernels1_ = kernels1s:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
    vnet.modules[1].weight = kernels1_:reshape(nk1s, ivch, is,is)
 else 
-   kernels1_ = kernels1:clone():div(nnf1*nk1*3) -- divide kernels so output of SpatialConv is about ~1 or more
+   kernels1_ = kernels1:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
    vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is)
 end
 
@@ -225,7 +225,7 @@ vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
 --   kernels2_= kernels2s:clone():div(nk2/2)
 --   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)
 --else
-   kernels2_= kernels2:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+   kernels2_= kernels2:clone():div(15) -- divide kernels so output of SpatialConv std =~0.5
    --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
    vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 --end
@@ -289,7 +289,7 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 --
 ---- setup net/ load kernels into network:
 --vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
---kernels3_= kernels3:clone():div(5)--:div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+--kernels3_= kernels3:clone():div(5) -- divide kernels so output of SpatialConv std =~0.5
 --vnet3.modules[1].weight = kernels3_:reshape(kernels3_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 --
 --
@@ -360,13 +360,6 @@ testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
 --testData1 = testData
 trainData = trainDataF -- relocate new dataset
 testData = testDataF
-
--- show a few outputs:
-if opt.display then
-   f256S_y = trainDataF.data[{ {1,256},1 }]
-   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
-            legend='Output 2-layer net: first 256 examples, 1st feature'}
-end
 
 
 ----------------------------------------------------------------------

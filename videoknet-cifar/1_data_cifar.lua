@@ -7,6 +7,7 @@
 require 'torch'   -- torch
 require 'image'   -- to visualize the dataset
 require 'nn'      -- provides a normalization operator
+require 'unsup'
 
 ----------------------------------------------------------------------
 -- parse command line arguments
@@ -149,11 +150,11 @@ end
 --print '==> preprocessing data: normalize all three channels locally'
 
 -- Define the normalization neighborhood:
---neighborhood = image.gaussian1D(7)
+neighborhood = image.gaussian1D(7)
 
 -- Define our local normalization operator (It is an actual nn module, 
 -- which could be inserted into a trainable model):
---normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
+normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 
 -- Normalize all channels locally:
 --for c in ipairs(channels) do
@@ -165,6 +166,34 @@ end
 --      testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
 --   end
 --end
+
+
+
+----------------------------------------------------------------------
+--print '==> whitening data'
+--
+--function zca_whiten(x)
+--   local dims = x:size()
+--   local nsamples = dims[1]
+--   local ndims    = dims[2]
+--   local M = torch.mean(x, 1)
+--   local D, V = unsup.pcacov(x)
+--   x:add(torch.ger(torch.ones(nsamples), M:squeeze()):mul(-1))
+--   local diag = torch.diag(D:add(0.1):sqrt():pow(-1))
+--   local P = V * diag * V:t()
+--   x = x * P
+--   return x, M, P
+--end
+--
+--for i = 1,trsize do
+--   trainData.data = zca_whiten(trainData.data:reshape(tesize,32*32*3))
+--   xlua.progress(i, trsize)
+--end
+--for i = 1,tesize do
+--   testData.data = zca_whiten(testData.data:reshape(tesize,32*32*3))
+--   xlua.progress(i, tesize)
+--end
+
 
 ----------------------------------------------------------------------
 print '==> verify statistics'

@@ -69,8 +69,8 @@ function trainLayer(nlayer, invdata, nsamples, kernels, nk, nnf, is, verbose)
    
    for i=1,nk do
       -- normalize kernels to 0 mean and 1 std:
-      kernels[i]:add(-kernels[i]:mean())
-      kernels[i]:div(kernels[i]:std())
+      --kernels[i]:add(-kernels[i]:mean())
+      --kernels[i]:div(kernels[i]:std())
    
       -- clear nan kernels   
       if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
@@ -128,13 +128,13 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    -- input data has multiple planes, compute similarity between these planes
    -- group planes that are similar
    -- we connect each group to one neuron in next layer
-   -- nkp = features previous layer, fpgroup = feateures per group
-   -- fanin = desired connex fanin - this should be also learned from data...
    
    -- train filter for next layer based on groups of connTable!!!
    -- uses co-occurence of features on muliple maps: sum maps, run clustering on them
-   
-   -- nnf = number frames, nk = number kernels, is = kernel size
+
+   -- nkp = features previous layer, fpgroup = features per group
+   -- fanin = desired connex fanin - this should be also learned from data...   
+   -- nnf = number frames, is = kernel size
    -- verbose = true ==> show images, text messages
    -- prev_ker= previous layer kernels
    
@@ -153,7 +153,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
       for i=1,nkp do
          for j=i,nkp do
             covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i]:clone():abs(), vdata[k][j]:clone():abs()) -- dist metric
-            covMat[j][i] = covMat[i][j]
+            covMat[j][i] = covMat[i][j] -- replicate on lower part of matrix, since symmetric
          end
       end
    end   
@@ -178,22 +178,6 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
          end
       end
       
-            -- repeat above for conenctions between top and 3rd max,
---            for j=1,fpgroup do -- repeat to have multiple filter kernels from this group:
---               for k=2,fanin+1,2 do -- the first value connects to itself!
---                  table.insert(connTable, torch.Tensor({inx[k],i+1}))
---                  -- group all feature maps that co-occur / are similar
---                  vd1[{{},{k}}] = vdata[{{},{inx[k]}}]
---               end
---            end
---      
---            kerp = trainLayer(nlayer, vd1, samples, nil, fpgroup, nnf, is, verbose)
---            for j=1,fpgroup do
---               for k=1,fanin do
---                  table.insert(kerTable, kerp:reshape(fpgroup, fanin,is*is)[j][k])
---               end
---            end
-      
       -- groups of 2 x fanin: (offset in i: 2*nkp)
       for j=1,fpgroup do -- repeat to have multiple filter kernels from this group:
          for k=1,2*fanin do -- the first value connects to itself!
@@ -208,22 +192,6 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
             table.insert(kerTable, kerp:reshape(fpgroup, fanin*2,is*is)[j][k])
          end
       end
-      
-            -- repeat above for conenctions between top and 3rd max,
-            -- groups of 2 x fanin: (offset in i: 2*nkp)
---            for j=1,fpgroup do -- repeat to have multiple filter kernels from this group:
---               for k=2,2*fanin+1,2 do -- the first value connects to itself!
---                  table.insert(connTable, torch.Tensor({inx[k],i+nkp+1}))
---                  -- group all feature maps that co-occur / are similar
---                  vd2[{{},{k}}] = vdata[{{},{inx[k]}}]
---               end
---            end
---            kerp = trainLayer(nlayer, vd2, samples, nil, fpgroup, nnf, is, verbose)
---            for j=1,fpgroup do
---               for k=1,2*fanin do
---                  table.insert(kerTable, kerp:reshape(fpgroup, fanin*2,is*is)[j][k])
---               end
---            end
       
       if verbose then xlua.progress(i, nkp) end
    end

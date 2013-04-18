@@ -1,7 +1,7 @@
 
 ----------------------------------------------------------------------
 -- Classes to learn
---
+
 classes = {'unknown',
            'awning', 'balcony', 'bird', 'boat', 'bridge', 'building', 'bus',
            'car', 'cow', 'crosswalk', 'desert', 'door', 'fence', 'field',
@@ -9,6 +9,10 @@ classes = {'unknown',
            'road', 'rock', 'sand', 'sea', 'sidewalk', 'sign', 'sky',
            'staircase', 'streetlight', 'sun', 'tree', 'window'}
 
+--ec mod:
+--classes = {'unknown',
+--				'building','car', 'person',
+--           'road','sidewalk', 'sign',}
 
 
 ----------------------------------------------------------------------
@@ -169,7 +173,7 @@ trainData = DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            labelGenerator=labelGenerator,
                            cacheFile='cached-256-'..patchSize..'-'..opt.type,
                            nbPatchPerSample=5,
-                           preloadSamples=true,
+                           preloadSamples=false,
                            patchSize=patchSize}
 
 -- load test set
@@ -180,7 +184,7 @@ testData = DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
                           classNames=classes,
                           classToSkip=1,
                           cacheFile='cached-256-'..patchSize..'-'..opt.type,
-                          preloadSamples=true,
+                          preloadSamples=false,
                           patchSize=patchSize}
 
 

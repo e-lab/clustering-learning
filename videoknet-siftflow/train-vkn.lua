@@ -14,7 +14,7 @@ require 'image'
 require 'nnx'
 require 'optim'
 -- ec added:
-require 'eex'
+--require 'eex'
 require 'online-kmeans' -- allow you to re-train k-means kernels
 require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
@@ -51,7 +51,7 @@ op:option{'-dp', '--display', action='store_true', dest='display', default=false
           help='display training/testing samples while training'}
 op:option{'-plt', '--plot', action='store_true', dest='plot', default=false,
           help='plot error/accuracy live (if false, still logged in a file)'}
-op:option{'-log', '--log', action='store_true', dest='log', default=false,
+op:option{'-log', '--log', action='store_true', dest='log', default=true,
           help='log the whole session to a file'}
 
 op:option{'-p', '--preproc', action='store', dest='preproc', default='norm(y)+norm(u)+norm(v)',
@@ -92,12 +92,12 @@ op:option{'-ss', '--subsize', action='store', dest='subsize', default="2,2",
           help='subsampling size, at each layer'}
 op:option{'-pl', '--pooling', action='store', dest='pooling', default="max",
           help='subsampling/pooling type: max OR sum OR l2'}
-op:option{'-hid', '--hiddens', action='store', dest='hiddens', default="1024",
+op:option{'-hid', '--hiddens', action='store', dest='hiddens', default="256",
           help='nb of hidden features for top perceptron (if 0, a simple linear classifier is used)'}
 op:option{'-rbf', '--rbf', action='store_true', dest='rbf', default=false,
           help='use rbf output units, instead of regular linear units'}
 
-op:option{'-t', '--type', action='store', dest='type', default='double',
+op:option{'-t', '--type', action='store', dest='type', default='float',
           help='numeric type: float | double'}
 op:option{'-sd', '--seed', action='store', dest='seed', default=1,
           help='use fixed seed for randomized initialization'}
@@ -236,7 +236,7 @@ end
 
 -- number of frames to process:
 if opt.quicktest then nfpr = 10 -- batch process size [video frames]
-else nfpr = 50 end
+else nfpr = 200 end
 
 
 
@@ -248,7 +248,7 @@ function createDataBatch()
    for i = 1, nfpr do -- just get a few frames to begin with
       -- perform full LCN
       if opt.videodata then procFrame = preproc:forward(rawFrame) 
-      else procFrame = trainData[i][1]:clone()
+      else procFrame = preproc:forward(trainData[i][1]:clone())
       end
       videoData[i] = procFrame
       if opt.videodata then rawFrame = source:forward() end
@@ -297,7 +297,7 @@ else
    -- AND/OR model or FULL CONNECT MODEL:
    kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is, false) 
 end
-image.display{image=kernels1:reshape(nk1,is,is), padding=2, nrow=8, symmetric=true, zoom=2}
+image.display{image=kernels1:reshape(nk1,ivch,is,is), padding=2, nrow=8, symmetric=true, zoom=2}
 
    
 ----------------------------------------------------------------------
@@ -329,19 +329,20 @@ image.display{image=kernels1:reshape(nk1,is,is), padding=2, nrow=8, symmetric=tr
    elseif opt.pooling == 'l2' then
       vnet:add(nn.SpatialLPPooling(f1_,2,s0_,s0_,s0_,s0_))
    end
-   if opt.cnnmodel then vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3)) end
+   --if opt.cnnmodel then vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3)) end
 
 
 
 -- setup net/ load kernels into network:
-vnet.modules[1].bias = torch.zeros(#vnet.modules[1].bias)-- set bias to 0!!! not needed
-kernels1_ = kernels1:clone():div(nk1/8) -- divide kernels so output of SpatialConv is about ~1 or more
+vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
+kernels1_ = kernels1:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std ~0.5
 if nnf1 > 1 then vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
 elseif nnf1 == 1 then 
    if opt.slacmodel then 
          vnet.modules[1].weight = kernels1_:reshape(nk1*2,is,is) -- max pool 1to1 connex
-      else vnet.modules[1].weight = kernels1_:reshape(nk1, 1, is,is):expand(nk1,ivch,is,is) end
+      else vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is) end
 end
+
 
 ----------------------------------------------------------------------
 print '==> process video throught 1st layer:'
@@ -354,13 +355,14 @@ print('1st layer output. std: '..vnet.output:std()..' and mean: '..vnet.output:m
 
 
 ----------------------------------------------------------------------
-print '==> generating filters for layer 1:'
+print '==> generating filters for layer 2:'
 nlayer = 2
 nnf2 = 1 -- just one frames goes into layer 2
-nk2 = f2_
-nk = nk2
+--nk2 = f2_
+--nk = nk2
 is = k2_
-fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
+fanin = 2 -- createCoCnxTable creates also 2*fanin connections
+feat_group = 32 --features per group (32=best in CIFAR, nk1=32, fanin=2)
 poolsize = 2
 cvstepsize = 1
 ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
@@ -382,9 +384,11 @@ ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
 
 -- OUTPUT Co-occurence CONNEX MODEL:
 print '==> Computing connection tables based on co-occurence of features'
-
-cTable1, kernels2 = createCoCnx(nlayer, videoData2, nk1, nk2, fanin, 'AND', opt.nsamples/50, nnf2, is, kernels1, false)
-image.display{image=kernels2, padding=2, nrow=8,  symmetric=true, zoom=2}
+cTable2, kernels2 = createCoCnx(nlayer, videoData2, nk1, feat_group, fanin, 50, nnf2, is, kernels1, false)
+nk2 = cTable2:max()
+nk = nk2
+--image.display{image=kernels2, padding=2, nrow=8,  symmetric=true, zoom=2}
+if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'} end
 
 
 ----------------------------------------------------------------------
@@ -394,7 +398,7 @@ image.display{image=kernels2, padding=2, nrow=8,  symmetric=true, zoom=2}
    --vnet2:add(nn.SpatialConvolutionMap(table2,k2_,k2_))
    --vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize)) -- fully connected (BEST NOW)
    --vnet2:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(nk2), is, is, cvstepsize,cvstepsize)) -- max pool 1to1 connex
-   vnet2:add(nn.SpatialConvolutionMap(cTable1, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+   vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
    --if opt.slacmodel then vnet2:add(nn.SpatialMaxMap(connTable2)) end -- slac function to pick max(each group) from VolConv layer
    if opt.cnnmodel then vnet2:add(nn.Tanh()) end
    --vnet:add(nn.HardShrink(0.1))
@@ -405,11 +409,11 @@ image.display{image=kernels2, padding=2, nrow=8,  symmetric=true, zoom=2}
    elseif opt.pooling == 'l2' then
       vnet2:add(nn.SpatialLPPooling(f2_,2,s1_,s1_,s1_,s1_))
    end
-   if opt.cnnmodel then vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3)) end
+   --if opt.cnnmodel then vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3)) end
    
 
 -- setup net/ load kernels into network:
-vnet2.modules[1].bias = torch.zeros(#vnet2.modules[1].bias) -- set bias to 0!!! not needed
+vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
 kernels2_ = kernels2:clone():div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
 --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
 vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
@@ -430,9 +434,10 @@ print('2nd layer output. std: '..vnet2.output:std()..' and mean: '..vnet2.output
 print '==> generating filters for layer 3:'
 nlayer = 3
 nnf3 = 1  -- just one frames goes into layer 3
-nk3 = f3_
+--nk3 = f3_
 is = k3_
---fanin = 8
+fanin = 2
+feat_group = 8 
 cvstepsize = 1
 --ovhe3 = (ovhe2-is+1)/poolsize/cvstepsize -- output video feature height
 --ovwi3 = (ovwi2-is+1)/poolsize/cvstepsize -- output video feature width
@@ -454,8 +459,11 @@ cvstepsize = 1
 
 -- OUTPUT Co-occurence CONNEX MODEL:
 print '==> Computing connection tables based on co-occurence of features'
-cTable2, kernels3 = createCoCnx(nlayer, videoData3, nk2, nk3, fanin, 'AND', opt.nsamples/50, nnf3, is, kernels2, false)
-image.display{image=kernels3, padding=2, nrow=8,  symmetric=true, zoom=2}
+cTable3, kernels3 = createCoCnx(nlayer, videoData3, nk2, feat_group, fanin, 50, nnf3, is, kernels2, false)
+nk3 = cTable3:max()
+--nk = nk3
+if opt.display then image.display{image=kernels3, padding=2, padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 3 filters'} end
+
    
 ----------------------------------------------------------------------
 -- 3rd layer   
@@ -464,7 +472,7 @@ image.display{image=kernels3, padding=2, nrow=8,  symmetric=true, zoom=2}
    --vnet3:add(nn.SpatialConvolutionMap(table3,k3_,k3_))
    --vnet3:add(nn.SpatialConvolution(nk2, nk3, is, is, cvstepsize, cvstepsize)) -- fully connected (BEST NOW)
    --vnet3:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(nk3), is, is, cvstepsize,cvstepsize))
-   vnet3:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+   vnet3:add(nn.SpatialConvolutionMap(cTable3, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
    --vnet3:add(nn.Tanh())
 --   if opt.pooling == 'max' then
 --      vnet3:add(nn.SpatialMaxPooling(s1_,s1_,s1_,s1_))
@@ -477,7 +485,7 @@ image.display{image=kernels3, padding=2, nrow=8,  symmetric=true, zoom=2}
 
 
 -- setup net/ load kernels into network:
-vnet3.modules[1].bias = torch.zeros(#vnet3.modules[1].bias) -- set bias to 0!!! not needed
+vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
 kernels3_ = kernels3:clone():div(nk3*fanin) -- divide kernels so output of SpatialConv is about ~1 or more
 --vnet3.modules[1].weight = kernels3_:reshape(nk3,nk2,is,is)
 vnet3.modules[1].weight = kernels3_
@@ -486,13 +494,13 @@ vnet3.modules[1].weight = kernels3_
 ---------------------------------------------------------------------- 
 -- quick sanity check with Lena:
 
-normkernel = image.gaussian1D(15)
-normer=nn.SpatialContrastiveNormalization(3, normkernel,1e-3)
-lvn=normer:forward(image.lena())
-lv1 = vnet:forward(lvn)
-image.display(lv1)
-lv2 = vnet2:forward(lv1)
-image.display(lv2)
+--normkernel = image.gaussian1D(15)
+--normer=nn.SpatialContrastiveNormalization(3, normkernel,1e-3)
+--lvn=normer:forward(image.lena())
+--lv1 = vnet:forward(lvn)
+--image.display(lv1)
+--lv2 = vnet2:forward(lv1)
+--image.display(lv2)
 
 
    
@@ -644,9 +652,9 @@ criterion.targetIsProbability = true
 --testsize = 200
 trainsize = trainData:size()
 testsize = testData:size()
-
-in_trsz = trainData[1][1]:size(2)
-in_tesz = testData[1][1]:size(2)
+--
+--in_trsz = trainData[1][1]:size(2)
+--in_tesz = testData[1][1]:size(2)
 --if nnf1 >1 then
 --   out_trsz = tnet:forward(trainData[1][1]:resize(ivch,1,in_trsz,in_trsz):expand(ivch,nnf1,in_trsz,in_trsz))
 --   out_tesz = tnet:forward(testData[1][1]:resize(ivch,1,in_tesz,in_tesz):expand(ivch,nnf1,in_tesz,in_tesz))
@@ -683,7 +691,7 @@ for t = 1,trainsize do
 end
 
 --report some statistics:
-print('trainData2[1][1] Max: '..trainData2[1][1]:max()..' and min: '..trainData2[1][1]:min()..' and mean: '..trainData2[1][1]:mean())
+print('trainData2[1][1] std: '..trainData2[1][1]:std()..' and mean: '..trainData2[1][1]:mean())
 
 
 testData2 = {}
@@ -700,7 +708,7 @@ for t = 1, #testData.rawdata/5 do
 end
 
 --report some statistics:
-print('testData2[1][1] Max: '..testData2[1][1]:max()..' and min: '..testData2[1][1]:min()..' and mean: '..testData2[1][1]:mean())
+print('testData2[1][1] std: '..testData2[1][1]:std()..' and mean: '..testData2[1][1]:mean())
 
 
 

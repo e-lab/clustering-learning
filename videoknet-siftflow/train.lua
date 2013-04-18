@@ -91,7 +91,7 @@ op:option{'-t', '--type', action='store', dest='type', default='double',
           help='numeric type: float | double'}
 op:option{'-sd', '--seed', action='store', dest='seed', default=1,
           help='use fixed seed for randomized initialization'}
-op:option{'-thd', '--threads', action='store', dest='threads', default=4,
+op:option{'-thd', '--threads', action='store', dest='threads', default=8,
           help='use multiple threads for function eval'}
 
 opt = op:parse()
@@ -129,6 +129,12 @@ classes = {'unknown',
            'grass', 'moon', 'mountain', 'person', 'plant', 'pole', 'river',
            'road', 'rock', 'sand', 'sea', 'sidewalk', 'sign', 'sky',
            'staircase', 'streetlight', 'sun', 'tree', 'window'}
+
+--ec mod:
+--classes = {'unknown','building', 'bus',
+--           'car', 'person', 'plant',
+--           'road','sidewalk', 'sign', 'sky', 'tree'}
+
 
 ----------------------------------------------------------------------
 -- define network to train
@@ -497,7 +503,7 @@ trainData = DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            labelGenerator=labelGenerator,
                            cacheFile='cached-256-'..patchSize..'-'..opt.type,
                            nbPatchPerSample=5,
-                           preloadSamples=true,
+                           preloadSamples=false,
                            patchSize=patchSize}
 
 -- load test set
@@ -508,7 +514,7 @@ testData = DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
                           classNames=classes,
                           classToSkip=1,
                           cacheFile='cached-256-'..patchSize..'-'..opt.type,
-                          preloadSamples=true,
+                          preloadSamples=false,
                           patchSize=patchSize}
 
 
@@ -520,9 +526,14 @@ if opt.display then
 end
 
 
+-- ec added:force cleanup
+collectgarbage()
+
 -- EC tests:
 --fovea:focus(trainData[1][3], trainData[1][4], trainData[1][5])
 --return fovea:forward(trainData[1][1]):size()
+
+print('tango', crap,dick,done)
 
 function epoch()
    -- train for one epoch on current subset

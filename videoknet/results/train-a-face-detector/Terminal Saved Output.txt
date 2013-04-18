@@ -1,0 +1,63 @@
+<DataSet> Dumping dataset to cache file ../datasets/faces_cut_yuv_32x32/bg-false-pos-interior-scene-all for fast retrieval
+<DataSet> Merging dataset of size = 1235 into dataset of size = 28034
+<DataSet> Popping 2647 samples dataset
+<DataSet> Popping 5854 samples dataset
+<trainer> on training set:
+<trainer> online epoch # 1 [batchSize = 1]
+ [================================ 46830/46830 ===============================>] ETA: 0ms | Step: 3ms                           <trainer> time to learn 1 sample = 3.5206388212684ms
+ConfusionMatrix:
+[[   22785     630]   97.309% 	[class: Face]
+ [     779   22636]]  96.673% 	[class: Background]
+ + average row correct: 96.991243958473% 
+ + average rowUcol correct (VOC measure): 94.158199429512% 
+ + global correct: 96.991244928465%
+<trainer> saving network to train-a-face-detector/face.net
+<trainer> on testing Set:
+ [================================ 11708/11708 ===============================>] ETA: 0ms | Step: 1ms                           <trainer> time to test 1 sample = 1.7708909292788ms
+ConfusionMatrix:
+[[    5802      52]   99.112% 	[class: Face]
+ [      25    5829]]  99.573% 	[class: Background]
+ + average row correct: 99.342328310013% 
+ + average rowUcol correct (VOC measure): 98.69324862957% 
+ + global correct: 99.342330030748%
+<trainer> on training set:
+<trainer> online epoch # 2 [batchSize = 1]
+ [================================ 46830/46830 ===============================>] ETA: 0ms | Step: 4ms                           <trainer> time to learn 1 sample = 4.3368141362375ms
+ConfusionMatrix:
+[[   23172     243]   98.962% 	[class: Face]
+ [     120   23295]]  99.488% 	[class: Background]
+ + average row correct: 99.224856495857% 
+ + average rowUcol correct (VOC measure): 98.461624979973% 
+ + global correct: 99.224855861627%
+<trainer> saving network to train-a-face-detector/face.net
+<trainer> on testing Set:
+ [================================ 11708/11708 ===============================>] ETA: 0ms | Step: 2ms                           <trainer> time to test 1 sample = 2.2654192005465ms
+ConfusionMatrix:
+[[    5795      59]   98.992% 	[class: Face]
+ [      31    5823]]  99.470% 	[class: Background]
+ + average row correct: 99.231296777725% 
+ + average rowUcol correct (VOC measure): 98.474308848381% 
+ + global correct: 99.231294841134%
+<trainer> on training set:
+<trainer> online epoch # 3 [batchSize = 1]
+ [================================ 46830/46830 ===============================>] ETA: 0ms | Step: 3ms                           <trainer> time to learn 1 sample = 4.1326217809096ms
+ConfusionMatrix:
+[[   23203     212]   99.095% 	[class: Face]
+ [     132   23283]]  99.436% 	[class: Background]
+ + average row correct: 99.265429377556% 
+ + average rowUcol correct (VOC measure): 98.541563749313% 
+ + global correct: 99.265428144352%
+<trainer> saving network to train-a-face-detector/face.net
+<trainer> on testing Set:
+ [================================ 11708/11708 ===============================>] ETA: 0ms | Step: 2ms                           <trainer> time to test 1 sample = 2.0983794841133ms
+ConfusionMatrix:
+[[    5805      49]   99.163% 	[class: Face]
+ [      27    5827]]  99.539% 	[class: Background]
+ + average row correct: 99.350872635841% 
+ + average rowUcol correct (VOC measure): 98.710113763809% 
+ + global correct: 99.35087119918%
+
+
+
+exec time:
+8		& 32			& CNN				& 1			& 6.04

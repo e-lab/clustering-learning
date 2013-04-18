@@ -23,20 +23,20 @@ require 'eex'
 require 'image'
 --require 'kmec'
 --require 'unsup'
-require 'online-kmeans'
+require 'online-kmeans' -- allow you to re-train k-means kernels
 require 'ffmpeg'
-require 'trainLayer'
+require 'trainLayer' -- functions for Clustering Learning on video
 require 'optim'
 require "slac"
 
 
 cmd = torch.CmdLine()
 cmd:text('Options')
-cmd:option('-visualize', true, 'display kernels') --WRONG! This will always be true because the parsing of the command line is giving STRINGS as output and everything but <false> and <nil> are <true>!!! So 'flase' IS <true>!!!
+cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 5, 'size of each input patches')
-cmd:option('-nkernels', 32, 'number of kernels to learn')
+cmd:option('-inputsize', 9, 'size of each input patches')
+cmd:option('-nkernels', 64, 'number of kernels to learn')
 cmd:option('-niter', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 10*1000, 'nb of random training samples')
@@ -44,7 +44,7 @@ cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templ
 cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:option('-savedataset', false, 'save modified dataset')
 cmd:option('-classify', true, 'run classification train/test')
-cmd:option('-nnframes', 2, 'nb of frames uses for temporal learning of features') --TODO change definition! It is really better to speak about Temporal Receptive Field instead of frames..
+cmd:option('-nnframes', 4, 'nb of frames uses for temporal learning of features')
 cmd:option('-dataset', '../datasets/faces_cut_yuv_32x32/','path to FACE dataset root dir')
 cmd:option('-patches', 'all', 'nb of patches to use')
 -- loss:
@@ -80,8 +80,24 @@ print 'SUPER-NET script!'
 ----------------------------------------------------------------------
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
--- video test:
-dspath = '/Users/eugenioculurciello/Desktop/euge.mov'
+--dspath = '/Users/eugenioculurciello/Pictures/2013/1-13-13/VID_20130105_111419.mp4'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
+
+--dspath = '/Users/eugenioculurciello/Desktop/driving1.mov'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
+
+--dspath = '../datasets/TLD/06_car'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
+
+--dspath = '../datasets/TLD/08_volkswagen'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
+
+--dspath = '../datasets/TLD/09_carchase'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=true, load=false}
+
+dspath = '../datasets/euge.mov'
+--source = ffmpeg.Video{path=dspath, encoding='jpg', fps=24, loaddump=false, load=false}
+-- smaller video test:
 source = ffmpeg.Video{path=dspath, width = 120, height = 80, encoding='jpg', fps=24, loaddump=false, load=false}
 
 rawFrame = source:forward()
@@ -89,10 +105,10 @@ rawFrame = source:forward()
 ivch = rawFrame:size(1) -- channels
 ivhe = rawFrame:size(2) -- height
 ivwi = rawFrame:size(3) -- width
---source.current = 1 -- rewind video frames
+source.current = 1 -- rewind video frames
 
 -- number of frames to process:
-nfpr = 200 + (nnf1 - 1) -- batch process size [video frames]
+nfpr = 200 + nnf1 -- batch process size [video frames]
 
 -- normalize and prepare dataset:
 neighborhood = image.gaussian1D(9)
@@ -116,7 +132,8 @@ nlayer = 1
 
 
 -- FULL CONNECT MODEL:
-kernels1 = trainLayer(nlayer, trainData, opt.nsamples, nil, nk1*3, nnf1, is) -- learn 3*nk1 filters!better results!--no slac
+kernels1 = trainLayer(nlayer, trainData, opt.nsamples, nil, nk1*ivch, nnf1, is) -- learn 3*nk1 filters!better results!--no slac
+--kernels1 = trainLayer(nlayer, trainData, opt.nsamples, nil, nk1*ivch, 1, is) -- NO VOL FILTERS!
 
 
 -- SLAC MODEL:
@@ -154,9 +171,11 @@ vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3))
 
 -- load kernels into network:
 kernels1:div(nnf1*nk1*ivch/4) -- divide kernels so output of SpatialConv is about ~1 or more
-vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
+--vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
 --vnet.modules[1].weight = kernels1:reshape(nk1,ivch,is,is) -- for spatial SAD
 
+-- NO VOL FILTERS!
+vnet.modules[1].weight = kernels1:reshape(nk1,ivch,1,is,is):expand(nk1,ivch,nnf1,is,is) -- full connex filters!
 
 -- SLAC MODEL:
 --vnet = nn.Sequential()
@@ -202,7 +221,7 @@ print('1st layer output. Max: '..vnet.output:max()..' and min: '..vnet.output:mi
 print '==> generating filters for layer 2:'
 nlayer = 2
 nnf2 = 1
-nk2 = 64
+nk2 = 128
 
 -- FULL CONNEX MODEL:
 -- we get better results training more filters for the full connected system. It is increasing the number of diff kenrnels!

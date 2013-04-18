@@ -6,19 +6,19 @@
 
 function trainLayer(nlayer,trainData, nsamples, kernels, nk, nnf, is)
    -- computes filter kernels for a layer with Clustering Learning / k-means
-
+   
    -- input video params:
    local ivch = trainData[1]:size(1) -- channels
    local ivhe = trainData[1]:size(2) -- height
    local ivwi = trainData[1]:size(3) -- width
-
+   
    print '==> extracting patches' -- only extract on Y channel (or R if RGB) -- all ok
    local img = torch.Tensor(ivch, nnf, ivhe, ivwi)
    local data = torch.Tensor(nsamples, nnf*is*is) -- need to learn volumetric filters on multiple frames!
    for i = 1, nsamples do
-      idx = math.random(nnf,nfpr) -- pointer to current frame
+      fimg = math.random(nnf,nfpr) -- pointer to current frame
       for j = 1, nnf do
-         img[{{},{j}}] = trainData[idx-j+1] -- pointer to current and all previous frames
+         img[{{},{j}}] = trainData[fimg-j+1] -- pointer to current and all previous frames
       end
       local z = math.random(1,ivch)
       local x = math.random(1,ivwi-is+1)
@@ -30,13 +30,13 @@ function trainLayer(nlayer,trainData, nsamples, kernels, nk, nnf, is)
       data[i] = patches
       xlua.progress(i, nsamples)
    end
-
+   
    -- show a few patches:
-   if opt.visualize then -- BUG! This will ALWAYS be <true>
+   if opt.visualize then
       f256S = data[{{1,256}}]:reshape(256,nnf*is,is)
       image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches of video frames'}
    end
-
+   
    ----------------------------------------------------------------------
    print '==> running k-means to learn filter'
    local win
@@ -45,19 +45,19 @@ function trainLayer(nlayer,trainData, nsamples, kernels, nk, nnf, is)
          win = image.display{image=kernels:reshape(nk,nnf*is,is), padding=2, symmetric=true, 
          zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
       end
-   end
+   end                    
    --kernels = kmec(data, nk, opt.initstd, opt.niter, opt.batchsize, cb, true) -- Euge kmeans (not good init yet)
    --kernels = unsup.kmeans(data, nk, opt.initstd, opt.niter, opt.batchsize, cb, true)
    kernels = okmeans(data, nk, kernels, opt.initstd, opt.niter, opt.batchsize, cb, true) -- online version to upadte filters
    print('==> saving centroids to disk:')
    --torch.save('volumetric.t7', kernels)
-
+   
    for i=1,nk do
       -- normalize kernels to 0 mean and 1 std:
       kernels[i]:add(-kernels[i]:mean())
       kernels[i]:div(kernels[i]:std())
-
-      -- clear nan kernels
+   
+      -- clear nan kernels   
       if torch.sum(kernels[i]-kernels[i]) ~= 0 then 
          print('Found NaN kernels!') 
          kernels[i] = torch.zeros(kernels[1]:size()) 
@@ -66,12 +66,12 @@ function trainLayer(nlayer,trainData, nsamples, kernels, nk, nnf, is)
    -- print final filters:
    win = image.display{image=kernels:reshape(nk,nnf*is,is), padding=2, symmetric=true, 
          zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
-
+   
    print '==> verify filters statistics'
    print('filters max mean: ' .. kernels:mean(2):abs():max())
    print('filters max standard deviation: ' .. kernels:std(2):abs():max())
-
-   -- save animated GIF of filters:
+         
+   -- save animated GIF of filters: 
    if nlayer == 1 then
       for i=1, nnf do
          outf = image.display{image=kernels:reshape(nk,nnf,is,is)[{{},{i},{},{}}]:reshape(nk,is,is), 
@@ -83,9 +83,49 @@ function trainLayer(nlayer,trainData, nsamples, kernels, nk, nnf, is)
       os.execute('convert -delay 20 -loop 0 volumetric*.png volumetric.gif')
       os.execute('rm volumetric*.png') -- remove intermediate files
    end
-
+   
    return kernels
 end
+
+
+
+function createCovCnxTable(vdata, fanin)
+   -- create a covariance connection table based on some test data:
+   
+   nf = vdata:size(1) --number frames
+   nk = vdata:size(2) -- number features
+   sz_X = vdata:size(3) -- image size
+   sz_Y = vdata:size(4)
+   
+   covMat = torch.zeros(nk,nk) --covariance matrix
+   connTable = {}
+   
+   for k=1,nf do
+      for i=1,nk do
+         for j=i+1,nk do
+            covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i], vdata[k][j]) -- dist metric
+            covMat[j][i] = covMat[i][j]
+         end
+      end
+   end
+   for i=1,nk do
+      max, j = torch.sort(covMat[i])
+      for k=1,fanin do -- skip first value because it would connect to itself
+         table.insert(connTable, torch.Tensor({j[k],i}))
+      end
+   end
+   connTableTensor = torch.Tensor(#connTable,2)
+   for i, value in ipairs(connTable) do
+      connTableTensor[i] = value
+   end
+   return connTableTensor
+end
+
+
+-- tests:
+-- image.display{image=kernels1:reshape(32,7,7), padding=2, zoom=4,  nrow=8}
+-- image.display{image=videoData2[1], padding=2, zoom=1,  nrow=8}
+
 
 
 function createConnexTable(nkP, nkN, level)

@@ -1,0 +1,106 @@
+<trainer> on training set:
+<trainer> online epoch # 27 [batchSize = 1]
+ [================================ 52684/52684 ===============================>] ETA: 0ms | Step: 0ms                            <trainer> time to learn 1 sample = 0.20862172576107ms
+ConfusionMatrix:
+[[   25569     773]   97.066% 	[class: Face]
+ [     436   25906]]  98.345% 	[class: Background]
+ + average row correct: 97.705185413361% 
+ + average rowUcol correct (VOC measure): 95.513156056404% 
+ + global correct: 97.705185635107%
+<trainer> on testing Set:
+ [================================ 5854/5854 =================================>] ETA: 0ms | Step: 0ms                            <trainer> time to test 1 sample = 0.14895866074554ms
+ConfusionMatrix:
+[[    2770     157]   94.636% 	[class: Face]
+ [      37    2890]]  98.736% 	[class: Background]
+ + average row correct: 96.686026453972% 
+ + average rowUcol correct (VOC measure): 93.582129478455% 
+ + global correct: 96.686026648446%
+<trainer> on training set:
+<trainer> online epoch # 28 [batchSize = 1]
+ [================================ 52684/52684 ===============================>] ETA: 0ms | Step: 0ms                            <trainer> time to learn 1 sample = 0.21090378483037ms
+ConfusionMatrix:
+[[   25571     771]   97.073% 	[class: Face]
+ [     425   25917]]  98.387% 	[class: Background]
+ + average row correct: 97.729861736298% 
+ + average rowUcol correct (VOC measure): 95.560321211815% 
+ + global correct: 97.729861058386%
+<trainer> on testing Set:
+ [================================ 5854/5854 =================================>] ETA: 0ms | Step: 0ms                            <trainer> time to test 1 sample = 0.14944977793008ms
+ConfusionMatrix:
+[[    2772     155]   94.704% 	[class: Face]
+ [      35    2892]]  98.804% 	[class: Background]
+ + average row correct: 96.75435423851% 
+ + average rowUcol correct (VOC measure): 93.710291385651% 
+ + global correct: 96.7543559959%
+<trainer> on training set:
+<trainer> online epoch # 29 [batchSize = 1]
+ [================================ 52684/52684 ===============================>] ETA: 0ms | Step: 0ms                            <trainer> time to learn 1 sample = 0.20905527294818ms
+ConfusionMatrix:
+[[   25578     764]   97.100% 	[class: Face]
+ [     421   25921]]  98.402% 	[class: Background]
+ + average row correct: 97.750741243362% 
+ + average rowUcol correct (VOC measure): 95.600259304047% 
+ + global correct: 97.750740262698%
+<trainer> on testing Set:
+ [================================ 5854/5854 =================================>] ETA: 0ms | Step: 0ms                            <trainer> time to test 1 sample = 0.14787939870254ms
+ConfusionMatrix:
+[[    2774     153]   94.773% 	[class: Face]
+ [      36    2891]]  98.770% 	[class: Background]
+ + average row correct: 96.771436929703% 
+ + average rowUcol correct (VOC measure): 93.742483854294% 
+ + global correct: 96.771438332764%
+<trainer> on training set:
+<trainer> online epoch # 30 [batchSize = 1]
+ [================================ 52684/52684 ===============================>] ETA: 0ms | Step: 0ms                            <trainer> time to learn 1 sample = 0.21443210462385ms
+ConfusionMatrix:
+[[   25585     757]   97.126% 	[class: Face]
+ [     409   25933]]  98.447% 	[class: Background]
+ + average row correct: 97.786805033684% 
+ + average rowUcol correct (VOC measure): 95.669272542% 
+ + global correct: 97.786804342875%
+<trainer> on testing Set:
+ [================================ 5854/5854 =================================>] ETA: 0ms | Step: 0ms                            <trainer> time to test 1 sample = 0.15028766655227ms
+ConfusionMatrix:
+[[    2774     153]   94.773% 	[class: Face]
+ [      35    2892]]  98.804% 	[class: Background]
+ + average row correct: 96.788519620895% 
+ + average rowUcol correct (VOC measure): 93.774521350861% 
+ + global correct: 96.788520669628%
+<trainer> on training set:
+<trainer> online epoch # 31 [batchSize = 1]
+ [================================ 52684/52684 ===============================>] ETA: 0ms | Step: 0ms                            <trainer> time to learn 1 sample = 0.21064400956643ms
+ConfusionMatrix:
+[[   25591     751]   97.149% 	[class: Face]
+ [     404   25938]]  98.466% 	[class: Background]
+ + average row correct: 97.807681560516% 
+ + average rowUcol correct (VOC measure): 95.709252357483% 
+ + global correct: 97.807683547187%
+<trainer> on testing Set:
+ [================================ 5854/5854 =================================>] ETA: 0ms | Step: 0ms                            <trainer> time to test 1 sample = 0.14791100102525ms
+ConfusionMatrix:
+[[    2776     151]   94.841% 	[class: Face]
+ [      34    2893]]  98.838% 	[class: Background]
+ + average row correct: 96.839767694473% 
+ + average rowUcol correct (VOC measure): 93.870857357979% 
+ + global correct: 96.839767680219%
+<trainer> on training set:
+<trainer> online epoch # 32 [batchSize = 1]
+ [================================ 52684/52684 ===============================>] ETA: 0ms | Step: 0ms                            <trainer> time to learn 1 sample = 0.210017633437ms
+ConfusionMatrix:
+[[   25596     746]   97.168% 	[class: Face]
+ [     400   25942]]  98.482% 	[class: Background]
+ + average row correct: 97.824767231941% 
+ + average rowUcol correct (VOC measure): 95.741975307465% 
+ + global correct: 97.824766532534%
+<trainer> on testing Set:
+ [================================ 5854/5854 =================================>] ETA: 0ms | Step: 0ms                            <trainer> time to test 1 sample = 0.14914366245301ms
+ConfusionMatrix:
+[[    2784     143]   95.114% 	[class: Face]
+ [      34    2893]]  98.838% 	[class: Background]
+ + average row correct: 96.976426243782% 
+ + average rowUcol correct (VOC measure): 94.128409028053% 
+ + global correct: 96.976426375128%
+
+
+exec time:
+32 		& 64 			& full	 LCN				& 2			& 560.45 \\
