@@ -103,7 +103,7 @@ tracklets = parseXML(trackletFile)
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
 --dspathL = '../datasets/KITTI/2011_09_26_drive_0001/image_02/data' -- Left images
-dspath = '../datasets/KITTI/2011_09_26_drive_0001/image_03/data'--/0000000000.png' -- Right images
+dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_03/data'--/0000000000.png' -- Right images
 --sourceL = ffmpeg.Video{path=dspathL, width = 310, height = 94, encoding='png', fps=10, loaddump=true, load=false}
 source = ffmpeg.Video{path=dspath, width = 310, height = 94, encoding='png', fps=10, loaddump=true, load=true}
 
