@@ -118,21 +118,21 @@ ivwi = rawFrame:size(3) -- width
 --source.current = 1 -- rewind video frames
 
 -- test: detect = {x=100, y=20, w=20, h=30}
-
+-- process tracklets into image bounding boxes:
 win = image.display(rawFrame)
-for imgi = 0,10 do
+for imgi = 0,150 do
 	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
-	win = image.display(rawFrame)
+	image.display{image=rawFrame, win=win}
 	
 	-- get bounding boxes from tracklets:
 	detections = {}
 	for i,res in ipairs(tracklets) do
-		if imgi >= tracklets[i].firstFrame and 
-				imgi <= tracklets[i].firstFrame + tracklets[i].firstFrame then
-			local x = tracklets[1].trans[]
-			local y = 
-			local w = tracklets[1].size[2]
-			local h = tracklets[1].size[1]
+		if imgi >= tonumber(tracklets[i].firstFrame) and 
+				imgi <= tonumber(tracklets[i].firstFrame + tracklets[i].nFrames) then
+			local x = tracklets[i].trans[1][1]
+			local y = tracklets[i].trans[1][2]
+			local w = tracklets[i].size[2]
+			local h = tracklets[i].size[1]
 			detections[i] = {x=x, y=y, w=w, h=h, obj_type = tracklets[i].objectType}
 		end
 	end
