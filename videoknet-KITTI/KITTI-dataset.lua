@@ -7,7 +7,9 @@ require 'nnx'
 require 'image'
 require 'ffmpeg'
 require 'xml' --https://github.com/clementfarabet/lua---xml, donwloaded and  installed with 'torch-pkg deploy'
-
+require 'qt'
+require 'qtwidget'
+require 'qtuiloader'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
@@ -30,7 +32,7 @@ print '==> test KITTI dataset'
 
 ----------------------------------------------------------------------
 print '==> load KITTI tracklets'
-trackletFile =  '../datasets/KITTI/2011_09_26_drive_0001/tracklet_labels.xml'
+trackletFile =  '../../datasets/KITTI/2011_09_26_drive_0001/tracklet_labels.xml'
 
 
 Tracklet = {
@@ -82,17 +84,17 @@ function parseXML(trackletFile)
 	local labels = xml.load(trackletFile)
 	local a = labels:find('tracklets')
 	local tracklets = {}
-	for i= 1, tonumber(a[1][1]) do
+	for i= 1, tonumber(a[1][1]) do -- for each tracklet
 		tracklets[i] = Tracklet:new()
 		tracklets[i].objectType = a[i+2][1][1]
 		tracklets[i].firstFrame = a[i+2][5][1]
-		tracklets[i].size = torch.Tensor({a[i+2][2][1], a[i+2][3][1], a[i+2][4][1]})
-		for j = 1, tonumber(a[i+2][6][1][1]) do -- poses count
-			tracklets[i].trans = torch.Tensor(tonumber(a[i+2][6][1][1]), 3)
+		tracklets[i].size = torch.Tensor({a[i+2][2][1], a[i+2][3][1], a[i+2][4][1]}) -- h,w,l
+		tracklets[i].trans = torch.Tensor(tonumber(a[i+2][6][1][1]), 3)
+		for j = 1, tonumber(a[i+2][6][1][1]) do -- for each frame/pose
 			tracklets[i].trans[j] =  torch.Tensor({a[i+2][6][3][1][1], 
-				a[i+2][6][3][2][1], a[i+2][6][3][3][1]})
+				a[i+2][6][3][2][1], a[i+2][6][3][3][1]}) -- x,y,z
 		end
-		tracklets[i].nFrames = a[i+2][6][1][1] -- number of frames/poses
+		tracklets[i].nFrames = a[i+2][6][1][1] -- number of frames/poses per tracklet
 	end
 	return tracklets
 end
@@ -113,13 +115,37 @@ rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
 ivch = rawFrame:size(1) -- channels
 ivhe = rawFrame:size(2) -- height
 ivwi = rawFrame:size(3) -- width
-source.current = 1 -- rewind video frames
+--source.current = 1 -- rewind video frames
 
+-- test: detect = {x=100, y=20, w=20, h=30}
 
-
-for imgi = 1, 100 do
+win = image.display(rawFrame)
+for imgi = 0,10 do
 	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
+	win = image.display(rawFrame)
 	
+	-- get bounding boxes from tracklets:
+	detections = {}
+	for i,res in ipairs(tracklets) do
+		if imgi >= tracklets[i].firstFrame and 
+				imgi <= tracklets[i].firstFrame + tracklets[i].firstFrame then
+			local x = tracklets[1].trans[]
+			local y = 
+			local w = tracklets[1].size[2]
+			local h = tracklets[1].size[1]
+			detections[i] = {x=x, y=y, w=w, h=h, obj_type = tracklets[i].objectType}
+		end
+	end
+
+	-- paint bounding boxes:	
+	for i,detect in ipairs(detections) do
+      win.painter:setcolor(1,0,0)
+      win.painter:rectangle(detect.x, detect.y, detect.w, detect.h)
+      win.painter:stroke()
+      win.painter:setfont(qt.QFont{serif=false,italic=false,size=16})
+      win.painter:moveto(detect.x, detect.y-1)
+      win.painter:show(detect.obj_type)
+   end
 end
 
 
