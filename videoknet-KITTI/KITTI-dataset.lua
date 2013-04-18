@@ -102,12 +102,13 @@ tracklets = parseXML(trackletFile)
 ----------------------------------------------------------------------
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
---dspathL = '../datasets/KITTI/2011_09_26_drive_0001/image_02/data' -- Left images
-dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_03/data'--/0000000000.png' -- Right images
+--dspathL = '../datasets/KITTI/2011_09_26_drive_0001/image_02/data/' -- Left images
+dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_03/data/' -- Right images
 --sourceL = ffmpeg.Video{path=dspathL, width = 310, height = 94, encoding='png', fps=10, loaddump=true, load=false}
-source = ffmpeg.Video{path=dspath, width = 310, height = 94, encoding='png', fps=10, loaddump=true, load=true}
+--source = ffmpeg.Video{path=dspath, width = 310, height = 94, encoding='png', fps=10, loaddump=true, load=true}
+imgi=0 -- pointer to image
+rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
 
-rawFrame = source:forward()
 -- input video params:
 ivch = rawFrame:size(1) -- channels
 ivhe = rawFrame:size(2) -- height
@@ -115,23 +116,30 @@ ivwi = rawFrame:size(3) -- width
 source.current = 1 -- rewind video frames
 
 
--- number of frames to process:
-nfpr = 200 -- batch process size [video frames]
 
--- normalize and prepare dataset:
-neighborhood = image.gaussian1D(9)
-normalization = nn.SpatialContrastiveNormalization(ivch, neighborhood, 1e-3)
-
-function createDataBatch()
-   trainData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
-   for i = 1, nfpr do -- just get a few frames to begin with
-      procFrame = normalization:forward(rawFrame) -- full LCN!
-      trainData[i] = procFrame
-      rawFrame = source:forward()
-      -- do a live display
-      winm = image.display{image=procFrame, win=winm}
-   end
-   return trainData
+for imgi = 1, 100 do
+	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
+	
 end
+
+
+---- number of frames to process:
+--nfpr = 200 -- batch process size [video frames]
+--
+---- normalize and prepare dataset:
+--neighborhood = image.gaussian1D(9)
+--normalization = nn.SpatialContrastiveNormalization(ivch, neighborhood, 1e-3)
+--
+--function createDataBatch()
+--   trainData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
+--   for i = 1, nfpr do -- just get a few frames to begin with
+--      procFrame = normalization:forward(rawFrame) -- full LCN!
+--      trainData[i] = procFrame
+--      rawFrame = source:forward()
+--      -- do a live display
+--      winm = image.display{image=procFrame, win=winm}
+--   end
+--   return trainData
+--end
 
 createDataBatch()
