@@ -58,21 +58,33 @@ for imgi = 1,videoframes do
 
 	-- get bounding boxes from tracklets:
 	detections = {}
-    w=tracklet.item[1].w
-    h=tracklet.item[1].h
-    l=tracklet.item[1].l
-    --tracklet.item[1].poses.count
-	if imgi < 41 then
-      detections = kitti2Dbox(tracklet.item[1].poses.item[imgi],imgi)
-     -- print(detections) 
-	end
  
-     win.painter:setcolor(1,0,0)
-     win.painter:rectangle(detections.x1, detections.y1, detections.x2-detections.x1, detections.y2-detections.y1)
+    for k=1, tracklet.count do
+    first = tonumber(tracklet.item[k].first_frame)
+	  if  first<imgi and imgi < tonumber(tracklet.item[k].poses.count) then
+        w=tracklet.item[k].w
+        h=tracklet.item[k].h
+        l=tracklet.item[k].l
+
+        box = kitti2Dbox(tracklet.item[k].poses.item[imgi-first])
+        box.objectType = tracklet.item[k].objectType
+        table.insert(detections, box)-- print(detections) 
+	   end
+    end
+
+  for i, detect in ipairs(detections) do
+     if (detect.objectType == 'Car') then  win.painter:setcolor('green')
+     elseif (detect.objectType == 'Cyclist') then  win.painter:setcolor('blue')
+     else win.painter:setcolor('red') 
+     end
+
+    
+     win.painter:rectangle(detect.x1, detect.y1, detect.x2-detect.x1, detect.y2-detect.y1)
      win.painter:stroke()
      win.painter:setfont(qt.QFont{serif=false,italic=false,size=16})
-     win.painter:moveto(detections.x1, detections.y1)
-     win.painter:show(tracklet.item[1].objectType)
+     win.painter:moveto(detect.x1, detect.y1)
+     win.painter:show(detect.objectType)
+  end
 
 end
 

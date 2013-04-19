@@ -23,7 +23,7 @@ function projectToImage(pts_3D, K)
 end
 
 
-function kitti2Dbox(tracklet,i)
+function kitti2Dbox(tracklet)
 
    corners={}
    corners.x = torch.Tensor{l/2, l/2, -l/2, -l/2, l/2, l/2, -l/2, -l/2}; 
