@@ -30,7 +30,6 @@ function parseXML(tracklet_labels)
   parse = xml.parse(tracklet_labels)
   tracklet = parse.boost_serialization.tracklets
 
-  print(tracklet)
   return tracklet  
 end
 ----------------------------------------------------------------------
@@ -62,10 +61,10 @@ for imgi = 1,videoframes do
     w=tracklet.item[1].w
     h=tracklet.item[1].h
     l=tracklet.item[1].l
-
-	for i=1, tracklet.item[1].poses.count do
-      detections = kitti2Dbox(tracklet.item[1].poses.item[1])
-       
+    --tracklet.item[1].poses.count
+	if imgi < 41 then
+      detections = kitti2Dbox(tracklet.item[1].poses.item[imgi],imgi)
+     -- print(detections) 
 	end
  
      win.painter:setcolor(1,0,0)
