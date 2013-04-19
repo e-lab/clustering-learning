@@ -10,6 +10,7 @@ require 'xml' --https://github.com/clementfarabet/lua---xml, donwloaded and  ins
 require 'qt'
 require 'qtwidget'
 require 'qtuiloader'
+require 'sys'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
@@ -120,8 +121,9 @@ ivwi = rawFrame:size(3) -- width
 -- test: detect = {x=100, y=20, w=20, h=30}
 -- process tracklets into image bounding boxes:
 win = image.display(rawFrame)
-for imgi = 0,150 do
-	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
+videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
+for imgi = 1,videoframes do
+	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi-1)..'.png'))
 	image.display{image=rawFrame, win=win}
 	
 	-- get bounding boxes from tracklets:
@@ -167,5 +169,5 @@ end
 --   end
 --   return trainData
 --end
-
-createDataBatch()
+--
+--createDataBatch()
