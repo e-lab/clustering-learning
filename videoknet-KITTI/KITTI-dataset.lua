@@ -92,8 +92,8 @@ function parseXML(trackletFile)
 		tracklets[i].size = torch.Tensor({a[i+2][2][1], a[i+2][3][1], a[i+2][4][1]}) -- h,w,l
 		tracklets[i].trans = torch.Tensor(tonumber(a[i+2][6][1][1]), 3)
 		for j = 1, tonumber(a[i+2][6][1][1]) do -- for each frame/pose
-			tracklets[i].trans[j] =  torch.Tensor({a[i+2][6][3][1][1], 
-				a[i+2][6][3][2][1], a[i+2][6][3][3][1]}) -- x,y,z
+			tracklets[i].trans[j] =  torch.Tensor({a[i+2][6][2+j][1][1], 
+				a[i+2][6][2+j][2][1], a[i+2][6][2+j][3][1]}) -- x,y,z
 		end
 		tracklets[i].nFrames = a[i+2][6][1][1] -- number of frames/poses per tracklet
 	end
@@ -121,7 +121,7 @@ ivwi = rawFrame:size(3) -- width
 -- test: detect = {x=100, y=20, w=20, h=30}
 -- process tracklets into image bounding boxes:
 win = image.display(rawFrame)
-videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
+videoframes = #sys.dir(dspath)-2 --total number of frames in video dump - (files: . and ..)
 for imgi = 1,videoframes do
 	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi-1)..'.png'))
 	image.display{image=rawFrame, win=win}
@@ -129,16 +129,48 @@ for imgi = 1,videoframes do
 	-- get bounding boxes from tracklets:
 	detections = {}
 	for i,res in ipairs(tracklets) do
-		if imgi >= tonumber(tracklets[i].firstFrame) and 
-				imgi <= tonumber(tracklets[i].firstFrame + tracklets[i].nFrames) then
-			local x = tracklets[i].trans[1][1]
-			local y = tracklets[i].trans[1][2]
-			local w = tracklets[i].size[2]
-			local h = tracklets[i].size[1]
-			detections[i] = {x=x, y=y, w=w, h=h, obj_type = tracklets[i].objectType}
+		local t1f = tracklets[i].firstFrame
+		local tnf = tracklets[i].nFrames
+		if imgi-1 >= tonumber(t1f) and  imgi-1 < tonumber(t1f + tnf) then
+			local x = torch.abs( tracklets[i].trans[imgi-t1f][1])
+			local y = torch.abs( tracklets[i].trans[imgi-t1f][2])
+			local w = torch.abs( tracklets[i].size[2])
+			local h = torch.abs( tracklets[i].size[1])		
+		
+			-- convert coordinates:
+			-- In order to transform a homogeneous point X = [x y z 1]' from the velodyne
+			-- coordinate system to a homogeneous point Y = [u v 1]' on image plane of
+			-- camera xx, the following transformation has to be applied:
+			-- Y = P_rect_xx * R_rect_00 * (R|T)_velo_to_cam * X
+			-- with:
+			-- P_rect_xx (3x4):         rectfied cam 0 coordinates -> image plane
+			-- R_rect_00 (4x4):         cam 0 coordinates -> rectified cam 0 coord.
+			-- (R|T)_velo_to_cam (4x4): velodyne coordinates -> cam 0 coordinates
+			-- Note that the (4x4) matrices above are padded with zeros and:
+			-- R_rect_00(4,4) = (R|T)_velo_to_cam(4,4) = (R|T)_imu_to_velo(4,4) = 1
+		
+			--R_rect_00 = torch.Tensor( {
+--				{9.999239e-01, 9.837760e-03, -7.445048e-03, 1}, 
+--				{-9.869795e-03, 9.999421e-01, -4.278459e-03, 1},
+--				{7.402527e-03, 4.351614e-03, 9.999631e-01, 1},
+--				{1,1,1,1} } )
+--			P_rect_02 = torch.Tensor( {
+--				{7.215377e+02, 0.000000e+00, 6.095593e+02, 4.485728e+01}, 
+--				{0.000000e+00, 7.215377e+02, 1.728540e+02, 2.163791e-01}, 
+--				{0.000000e+00, 0.000000e+00, 1.000000e+00, 2.745884e-03} } )
+--			T_velo_to_cam = torch.Tensor( {-4.069766e-03, -7.631618e-02, -2.717806e-01, 1} )
+--
+--			x,y,z = P_rect_02 * R_rect_00 * T_velo_to_cam * {x,y,0}
+		
+			--print(x,y)
+		
+			x=x*12 y=y*22 w=w*30 h=h*20
+		
+			table.insert(detections, {x=x, y=y, w=w, h=h, obj_type = tracklets[i].objectType} )
 		end
 	end
-
+	print(detections)
+	
 	-- paint bounding boxes:	
 	for i,detect in ipairs(detections) do
       win.painter:setcolor(1,0,0)
@@ -148,6 +180,8 @@ for imgi = 1,videoframes do
       win.painter:moveto(detect.x, detect.y-1)
       win.painter:show(detect.obj_type)
    end
+   
+   sys.sleep(0.5) 
 end
 
 
