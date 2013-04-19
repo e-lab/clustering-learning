@@ -6,8 +6,8 @@
 require 'nnx'
 require 'image'
 require 'ffmpeg'
-require 'xml' --https://github.com/clementfarabet/lua---xml, donwloaded and  installed with 'torch-pkg deploy'
-
+require 'xml' 
+require 'kitti2Dbox'
 
 cmd = torch.CmdLine()
 cmd:text('Options')
@@ -46,22 +46,40 @@ tracklet = parseXML(tracklet_labels)
 ----------------------------------------------------------------------
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0060/image_03/data'--/0000000000.png' -- Right images
-source = ffmpeg.Video{path=dspath, width = 310, height = 94, encoding='png', fps=10, loaddump=true, load=true}
-
-rawFrame = source:forward()
--- input video params:
-ivch = rawFrame:size(1) -- channels
-ivhe = rawFrame:size(2) -- height
-ivwi = rawFrame:size(3) -- width
-source.current = 1 -- rewind video frames
+dspath = '../../datasets/KITTI/2011_09_26_drive_0060/image_03/data/'--/0000000000.png' -- Right images
+imgi = 0
+rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
 
 
--- number of frames to process:
-nfpr = 200 -- batch process size [video frames]
+win = image.display(rawFrame)
+videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
+for imgi = 1,videoframes do
+	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi-1)..'.png'))
+	image.display{image=rawFrame, win=win}
+
+	-- get bounding boxes from tracklets:
+	detections = {}
+    w=tracklet.item[1].w
+    h=tracklet.item[1].h
+    l=tracklet.item[1].l
+
+	for i=1, tracklet.item[1].poses.count do
+      detections = kitti2Dbox(tracklet.item[1].poses.item[1])
+       
+	end
+ 
+     win.painter:setcolor(1,0,0)
+     win.painter:rectangle(detections.x1, detections.y1, detections.x2-detections.x1, detections.y2-detections.y1)
+     win.painter:stroke()
+     win.painter:setfont(qt.QFont{serif=false,italic=false,size=16})
+     win.painter:moveto(detections.x1, detections.y1)
+     win.painter:show(tracklet.item[1].objectType)
+
+end
+
 
 -- normalize and prepare dataset:
-neighborhood = image.gaussian1D(9)
+--[[neighborhood = image.gaussian1D(9)
 normalization = nn.SpatialContrastiveNormalization(ivch, neighborhood, 1e-3)
 
 function createDataBatch()
@@ -76,4 +94,4 @@ function createDataBatch()
    return trainData
 end
 
-createDataBatch()
+createDataBatch()]]

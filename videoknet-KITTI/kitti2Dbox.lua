@@ -23,10 +23,9 @@ function projectToImage(pts_3D, K)
 end
 
 
+function kitti2Dbox(tracklet)
 cam = 2   ------------WHAT IS THIS?
-w = 0.61896116;
-h = 1.7278275;
-l = 1.8314147;
+
 it = 1;
 
 corners={}
@@ -35,9 +34,9 @@ corners.y = torch.Tensor{w/2, -w/2, -w/2, w/2, w/2, -w/2, -w/2, w/2};
 corners.z = torch.Tensor{0,0,0,0,h,h,h,h};
 
 
-
-t = {12.630460111096083; 0.072594067633063808; -1.5743287801742554};
-rz = wrapToPi(-1.4567013443720802);
+rz = tracklet.rz
+t = {tracklet.tx; tracklet.ty; tracklet.tz};
+rz = wrapToPi(rz);
 occlusion =0;
 
 
@@ -72,34 +71,21 @@ velToCam = torch.Tensor{
 
 corners_3D = velToCam*a
 
---[[orientation_3D = R * torch.Tensor{{0, 07*l}, {0,0}, {0,0}}
-orientation_3D[1] = orientation_3D[1]+t[1]
-orientation_3D[2] = orientation_3D[2]+t[2]
-orientation_3D[3] = orientation_3D[3]+t[3]
-a = torch.Tensor(3,orientation_3D[1]:size(1)):fill(1)
-a[1]:copy(orientation_3D[1])
-a[2]:copy(orientation_3D[2])
-a[3]:copy(orientation_3D[3])
 
-orientation_3D = velToCam*a
-
-
-print(orientation_3D)]]
-K = torch.Tensor{
-  {721.5377,         0,  609.5593},
+  K = torch.Tensor{
+    {721.5377,         0,  609.5593},
          {0,  721.5377,  172.8540},
          {0,         0,    1.0000}}
 
 
-corners_2D     = projectToImage(corners_3D, K);
--- compute and draw the 2D bounding box from the 3D box projection
-box={}
-box.x1 = torch.min(corners_2D[1]);
-box.x2 = torch.max(corners_2D[1]);
-box.y1 = torch.min(corners_2D[2]);
-box.y2 = torch.max(corners_2D[2]);
+  corners_2D     = projectToImage(corners_3D, K);
+  -- compute and draw the 2D bounding box from the 3D box projection
+  box={}
+  box.x1 = torch.min(corners_2D[1]);
+  box.x2 = torch.max(corners_2D[1]);
+  box.y1 = torch.min(corners_2D[2]);
+  box.y2 = torch.max(corners_2D[2]);
 
+  return box
 
-
-print(box)
-
+end
