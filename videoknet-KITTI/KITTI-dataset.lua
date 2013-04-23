@@ -1,6 +1,10 @@
 ----------------------------------------------------------------------
 -- KITTI dataset interface
+-- 
 --
+-- Author : Aysegul Dundar 
+-- email : adundar@purdue.edu
+-- Date 04/17/2013
 ----------------------------------------------------------------------
 
 require 'nnx'
@@ -16,10 +20,7 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
-torch.setdefaulttensortype('torch.DoubleTensor')
---if not qt then
---   opt.visualize = false
---end
+
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
@@ -37,7 +38,7 @@ print '==> test KITTI dataset'
 
 ----------------------------------------------------------------------
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0060/tracklet_labels.xml')
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0005/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 
 
@@ -45,11 +46,9 @@ tracklet = parseXML(tracklet_labels)
 ----------------------------------------------------------------------
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0060/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../datasets/KITTI/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
 imgi = 0
 rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
-print(rawFrame:size())
-
 
 
 win = image.display{image=rawFrame, zoom=1}
@@ -75,19 +74,19 @@ for imgi = 1,videoframes do
 	   end
     end
 
-  for i, detect in ipairs(detections) do
-     if (detect.objectType == 'Car') then  win.painter:setcolor('green')
-     elseif (detect.objectType == 'Cyclist') then  win.painter:setcolor('blue')
-     else win.painter:setcolor('red') 
-     end
+    for i, detect in ipairs(detections) do
+      if (detect.objectType == 'Car') then  win.painter:setcolor('green')
+      elseif (detect.objectType == 'Cyclist') then  win.painter:setcolor('blue')
+      else win.painter:setcolor('red') 
+      end
  
-     win.painter:rectangle(math.floor(detect.x1-1), detect.y1-1, detect.x2-detect.x1+1, detect.y2-detect.y1+1)
-     win.painter:stroke()
-     win.painter:setfont(qt.QFont{serif=false,italic=false,size=16})
-     win.painter:moveto(detect.x1, detect.y1)
-     win.painter:show(detect.objectType)
+      win.painter:rectangle(math.floor(detect.x1-1), detect.y1-1, detect.x2-detect.x1+1, detect.y2-detect.y1+1)
+      win.painter:stroke()
+      win.painter:setfont(qt.QFont{serif=false,italic=false,size=16})
+      win.painter:moveto(detect.x1, detect.y1)
+      win.painter:show(detect.objectType)
 
-  end
+   end
 
 end
 

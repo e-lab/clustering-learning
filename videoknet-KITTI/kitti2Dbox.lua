@@ -1,4 +1,12 @@
-  
+----------------------------------------------------------------------
+-- KITTI dataset interface
+-- 
+--
+-- Author : Aysegul Dundar 
+-- email : adundar@purdue.edu
+-- Date 04/17/2013
+----------------------------------------------------------------------
+ 
 
 function wrapToPi(alpha)
 
