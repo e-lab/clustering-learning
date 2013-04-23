@@ -4,7 +4,9 @@
 *.blg
 *.dvi
 *.log
+*.jpg
 .synctex.gz
 .out
+session.txt
 /paper/clustering.log
 /datasets
