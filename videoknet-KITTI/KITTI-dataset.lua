@@ -87,7 +87,7 @@ for imgi = 1,videoframes do
       win.painter:show(detect.objectType)
 
    end
-
+sys.sleep(0.5)
 end
 
 
