@@ -84,10 +84,17 @@ for imgi = 1,videoframes do
      win.painter:rectangle(math.floor(detect.x1-1), detect.y1-1, detect.x2-detect.x1+1, detect.y2-detect.y1+1)
      win.painter:stroke()
      win.painter:setfont(qt.QFont{serif=false,italic=false,size=16})
+<<<<<<< HEAD
      win.painter:moveto(detect.x1, detect.y1)
      win.painter:show(detect.objectType)
 
   end
+=======
+     win.painter:moveto(detections.x1, detections.y1)
+     win.painter:show(tracklet.item[1].objectType)
+     
+     sys.sleep(0.5)
+>>>>>>> sleep function to slow down demo
 
 end
 
