@@ -27,6 +27,13 @@ torch.setnumthreads(opt.threads)
 torch.setdefaulttensortype('torch.DoubleTensor')
 
 
+-- variables for options 
+w_patch = 32*2 -- size of the patch to be extracted 
+h_patch = 32*2
+d_patch = 3    -- the depth of the patch for volumetric filters (future work)
+
+no_percar = 4  -- number of the patch to extract from per car (bounding box)
+
 -- shorcuts
 local max = math.max
 local min = math.min
@@ -78,26 +85,28 @@ function extractPatches(dspath, tracklet)
      end
      ncar = 0
      for i, detect in ipairs(detections) do
-        if (detect.objectType == 'Car') then 
-          iwidth = rawFrame:size(3)
-          iheight = rawFrame:size(2)
-          detect.x1 = max(1, min(iwidth, detect.x1))
-          detect.y1 = max(1, min(iheight, detect.y1))
-          detect.x2 = max(1, min(iwidth, detect.x2))
-          detect.y2 = max(1, min(iheight, detect.y2))
+        for j=1, no_percar do
+          if (detect.objectType == 'Car') then 
+            iwidth = rawFrame:size(3)
+            iheight = rawFrame:size(2)
+            detect.x1 = max(1, min(iwidth, detect.x1))
+            detect.y1 = max(1, min(iheight, detect.y1))
+            detect.x2 = max(1, min(iwidth, detect.x2))
+            detect.y2 = max(1, min(iheight, detect.y2))
 
           -- if detect.x1~=1 and detect.y1~=1 and detect.x2~=iwidth and detect.y2~=iheight then
-          if detect.x1==1 and detect.y1==1 and detect.x2==iwidth and detect.y2==iheight then
-             a = rawFrame[{{},{detect.y1,detect.y2},{detect.x1,detect.x2}}]
-          elseif(detect.x1+w_patch<=detect.x2) and (detect.y1+h_patch<=detect.y2) then
-             x = math.random(detect.x1+w_patch/2,detect.x2-w_patch/2)
-             y = math.random(detect.y1+h_patch/2,detect.y2-h_patch/2)
+            if detect.x1==1 and detect.y1==1 and detect.x2==iwidth and detect.y2==iheight then
+               a = rawFrame[{{},{detect.y1,detect.y2},{detect.x1,detect.x2}}]
+            elseif(detect.x1+w_patch<=detect.x2) and (detect.y1+h_patch<=detect.y2) then
+               x = math.random(detect.x1+w_patch/2,detect.x2-w_patch/2)
+               y = math.random(detect.y1+h_patch/2,detect.y2-h_patch/2)
           
-             randompatch = rawFrame[{{},{y-h_patch/2,y+h_patch/2-1},{x-w_patch/2,x+w_patch/2-1}}]
-             table.insert(trainData.data1, randompatch)
-             table.insert(trainData.labels, 1)  -- car
-             ncar = ncar+1
-          end 
+               randompatch = rawFrame[{{},{y-h_patch/2,y+h_patch/2-1},{x-w_patch/2,x+w_patch/2-1}}]
+               table.insert(trainData.data, randompatch)
+               table.insert(trainData.labels, 1)  -- car
+               ncar = ncar+1
+            end 
+         end
        end
      end
 
@@ -110,21 +119,24 @@ function extractPatches(dspath, tracklet)
            y = math.random(h_patch/2+1, iheight-h_patch/2-1)
         end
         randompatch = rawFrame[{{},{y-h_patch/2,y+h_patch/2-1},{x-w_patch/2,x+w_patch/2-1}}]
-        table.insert(trainData.data2, randompatch)
+        table.insert(trainData.data, randompatch)
         table.insert(trainData.labels, 0)  -- bg
      end
   end
-
-image.display{image=trainData.data1, nrow=16, nrow=16, padding=2, zoom=1, legend='Patches for 1st layer learning'}
-image.display{image=trainData.data2, nrow=16, nrow=16, padding=2, zoom=1, legend='Patches for 1st layer learning'}
+f16S = torch.Tensor(256, 3, w_patch, w_patch)
+for i=1, 256 do 
+  k = math.random(1, trainData:size())
+  f16S[i]=trainData.data[k]
+end 
+image.display{image=f16S, nrow=16, nrow=16, padding=2, zoom=1, 
+            legend='Patches for dataset'}
 
 end
 
 
 -- define dataset tables
 trainData = {
-   data1 = {},
-   data2 = {},
+   data = {},
    labels = {},
    size = function() return #trainData.labels end
 }
@@ -134,17 +146,49 @@ testData = {
    size = function() return #testData.labels end
 }
 
-w_patch = 32*2
-h_patch = 32*2
-d_patch = 3
 
 ----------------------------------------------------------------------
-print '==> loading and processing (local-contrast-normalization) of dataset'
+
+
+dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0001/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+dspath = '../../datasets/KITTI/2011_09_26_drive_0002/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0002/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0005/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-
 extractPatches(dspath, tracklet)
 
+dspath = '../../datasets/KITTI/2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0009/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+dspath = '../../datasets/KITTI/2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0011/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+
+--[[dspath = '../../datasets/KITTI/2011_09_26_drive_0060/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0060/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+]]
+-- 60 is giving problems with the opening image 78
+
+
+print(trainData:size())
