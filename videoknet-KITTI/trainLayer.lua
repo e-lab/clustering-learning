@@ -123,7 +123,7 @@ end
 
 
 
-function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_ker, verbose)
+function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, verbose)
    -- create a covariance/co-occurence connection table based on some test data
    -- input data has multiple planes, compute similarity between these planes
    -- group planes that are similar
@@ -136,7 +136,6 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    -- fanin = desired connex fanin - this should be also learned from data...   
    -- nnf = number frames, is = kernel size
    -- verbose = true ==> show images, text messages
-   -- prev_ker= previous layer kernels
    
    assert(nkp == vdata:size(2), 'Error: nkp and input video features are not the same number!') -- number features
    
