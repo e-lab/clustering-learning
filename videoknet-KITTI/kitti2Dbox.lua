@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ----------------------------------------------------------------------
 -- KITTI dataset interface
 -- 
@@ -8,10 +7,6 @@
 -- Date 04/17/2013
 ----------------------------------------------------------------------
  
-=======
-  
->>>>>>> ayse_sandbox
-
 function wrapToPi(alpha)
 
   alpha = alpha%(2*math.pi)
@@ -94,8 +89,5 @@ function kitti2Dbox(tracklet)
 
   return box
 
-<<<<<<< HEAD
 end
-=======
-end
->>>>>>> ayse_sandbox
+

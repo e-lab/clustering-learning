@@ -20,14 +20,11 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
-<<<<<<< HEAD
 
-=======
 torch.setdefaulttensortype('torch.DoubleTensor')
 --if not qt then
 --   opt.visualize = false
 --end
->>>>>>> ayse_sandbox
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
@@ -45,11 +42,7 @@ print '==> test KITTI dataset'
 
 ----------------------------------------------------------------------
 print '==> load KITTI tracklets'
-<<<<<<< HEAD
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0001/tracklet_labels.xml')
-=======
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0060/tracklet_labels.xml')
->>>>>>> ayse_sandbox
 tracklet = parseXML(tracklet_labels)
 
 
@@ -57,16 +50,11 @@ tracklet = parseXML(tracklet_labels)
 ----------------------------------------------------------------------
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
-<<<<<<< HEAD
 dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
 imgi = 0
 rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
-=======
-dspath = '../../datasets/KITTI/2011_09_26_drive_0060/image_02/data/'--/0000000000.png' -- Right images
-imgi = 0
-rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
 print(rawFrame:size())
->>>>>>> ayse_sandbox
+
 
 
 win = image.display{image=rawFrame, zoom=1}
@@ -108,8 +96,6 @@ for imgi = 1,videoframes do
 sys.sleep(0.5)
 end
 
-<<<<<<< HEAD
-=======
 win = image.display{image=rawFrame, zoom=1}
 videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
 for imgi = 1,videoframes do
@@ -149,26 +135,4 @@ for imgi = 1,videoframes do
      sys.sleep(0.5)
 end
 
->>>>>>> ayse_sandbox
 
--- normalize and prepare dataset:
---[[neighborhood = image.gaussian1D(9)
-normalization = nn.SpatialContrastiveNormalization(ivch, neighborhood, 1e-3)
-
-function createDataBatch()
-   trainData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
-   for i = 1, nfpr do -- just get a few frames to begin with
-      procFrame = normalization:forward(rawFrame) -- full LCN!
-      trainData[i] = procFrame
-      rawFrame = source:forward()
-      -- do a live display
-      winm = image.display{image=procFrame, win=winm}
-   end
-   return trainData
-end
-
-<<<<<<< HEAD
-createDataBatch()]]
-=======
-createDataBatch()]]
->>>>>>> ayse_sandbox
