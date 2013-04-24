@@ -16,7 +16,7 @@ def load_data_file( filename ):
    return data
 
 # load all needed data: CIFAR
-cy1 = load_data_file('CL-2l-64-128/test.log')
+cy1 = load_data_file('CL-2l-color/test.log')
 cx1 = range(0,len(cy1))
 cy4 = load_data_file('/Users/eugenioculurciello/Code/torch/cluster-learning/results/cifar-convnet-16-128/test.log')
 cx4 = range(0,len(cy4))

@@ -29,7 +29,7 @@ print '==> downloading dataset'
 
 tar = 'http://data.neuflow.org/data/cifar10.t7.tgz'
 
-if not paths.dirp('../datasets/cifar-10-batches-t7') then
+if not paths.dirp('../../datasets/cifar-10-batches-t7') then
    os.execute('wget ' .. tar)
    os.execute('tar xvf ' .. paths.basename(tar))
 end
@@ -47,13 +47,13 @@ trainData = {
    size = function() return trsize end
 }
 for i = 0,4 do
-   subset = torch.load('../datasets/cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
+   subset = torch.load('../../datasets/cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
    trainData.data[{ {i*10000+1, (i+1)*10000} }] = subset.data:t()
    trainData.labels[{ {i*10000+1, (i+1)*10000} }] = subset.labels
 end
 trainData.labels = trainData.labels + 1
 
-subset = torch.load('../datasets/cifar-10-batches-t7/test_batch.t7', 'ascii')
+subset = torch.load('../../datasets/cifar-10-batches-t7/test_batch.t7', 'ascii')
 testData = {
    data = subset.data:t():double(),
    labels = subset.labels[1]:double(),
@@ -126,8 +126,8 @@ channels = {'y','u','v'}
 -- the trainable parameters. At test time, test data will be normalized
 -- using these values.
 print '==> preprocessing data: normalize each feature (channel) globally'
-mean = {}
-std = {}
+local mean = {}
+local std = {}
 for i,channel in ipairs(channels) do
    -- normalize each channel globally:
    mean[i] = trainData.data[{ {},i,{},{} }]:mean()
@@ -202,11 +202,11 @@ print '==> verify statistics'
 -- normalized.
 
 for i,channel in ipairs(channels) do
-   trainMean = trainData.data[{ {},i }]:mean()
-   trainStd = trainData.data[{ {},i }]:std()
+   local trainMean = trainData.data[{ {},i }]:mean()
+   local trainStd = trainData.data[{ {},i }]:std()
 
-   testMean = testData.data[{ {},i }]:mean()
-   testStd = testData.data[{ {},i }]:std()
+   local testMean = testData.data[{ {},i }]:mean()
+   local testStd = testData.data[{ {},i }]:std()
 
    print('training data, '..channel..'-channel, mean: ' .. trainMean)
    print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
@@ -222,9 +222,9 @@ print '==> visualizing data'
 -- help(image.display), for more info about options.
 
 if opt.visualize then
-   first256Samples_y = trainData.data[{ {1,256},1 }]
-   first256Samples_u = trainData.data[{ {1,256},2 }]
-   first256Samples_v = trainData.data[{ {1,256},3 }]
+   local first256Samples_y = trainData.data[{ {1,256},1 }]
+   local first256Samples_u = trainData.data[{ {1,256},2 }]
+   local first256Samples_v = trainData.data[{ {1,256},3 }]
    image.display{image=first256Samples_y, nrow=16, legend='Some training examples: ' ..channels[1].. ' channel'}
    image.display{image=first256Samples_u, nrow=16, legend='Some training examples: ' ..channels[2].. ' channel'}
    image.display{image=first256Samples_v, nrow=16, legend='Some training examples: ' ..channels[3].. ' channel'}

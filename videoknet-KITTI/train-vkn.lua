@@ -52,7 +52,6 @@ opt = lapp[[
 ]]
 
 opt.quicktest = true	--(default 0)			true = small test, false = full code running
-opt.slacmodel = false --(default 0)			true = SLAC, false = fully connected layers
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
 opt.videodata = true --	(default 1) 		true = load video file, otherwise ??? data
 
@@ -86,6 +85,7 @@ end
 ----------------------------------------------------------------------
 -- define network to train
 --
+print('<trainer> creating new network')
 
 pcall(loadstring("f0_,f1_,f2_,f3_ = " .. opt.nfeatures))         -- nb of features
 pcall(loadstring("k0_,k1_,k2_,k3_ = " .. opt.kernelsize))           -- size of kernels
@@ -98,54 +98,52 @@ p0_,p1_         = f3_*#scales,tonumber(opt.hiddens)              -- dimensions f
 
 normthres = 1e-1
 
---if not opt.network then
-   print('<trainer> creating new network')
+-- Preprocessor (normalizer)
+preproc = nn.Sequential()
+if opt.preproc == 'norm(rgb)' then
+	preproc:add(nn.SpatialContrastiveNormalization(f0_, image.gaussian1D(k0_), normthres))
+elseif opt.preproc == 'norm(yuv)' then
+	preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+	preproc:add(nn.SpatialContrastiveNormalization(f0_, image.gaussian1D(k0_), normthres))
+elseif opt.preproc == 'norm(y)+norm(u)+norm(v)' then
+	preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+	do
+		normer = nn.ConcatTable()
+		for i = 1,3 do
+			local n = nn.Sequential()
+			n:add(nn.Narrow(1,i,1))
+			n:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(k0_), normthres))
+			normer:add(n)
+		end
+	end
+	preproc:add(normer)
+	preproc:add(nn.JoinTable(1))
+elseif opt.preproc == 'norm(y)+uv' then
+	preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+	do
+		ynormer = nn.Sequential()
+		ynormer:add(nn.Narrow(1,1,1))
+		ynormer:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(k0_), normthres))
+		normer = nn.ConcatTable()
+		normer:add(ynormer)
+		normer:add(nn.Narrow(1,2,2))
+	end
+	preproc:add(normer)
+	preproc:add(nn.JoinTable(1))
+elseif opt.preproc == 'norm(y)' then
+	f0_ = 1
+	preproc:add(nn.SpatialColorTransform('rgb2y'))
+	preproc:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(k0_), normthres))
+elseif opt.preproc == 'rgb' then
+	preproc:add(nn.Identity())
+elseif opt.preproc == 'yuv' then
+	preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+else
+	print('incorrect arg: preproc')
+	op:help()
+	os.exit()
+end
 
-   -- Preprocessor (normalizer)
-   preproc = nn.Sequential()
-   if opt.preproc == 'norm(rgb)' then
-      preproc:add(nn.SpatialContrastiveNormalization(f0_, image.gaussian1D(k0_), normthres))
-   elseif opt.preproc == 'norm(yuv)' then
-      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
-      preproc:add(nn.SpatialContrastiveNormalization(f0_, image.gaussian1D(k0_), normthres))
-   elseif opt.preproc == 'norm(y)+norm(u)+norm(v)' then
-      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
-      do
-         normer = nn.ConcatTable()
-         for i = 1,3 do
-            local n = nn.Sequential()
-            n:add(nn.Narrow(1,i,1))
-            n:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(k0_), normthres))
-            normer:add(n)
-         end
-      end
-      preproc:add(normer)
-      preproc:add(nn.JoinTable(1))
-   elseif opt.preproc == 'norm(y)+uv' then
-      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
-      do
-         ynormer = nn.Sequential()
-         ynormer:add(nn.Narrow(1,1,1))
-         ynormer:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(k0_), normthres))
-         normer = nn.ConcatTable()
-         normer:add(ynormer)
-         normer:add(nn.Narrow(1,2,2))
-      end
-      preproc:add(normer)
-      preproc:add(nn.JoinTable(1))
-   elseif opt.preproc == 'norm(y)' then
-      f0_ = 1
-      preproc:add(nn.SpatialColorTransform('rgb2y'))
-      preproc:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(k0_), normthres))
-   elseif opt.preproc == 'rgb' then
-      preproc:add(nn.Identity())
-   elseif opt.preproc == 'yuv' then
-      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
-   else
-      print('incorrect arg: preproc')
-      op:help()
-      os.exit()
-   end
 
 
 ----------------------------------------------------------------------
@@ -225,63 +223,37 @@ normkernel = image.gaussian1D(7)
 ovhe = (ivhe-is+1)/poolsize/cvstepsize -- output video feature height
 ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
 
+ 
+-- AND/OR model or FULL CONNECT MODEL:
+kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is, false) 
 
-if opt.slacmodel then 
-   -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
-   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1*2, nnf1, is, false)
-   -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
-   kernels1s, connTable1 = slac(kernels1, nk1*2, nk1, 5, 4.5) -- SLAC algorithm to aggregate kernels
-   --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
-   nk1s=kernels1s:size(1)
-else 
-   -- AND/OR model or FULL CONNECT MODEL:
-   kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is, false) 
-end
 if opt.display then image.display{image=kernels1:reshape(nk1,ivch,is,is),
-		padding=2, symmetric=true, nrow = 8, zoom=4, legend = 'Layer 2 filters'} end
+		padding=2, symmetric=true, nrow = 8, zoom=2, legend = 'Layer 1 filters'} end
+
    
 ----------------------------------------------------------------------
 -- 1st layer
-   
-   -- Trainable Network
-   vnet = nn.Sequential()
-   --vnet:add(nn.SpatialConvolutionMap(table1,k1_,k1_))
-   if nnf1 > 1 then
-      vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is, 1, cvstepsize,cvstepsize))
-      vnet:add(nn.Sum(2)) -- needed by volconv
-   elseif nnf1 == 1 then
-      --vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
-      -- just pick one map as input:
-      if opt.slacmodel then 
-         vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
-      else
-         vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
-      end 
-   end
-   -- just pick one map as input
-   if opt.slacmodel then vnet:add(nn.SpatialMaxMap(connTable1)) end -- slac function to pick max(each group) from VolConv layer
-   if opt.cnnmodel then vnet:add(nn.Tanh()) end
-   --vnet:add(nn.HardShrink(0.1))
-   if opt.pooling == 'max' then
-      vnet:add(nn.SpatialMaxPooling(s0_,s0_,s0_,s0_))
-   elseif opt.pooling == 'sum' then
-      vnet:add(nn.SpatialSubSampling(f1_,s0_,s0_,s0_,s0_))
-   elseif opt.pooling == 'l2' then
-      vnet:add(nn.SpatialLPPooling(f1_,2,s0_,s0_,s0_,s0_))
-   end
-   --if opt.cnnmodel then vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3)) end
 
-
+vnet = nn.Sequential()
+if nnf1 > 1 then
+	vnet:add(nn.VolumetricConvolution(ivch, nk1, nnf1, is, is, 1, cvstepsize,cvstepsize))
+	vnet:add(nn.Sum(2)) -- needed by volconv
+elseif nnf1 == 1 then
+	vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
+end
+vnet:add(nn.Threshold())
+if opt.pooling == 'max' then
+	vnet:add(nn.SpatialMaxPooling(s0_,s0_,s0_,s0_))
+elseif opt.pooling == 'sum' then
+	vnet:add(nn.SpatialSubSampling(f1_,s0_,s0_,s0_,s0_))
+elseif opt.pooling == 'l2' then
+	vnet:add(nn.SpatialLPPooling(f1_,2,s0_,s0_,s0_,s0_))
+end
 
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
 kernels1_ = kernels1:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std ~0.5
-if nnf1 > 1 then vnet.modules[1].weight = kernels1:reshape(nk1,ivch,nnf1,is,is) -- full connex filters!
-elseif nnf1 == 1 then 
-   if opt.slacmodel then 
-         vnet.modules[1].weight = kernels1_:reshape(nk1*2,is,is) -- max pool 1to1 connex
-      else vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is) end
-end
+vnet.modules[1].weight = kernels1_:reshape(nk1,ivch,is,is)
 
 
 ----------------------------------------------------------------------
@@ -321,28 +293,21 @@ if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is,is)
 ----------------------------------------------------------------------
 -- 2nd layer
 
-   vnet2 = nn.Sequential()
-   --vnet2:add(nn.SpatialConvolutionMap(table2,k2_,k2_))
-   --vnet2:add(nn.SpatialConvolution(nk1, nk2, is, is,cvstepsize,cvstepsize)) -- fully connected (BEST NOW)
-   --vnet2:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(nk2), is, is, cvstepsize,cvstepsize)) -- max pool 1to1 connex
-   vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
-   --if opt.slacmodel then vnet2:add(nn.SpatialMaxMap(connTable2)) end -- slac function to pick max(each group) from VolConv layer
-   if opt.cnnmodel then vnet2:add(nn.Tanh()) end
-   --vnet:add(nn.HardShrink(0.1))
-   if opt.pooling == 'max' then
-      vnet2:add(nn.SpatialMaxPooling(s1_,s1_,s1_,s1_))
-   elseif opt.pooling == 'sum' then
-      vnet2:add(nn.SpatialSubSampling(f2_,s1_,s1_,s1_,s1_))
-   elseif opt.pooling == 'l2' then
-      vnet2:add(nn.SpatialLPPooling(f2_,2,s1_,s1_,s1_,s1_))
-   end
-   --if opt.cnnmodel then vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3)) end
-   
+vnet2 = nn.Sequential()
+vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+vnet2:add(nn.Threshold())
+if opt.pooling == 'max' then
+	vnet2:add(nn.SpatialMaxPooling(s1_,s1_,s1_,s1_))
+elseif opt.pooling == 'sum' then
+	vnet2:add(nn.SpatialSubSampling(f2_,s1_,s1_,s1_,s1_))
+elseif opt.pooling == 'l2' then
+	vnet2:add(nn.SpatialLPPooling(f2_,2,s1_,s1_,s1_,s1_))
+end
+
 
 -- setup net/ load kernels into network:
 vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
 kernels2_ = kernels2:clone():div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
---vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
 vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 
 ----------------------------------------------------------------------
@@ -382,26 +347,13 @@ if opt.display then image.display{image=kernels3, padding=2, padding=2, symmetri
 ----------------------------------------------------------------------
 -- 3rd layer   
 
-   vnet3 = nn.Sequential()
-   --vnet3:add(nn.SpatialConvolutionMap(table3,k3_,k3_))
-   --vnet3:add(nn.SpatialConvolution(nk2, nk3, is, is, cvstepsize, cvstepsize)) -- fully connected (BEST NOW)
-   --vnet3:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(nk3), is, is, cvstepsize,cvstepsize))
-   vnet3:add(nn.SpatialConvolutionMap(cTable3, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
-   --vnet3:add(nn.Tanh())
---   if opt.pooling == 'max' then
---      vnet3:add(nn.SpatialMaxPooling(s1_,s1_,s1_,s1_))
---   elseif opt.pooling == 'sum' then
---      vnet3:add(nn.SpatialSubSampling(f2_,s1_,s1_,s1_,s1_))
---   elseif opt.pooling == 'l2' then
---      vnet3:add(nn.SpatialLPPooling(f2_,2,s1_,s1_,s1_,s1_))
---   end
---   vnet3:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
+vnet3 = nn.Sequential()
+vnet3:add(nn.SpatialConvolutionMap(cTable3, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
 
 
 -- setup net/ load kernels into network:
 vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels3_ = kernels3:clone():div(nk3*fanin) -- divide kernels so output of SpatialConv is about ~1 or more
---vnet3.modules[1].weight = kernels3_:reshape(nk3,nk2,is,is)
+kernels3_ = kernels3:clone():div(nk3*fanin) -- divide kernels so output of SpatialConv std ~0.5
 vnet3.modules[1].weight = kernels3_
    
    
@@ -429,7 +381,6 @@ for i=1,vnet3:size() do
 end
 
 convnet = tnet -- pointer to full convnet trained with CL
-
 
 ----------------------------------------------------------------------
 --
