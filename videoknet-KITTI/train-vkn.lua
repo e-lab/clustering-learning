@@ -12,13 +12,10 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
--- ec added:
---require 'eex'
 require 'online-kmeans' -- allow you to re-train k-means kernels
 require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
 require 'unsup'
---require "slac"
 
 ----------------------------------------------------------------------
 print '==> processing options'
@@ -83,16 +80,16 @@ end
 --
 print('<trainer> creating new network')
 
-nnf1,nnf2,nnf3 = 1,1,1 			-- number of frames at each layer
+nnf1,nnf2,nnf3  = 1,1,1 			-- number of frames at each layer
 nk0,nk1,nk2,nk3 = 3,32,64,128 -- nb of features
 is0,is1,is2,is3 = 15,7,7,7 	-- size of kernels
-ss1,ss2         = 2,2 			-- size of subsamplers (strides)
+ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
 scales          = 1 				-- scales
-fanin = 2 -- createCoCnxTable creates also 2*fanin connections
-feat_group = 32 --features per group (32=best in CIFAR, nk1=32, fanin=2)
-opt.hiddens = 256 -- nb of hidden features for top perceptron (0=linear classifier)
-p0_,p1_         = nk3,tonumber(opt.hiddens)              -- dimensions for top perceptron
-classes = {}
+fanin 			 = 2 				-- createCoCnxTable creates also 2*fanin connections
+feat_group 		 = 32 			--features per group (32=best in CIFAR, nk1=32, fanin=2)
+opt.hiddens 	 = 256 			-- nb of hidden features for top perceptron (0=linear classifier)
+cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
+classes 			 = {'car', 'bg'} -- classes of objects to find
 
 -- Preprocessor (normalizer)
 normthres = 1e-1
@@ -326,10 +323,10 @@ convnet = tnet -- pointer to full convnet trained with CL
 classifier = nn.Sequential()
 -- a 2-layer perceptron
 classifier:add(nn.Tanh())
-classifier:add(nn.Reshape(p0_))
-classifier:add(nn.Linear(p0_,p1_))
+classifier:add(nn.Reshape(cl_nk1))
+classifier:add(nn.Linear(cl_nk1,cl_nk2))
 classifier:add(nn.Tanh())
-classifier:add(nn.Linear(p1_,#classes))
+classifier:add(nn.Linear(cl_nk2,#classes))
 
 -- Global trainable machine
 trainable = classifier
@@ -343,7 +340,7 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 if opt.save then
 	print('<trainer> saving bare network to '..opt.save)
 	os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-	torch.save(opt.save, trainable)
+	torch.save(opt.save..'network.net', trainable)
 end
 
 
