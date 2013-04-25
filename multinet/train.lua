@@ -19,15 +19,15 @@ require 'optim'   -- an optimization package, for online and batch methods
 
 ----------------------------------------------------------------------
 -- Model + Loss:
-local t = require 'model'
-local model = t.model
-local loss = t.loss
+--local t = require 'model'
+--local model = t.model
+--local loss = t.loss
 
 ----------------------------------------------------------------------
 print '==> defining some tools'
 
 -- classes
-local classes = {'1','2','3','4','5','6','7','8','9','0'}
+--local classes = {'1','2','3','4','5','6','7','8','9','0'}
 
 -- This matrix records the current confusion across classes
 local confusion = optim.ConfusionMatrix(classes)

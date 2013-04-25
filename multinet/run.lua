@@ -316,16 +316,13 @@ end
 
 ----------------------------------------------------------------------
 -- Classifier
-classifier = nn.Sequential()
+model = nn.Sequential()
 -- a 2-layer perceptron
-classifier:add(nn.Tanh())
-classifier:add(nn.Reshape(cl_nk1))
-classifier:add(nn.Linear(cl_nk1,cl_nk2))
-classifier:add(nn.Tanh())
-classifier:add(nn.Linear(cl_nk2,#classes))
-
--- Global trainable machine
-trainable = classifier
+model:add(nn.Tanh())
+model:add(nn.Reshape(cl_nk1))
+model:add(nn.Linear(cl_nk1,cl_nk2))
+model:add(nn.Tanh())
+model:add(nn.Linear(cl_nk2,#classes))
 
 
 -- compute network creation time time 
@@ -344,15 +341,13 @@ parameters,gradParameters = trainable:getParameters()
 
 -- verbose
 print('==>  model:')
-print(trainable)
+print(model)
 print('==>  nb of trainable parameters: ' .. parameters:size(1))
 
 
 ----------------------------------------------------------------------
--- training criterion: Mean-Square Error or Negative Log-Likelihood
---
-criterion = nn.DistNLLCriterion()
-criterion.targetIsProbability = true
+-- Loss: NLL
+loss = nn.ClassNLLCriterion()
 
 
 ----------------------------------------------------------------------

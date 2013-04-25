@@ -13,10 +13,10 @@ require 'optim'   -- an optimization package, for online and batch methods
 print '==> defining some tools'
 
 -- model:
-local t = require 'model'
-local model = t.model
-local loss = t.loss
-local dropout = t.dropout
+--local t = require 'model'
+--local model = t.model
+--local loss = t.loss
+--local dropout = t.dropout
 
 -- classes
 local classes = {'1','2','3','4','5','6','7','8','9','0'}
@@ -92,7 +92,7 @@ function test(testData)
    confusion:zero()
    
    -- dropout -> on
-   dropout.p = opt.dropout
+   --dropout.p = opt.dropout
 end
 
 -- Export:
