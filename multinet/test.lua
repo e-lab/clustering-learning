@@ -19,7 +19,7 @@ print '==> defining some tools'
 --local dropout = t.dropout
 
 -- classes
-local classes = {'1','2','3','4','5','6','7','8','9','0'}
+local classes = {'1','0'}
 
 -- This matrix records the current confusion across classes
 local confusion = optim.ConfusionMatrix(classes)
@@ -28,7 +28,7 @@ local confusion = optim.ConfusionMatrix(classes)
 local testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 
 -- Batch test:
-local inputs = torch.Tensor(opt.batchSize,3,32,32)
+local inputs = torch.Tensor(opt.batchSize,testData.data:size(2),testData.data:size(3),testData.data:size(4))
 local targets = torch.Tensor(opt.batchSize)
 if opt.type == 'cuda' then 
    inputs = inputs:cuda()

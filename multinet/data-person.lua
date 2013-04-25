@@ -57,26 +57,26 @@ else
 
 	local rawFrame = source:forward()
 	-- input video params:
-	--ivch = rawFrame:size(1) -- channels
-	local ivhe = rawFrame:size(2) -- height
-	local ivwi = rawFrame:size(3) -- width
+	--local ivch = rawFrame:size(1) -- channels
+	ivhe = rawFrame:size(2) -- height
+	ivwi = rawFrame:size(3) -- width
 	
 	local ivch = 3 -- color channels in images
-	local desImaX = 32 -- desired cropped dataset image size
-	local desImaY = 32
+	local desImaX = 46 -- desired cropped dataset image size
+	local desImaY = 46
 
-	local cropTrX = 50 -- desired offset to crop images from train set
-	local cropTrY = 45
+	local cropTrX = 45 -- desired offset to crop images from train set
+	local cropTrY = 48
 	local cropTeX = 33 -- desired offset to crop images from test set
-	local cropTeY = 30
+	local cropTeY = 35
 
 	local labelPerson = 1 -- label for person and background:
 	local labelBg = 0
 
-	local trainDir='../../datasets/INRIAPerson/96X160H96/Train/pos/'
-	local trainImaNumber = #ls(traindir)
-	local testDir='../../datasets/INRIAPerson/70X134H96/Test/pos/'
-	local testImaNumber = #ls(testdir)
+	local trainDir = '../../datasets/INRIAPerson/96X160H96/Train/pos/'
+	local trainImaNumber = #ls(trainDir)
+	local testDir = '../../datasets/INRIAPerson/70X134H96/Test/pos/'
+	local testImaNumber = #ls(testDir)
 
 	-- dataset size:
 	local dataMultiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
@@ -90,18 +90,18 @@ else
 	}
 
 	-- load person data:
-	for i = 1, train_ima_number, 2 do
-		imatoload = image.loadPNG(traindir..ls(trainDir)[i],ivch)
+	for i = 1, trainImaNumber, 2 do
+		imatoload = image.loadPNG(trainDir..ls(trainDir)[i],ivch)
 		trainData.data[i] = image.crop(imatoload, cropTrX-desImaX/2, cropTrY-desImaY/2, 
 																cropTrX+desImaX/2, cropTrY+desImaY/2):clone()
-		trainData.labels[i] = label_person
+		trainData.labels[i] = labelPerson
 	
 		-- load background data:
 		imatoload = source:forward()
-		local x = math.random(1,ivwi-desImaX+1)
-		local y = math.random(20,ivhe-desImaY+1-40) -- added # to get samples more or less from horizon
+		local x = math.random(1, ivwi-desImaX+1)
+		local y = math.random(15, ivhe-desImaY+1-30) -- added # to get samples more or less from horizon
 		trainData.data[i+1] = imatoload[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
-		trainData.labels[i+1] = label_bg
+		trainData.labels[i+1] = labelBg
 	end
 	-- display some examples:
 	image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train Data'}
@@ -114,25 +114,25 @@ else
 	}
 
 	-- load person data:
-	for i = 1, test_ima_number, 2 do
-		imatoload = image.loadPNG(testdir..ls(testDir)[i],ivch)
+	for i = 1, testImaNumber, 2 do
+		imatoload = image.loadPNG(testDir..ls(testDir)[i],ivch)
 		testData.data[i] = image.crop(imatoload, cropTeX-desImaX/2, cropTeY-desImaY/2, 
 																cropTeX+desImaX/2, cropTeY+desImaY/2):clone()
-		testData.labels[i] = label_person
+		testData.labels[i] = labelPerson
 	
 		-- load background data:
 		imatoload = source:forward()
 		local x = math.random(1,ivwi-desImaX+1)
-		local y = math.random(20,ivhe-desImaY+1-40) -- added # to get samples more or less from horizon
+		local y = math.random(15,ivhe-desImaY+1-30) -- added # to get samples more or less from horizon
 		testData.data[i+1] = imatoload[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
-		testData.labels[i+1] = label_bg
+		testData.labels[i+1] = labelBg
 	end
 	-- display some examples:
 	image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
-	--save if needed:
-	--torch.save('train.t7',trainData)
-	--torch.save('test.t7',testData)
+	--save created dataset:
+	torch.save('train.t7',trainData)
+	torch.save('test.t7',testData)
 end
 
 
@@ -179,7 +179,7 @@ for i = 1,tesize do
 end
 
 -- Name channels for convenience
-channels = {'y','u','v'}
+local channels = {'y','u','v'}
 --channels = {'r','g','b'}
 
 -- Normalize each channel, and store mean/std
@@ -211,11 +211,11 @@ end
 print '==> preprocessing data: local contrast normalization:'
 
 -- Define the normalization neighborhood:
-neighborhood = image.gaussian1D(7)
+local neighborhood = image.gaussian1D(7)
 
 -- Define our local normalization operator (It is an actual nn module, 
 -- which could be inserted into a trainable model):
-normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
+local normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 
 -- Normalize all channels locally:
 --for c in ipairs(channels) do

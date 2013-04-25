@@ -80,14 +80,14 @@ end
 --
 print('<trainer> creating new network')
 
-nnf1,nnf2,nnf3  = 1,1,1 			-- number of frames at each layer
+nnf1,nnf2,nnf3  = 1,1,1 		-- number of frames at each layer
 nk0,nk1,nk2,nk3 = 3,32,64,128 -- nb of features
 is0,is1,is2,is3 = 15,7,7,7 	-- size of kernels
 ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
 scales          = 1 				-- scales
 fanin 			 = 2 				-- createCoCnxTable creates also 2*fanin connections
 feat_group 		 = 32 			--features per group (32=best in CIFAR, nk1=32, fanin=2)
-opt.hiddens 	 = 256 			-- nb of hidden features for top perceptron (0=linear classifier)
+opt.hiddens 	 = 64 			-- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'person', 'bg'} -- classes of objects to find
 
@@ -133,11 +133,9 @@ else
    
 end
 
-
 -- number of frames to process:
 if opt.quicktest then nfpr = 10 -- batch process size [video frames]
 else nfpr = 200 end
-
 
 
 ----------------------------------------------------------------------
@@ -161,7 +159,7 @@ createDataBatch()
 if opt.display then image.display{image=videoData[{{1,9}}],
 		padding=2, symmetric=true, nrow = 3, zoom=1, legend = 'Input Video Data [normalized]'} end
 
-----------------------------------------------------------------------
+
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 print '==> generating CL unsupervised network:'
@@ -256,7 +254,6 @@ print('2nd layer conv out. std: '..vnet2.modules[1].output:std()..' and mean: '.
 print('2nd layer output. std: '..vnet2.output:std()..' and mean: '..vnet2.output:mean())
 
 
-
 ----------------------------------------------------------------------
 print '==> generating filters for layer 3:'
 nlayer = 3
@@ -301,9 +298,8 @@ vnet3.modules[1].weight = kernels3_
 --image.display(lv2)
 
 
-   
 ----------------------------------------------------------------------  
--- prepare full network with all layers:
+-- prepare full network [tnet] with all layers:
 tnet = vnet:clone()
 for i=1,vnet2:size() do
    tnet:add(vnet2.modules[i]:clone())
@@ -312,7 +308,6 @@ for i=1,vnet3:size() do
    tnet:add(vnet3.modules[i]:clone())
 end
 
--- tnet -- pointer to full convnet trained with CL
 
 ----------------------------------------------------------------------
 -- Classifier
@@ -333,16 +328,12 @@ print("==>  time to CL train network = " .. (time*1000) .. 'ms')
 if opt.save then
 	print('==>  <trainer> saving bare network to '..opt.save)
 	os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-	torch.save(opt.save..'network.net', trainable)
+	torch.save(opt.save..'network.net', model)
 end
-
--- retrieve parameters and gradients
-parameters,gradParameters = trainable:getParameters()
 
 -- verbose
 print('==>  model:')
 print(model)
-print('==>  nb of trainable parameters: ' .. parameters:size(1))
 
 
 ----------------------------------------------------------------------
@@ -354,10 +345,9 @@ loss = nn.ClassNLLCriterion()
 -- load/get dataset
 print '==> load modules'
 
---dofile('data-person.lua')
-local data  = require 'data-person'
-local train = require 'train'
-local test  = require 'test'
+dofile('data-person.lua')
+dofile('train.lua')
+dofile('test.lua')
 
 
 ----------------------------------------------------------------------
@@ -365,17 +355,23 @@ local test  = require 'test'
 --
 print "==> processing dataset with videoknet:"
 -- train:
-for i = 1,trsize do
-   trainData.data[i] = tnet:forward(trainData.data[i])
-   xlua.progress(t, trsize)
+local a = #tnet:forward(trainData.data[1])
+trainData2 = torch.Tensor(trainData:size(), a[1], a[2], a[3])
+for i = 1,trainData:size() do
+   trainData2[i] = tnet:forward(trainData.data[i])
+   xlua.progress(i, trainData:size())
 end
+trainData.data = trainData2
 --report some statistics:
 print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainData.data[1]:mean())
 -- test:
-for i = 1,tesize do
-   testData.data[i] = tnet:forward(testData.data[i])
-   xlua.progress(t, trsize)
+local a = #tnet:forward(testData.data[1])
+testData2 = torch.Tensor(testData:size(), a[1], a[2], a[3])
+for i = 1,testData:size() do
+   testData2[i] = tnet:forward(testData.data[i])
+   xlua.progress(i, testData:size())
 end
+testData.data = testData2
 --report some statistics:
 print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.data[1]:mean())
 
@@ -385,8 +381,8 @@ print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.
 print '==> training!'
 
 while true do
-   train(data.trainData)
-   test(data.testData)
+   train(trainData)
+   test(testData)
 end
 
 

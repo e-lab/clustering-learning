@@ -27,7 +27,7 @@ require 'optim'   -- an optimization package, for online and batch methods
 print '==> defining some tools'
 
 -- classes
---local classes = {'1','2','3','4','5','6','7','8','9','0'}
+local classes = {'1','0'}
 
 -- This matrix records the current confusion across classes
 local confusion = optim.ConfusionMatrix(classes)
@@ -56,7 +56,7 @@ local optimState = {
 ----------------------------------------------------------------------
 print '==> allocating minibatch memory'
 
-local x = torch.Tensor(opt.batchSize,3,32,32)
+local x = torch.Tensor(opt.batchSize,trainData.data:size(2),trainData.data:size(3),trainData.data:size(4))
 local yt = torch.Tensor(opt.batchSize)
 if opt.type == 'cuda' then 
    x = x:cuda()
@@ -68,7 +68,7 @@ print '==> defining training procedure'
 
 local epoch
 
-local function train(trainData)
+function train(trainData)
 
    -- epoch tracker
    epoch = epoch or 1
@@ -107,7 +107,6 @@ local function train(trainData)
 
          -- evaluate function for complete mini batch
          local y = model:forward(x)
-         print(yt)
          local E = loss:forward(y,yt)
 
          -- estimate df/dW
