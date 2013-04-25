@@ -18,6 +18,7 @@ cmd:text('Options')
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
+cmd:option('-savedataset', false, 'save modified dataset')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
@@ -175,20 +176,20 @@ dspath = '../../datasets/KITTI/2011_09_26_drive_0002/image_02/data/'--/000000000
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0002/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet, 'train')
+--extractPatches(dspath, tracklet, 'train')
 
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0005/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet, 'train')
+--extractPatches(dspath, tracklet, 'train')
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0009/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet, 'test')
+--extractPatches(dspath, tracklet, 'test')
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
@@ -208,3 +209,10 @@ extractPatches(dspath, tracklet)
 
 print(trainData:size())
 print(testData:size())
+
+if opt.save then
+   torch.save('trainData-kitti.t7', trainData)
+   torch.save('testData-kitti.t7', testData)
+end
+
+
