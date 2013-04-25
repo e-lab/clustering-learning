@@ -10,6 +10,7 @@ require 'image'   -- to visualize the dataset
 require 'nn'      -- provides a normalization operator
 require 'unsup'
 require 'sys'
+require 'ffmpeg'
 
 ----------------------------------------------------------------------
 -- parse command line arguments
@@ -33,80 +34,101 @@ function ls(path) return sys.split(sys.ls(path),'\n') end -- alf ls() nice funct
 
 
 ----------------------------------------------------------------------
-print '==> loading dataset'
+-- load or generate new dataset:
 
--- video dataset to get background from:
-dspath = '../../datasets/driving1.mov'
-source = ffmpeg.Video{path=dspath, width = 320, height = 240, encoding='jpg', fps=24, loaddump=false, load=false}
+if paths.filep('train.t7') and paths.filep('test.t7') then
 
-rawFrame = source:forward()
--- input video params:
---ivch = rawFrame:size(1) -- channels
-ivhe = rawFrame:size(2) -- height
-ivwi = rawFrame:size(3) -- width
-source.current = 1 -- rewind video frames
+	print '==> loading previously generated dataset:'
+	trainData = torch.load('train.t7')
+	testData = torch.load('test.t7')
 
-ivch = 3 -- color channels in images
-des_ima_w = 32 -- desired cropped dataset image size
-des_ima_h = 32
+else
 
-crop_off_x = 55 -- desired offset to crop images from
-crop_off_y = 55
+	print '==> creating a new dataset from rawa images:'
 
-label_person = 1 -- label for person and background:
-label_bg = 0
+	-- video dataset to get background from:
+	dspath = '../../datasets/driving1.mov'
+	source = ffmpeg.Video{path=dspath, width = 160, height = 120, encoding='jpg', fps=24, loaddump=false, load=false}
 
-traindir='../../datasets/INRIAPerson/96X160H96/Train/pos/'
-train_ima_number = #ls(traindir)
-testdir='../../datasets/INRIAPerson/70X134H96/Test/pos/'
-test_ima_number = #ls(testdir)
+	rawFrame = source:forward()
+	-- input video params:
+	--ivch = rawFrame:size(1) -- channels
+	ivhe = rawFrame:size(2) -- height
+	ivwi = rawFrame:size(3) -- width
+	source.current = 1 -- rewind video frames
 
--- dataset size:
-data_multiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
-trsize = data_multiplier * train_ima_number
-tesize = data_multiplier * test_ima_number
+	ivch = 3 -- color channels in images
+	des_ima_w = 32 -- desired cropped dataset image size
+	des_ima_h = 32
 
-trainData = {
-   data = torch.Tensor(trsize, ivch*des_ima_w*des_ima_h),
-   labels = torch.Tensor(trsize),
-   size = function() return trsize end
-}
+	crop_tr_x = 50 -- desired offset to crop images from train set
+	crop_tr_y = 45
+	crop_te_x = 33 -- desired offset to crop images from test set
+	crop_te_y = 30
 
--- load person data:
-for i = 0, train_ima_number do
-	imatoload = image.loadPNG(tostring(traindir..ls(traindir)[i]))
-	trainData.data[i] = image.crop(imatoload, crop_off_x-des_ima_w/2, crop_off_y-des_ima_h/2, 
-															crop_off_x+des_ima_w/2, crop_off_y+des_ima_h/2):clone()
-	trainData.labels[i] = label_person
+	label_person = 1 -- label for person and background:
+	label_bg = 0
+
+	traindir='../../datasets/INRIAPerson/96X160H96/Train/pos/'
+	train_ima_number = #ls(traindir)
+	testdir='../../datasets/INRIAPerson/70X134H96/Test/pos/'
+	test_ima_number = #ls(testdir)
+
+	-- dataset size:
+	data_multiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
+	trsize = data_multiplier * train_ima_number
+	tesize = data_multiplier * test_ima_number
+
+	trainData = {
+		data = torch.Tensor(trsize, ivch,des_ima_w,des_ima_h),
+		labels = torch.Tensor(trsize),
+		size = function() return trsize end
+	}
+
+	-- load person data:
+	for i = 1, train_ima_number, 2 do
+		imatoload = image.loadPNG(traindir..ls(traindir)[i],ivch)
+		trainData.data[i] = image.crop(imatoload, crop_tr_x-des_ima_w/2, crop_tr_y-des_ima_h/2, 
+																crop_tr_x+des_ima_w/2, crop_tr_y+des_ima_h/2):clone()
+		trainData.labels[i] = label_person
 	
-	-- load background data:
-	imatoload = source:forward()
-	local x = math.random(1,ivwi-des_ima_w+1)
-   local y = math.random(1,ivhe-des_ima_h+1)
-   trainData.data[i] = img[{ {},{y,y+des_ima_h-1},{x,x+des_ima_w-1} }]:clone()
-	trainData.labels[i] = label_bg
-end
+		-- load background data:
+		imatoload = source:forward()
+		local x = math.random(1,ivwi-des_ima_w+1)
+		local y = math.random(20,ivhe-des_ima_h+1-40) -- added # to get samples more or less from horizon
+		trainData.data[i+1] = imatoload[{ {},{y,y+des_ima_h-1},{x,x+des_ima_w-1} }]:clone()
+		trainData.labels[i+1] = label_bg
+	end
+
+	image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train Data'}
 
 
-testData = {
-   data = torch.Tensor(tesize, ivch*des_ima_w*des_ima_h),
-   labels = torch.Tensor(tesize),
-   size = function() return tesize end
-}
+	testData = {
+		data = torch.Tensor(tesize, ivch,des_ima_w,des_ima_h),
+		labels = torch.Tensor(tesize),
+		size = function() return tesize end
+	}
 
--- load person data:
-for i = 0, test_ima_number do
-	imatoload = image.loadPNG(tostring(traindir..ls(traindir)[i]))
-	testData.data[i] = image.crop(imatoload, crop_off_x-des_ima_w/2, crop_off_y-des_ima_h/2, 
-															crop_off_x+des_ima_w/2, crop_off_y+des_ima_h/2)
-	testData.labels[i] = label_person
-end
--- load background data:
-for i = 0, test_ima_number do
-	--imatoload = image.loadPNG(tostring(traindir..ls(traindir)[i]))
-	--trainData.data[i] = image.crop(imatoload, crop_off_x-des_ima_w/2, crop_off_y-des_ima_h/2, 
-	--														crop_off_x+des_ima_w/2, crop_off_y+des_ima_h/2)
-	testData.labels[i] = label_bg
+	-- load person data:
+	for i = 1, test_ima_number, 2 do
+		imatoload = image.loadPNG(testdir..ls(testdir)[i],ivch)
+		testData.data[i] = image.crop(imatoload, crop_te_x-des_ima_w/2, crop_te_y-des_ima_h/2, 
+																crop_te_x+des_ima_w/2, crop_te_y+des_ima_h/2):clone()
+		testData.labels[i] = label_person
+	
+		-- load background data:
+		imatoload = source:forward()
+		local x = math.random(1,ivwi-des_ima_w+1)
+		local y = math.random(20,ivhe-des_ima_h+1-40) -- added # to get samples more or less from horizon
+		testData.data[i+1] = imatoload[{ {},{y,y+des_ima_h-1},{x,x+des_ima_w-1} }]:clone()
+		testData.labels[i+1] = label_bg
+	end
+
+	image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
+
+	--save if needed:
+	--torch.save('train.t7',trainData)
+	--torch.save('test.t7',testData)
 end
 
 
@@ -201,34 +223,6 @@ normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float(
 --      testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
 --   end
 --end
-
-
-
-----------------------------------------------------------------------
---print '==> whitening data'
---
---function zca_whiten(x)
---   local dims = x:size()
---   local nsamples = dims[1]
---   local ndims    = dims[2]
---   local M = torch.mean(x, 1)
---   local D, V = unsup.pcacov(x)
---   x:add(torch.ger(torch.ones(nsamples), M:squeeze()):mul(-1))
---   local diag = torch.diag(D:add(0.1):sqrt():pow(-1))
---   local P = V * diag * V:t()
---   x = x * P
---   return x, M, P
---end
---
---for i = 1,trsize do
---   trainData.data = zca_whiten(trainData.data:reshape(tesize,32*32*3))
---   xlua.progress(i, trsize)
---end
---for i = 1,tesize do
---   testData.data = zca_whiten(testData.data:reshape(tesize,32*32*3))
---   xlua.progress(i, tesize)
---end
-
 
 ----------------------------------------------------------------------
 print '==> verify statistics'
