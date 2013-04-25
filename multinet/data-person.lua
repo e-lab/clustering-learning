@@ -51,36 +51,35 @@ else
 	print '==> creating a new dataset from raw files:'
 
 	-- video dataset to get background from:
-	dspath = '../../datasets/driving1.mov'
-	source = ffmpeg.Video{path=dspath, width = 160, height = 120, encoding='jpg', 
+	local dspath = '../../datasets/driving1.mov'
+	local source = ffmpeg.Video{path=dspath, width = 160, height = 120, encoding='jpg', 
 			fps=24, loaddump=false, load=false}
 
-	rawFrame = source:forward()
+	local rawFrame = source:forward()
 	-- input video params:
 	--ivch = rawFrame:size(1) -- channels
-	ivhe = rawFrame:size(2) -- height
-	ivwi = rawFrame:size(3) -- width
-	source.current = 1 -- rewind video frames
+	local ivhe = rawFrame:size(2) -- height
+	local ivwi = rawFrame:size(3) -- width
+	
+	local ivch = 3 -- color channels in images
+	local desImaX = 32 -- desired cropped dataset image size
+	local desImaY = 32
 
-	ivch = 3 -- color channels in images
-	desImaX = 32 -- desired cropped dataset image size
-	desImaY = 32
+	local cropTrX = 50 -- desired offset to crop images from train set
+	local cropTrY = 45
+	local cropTeX = 33 -- desired offset to crop images from test set
+	local cropTeY = 30
 
-	cropTrX = 50 -- desired offset to crop images from train set
-	cropTrY = 45
-	cropTeX = 33 -- desired offset to crop images from test set
-	cropTeY = 30
+	local labelPerson = 1 -- label for person and background:
+	local labelBg = 0
 
-	labelPerson = 1 -- label for person and background:
-	labelBg = 0
-
-	trainDir='../../datasets/INRIAPerson/96X160H96/Train/pos/'
-	trainImaNumber = #ls(traindir)
-	testDir='../../datasets/INRIAPerson/70X134H96/Test/pos/'
-	testImaNumber = #ls(testdir)
+	local trainDir='../../datasets/INRIAPerson/96X160H96/Train/pos/'
+	local trainImaNumber = #ls(traindir)
+	local testDir='../../datasets/INRIAPerson/70X134H96/Test/pos/'
+	local testImaNumber = #ls(testdir)
 
 	-- dataset size:
-	dataMultiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
+	local dataMultiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
 	trsize = dataMultiplier * trainImaNumber
 	tesize = dataMultiplier * testImaNumber
 
@@ -104,7 +103,7 @@ else
 		trainData.data[i+1] = imatoload[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
 		trainData.labels[i+1] = label_bg
 	end
-
+	-- display some examples:
 	image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train Data'}
 
 
@@ -128,7 +127,7 @@ else
 		testData.data[i+1] = imatoload[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
 		testData.labels[i+1] = label_bg
 	end
-
+	-- display some examples:
 	image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
 	--save if needed:
@@ -171,7 +170,7 @@ testData.data = testData.data:float()
 --     as a result, each color component has 0-mean and 1-norm across the dataset.
 
 -- Convert all images to YUV
-print '==> preprocessing data: colorspace RGB -> YUV'
+print '==> preprocessing data: colorspace RGB -> YUV:'
 for i = 1,trsize do
    trainData.data[i] = image.rgb2yuv(trainData.data[i])
 end
@@ -187,7 +186,7 @@ channels = {'y','u','v'}
 -- per channel. These values are important, as they are part of
 -- the trainable parameters. At test time, test data will be normalized
 -- using these values.
-print '==> preprocessing data: normalize each feature (channel) globally'
+print '==> preprocessing data: global normalization:'
 local mean = {}
 local std = {}
 for i,channel in ipairs(channels) do
@@ -209,7 +208,7 @@ end
 -- (note: the global normalization is useless, if this local normalization
 -- is applied on all channels... the global normalization code is kept just
 -- for the tutorial's purpose)
---print '==> preprocessing data: normalize all three channels locally'
+print '==> preprocessing data: local contrast normalization:'
 
 -- Define the normalization neighborhood:
 neighborhood = image.gaussian1D(7)
@@ -230,7 +229,7 @@ c = 1
 --end
 
 ----------------------------------------------------------------------
-print '==> verify statistics'
+print '==> verify statistics:'
 
 -- It's always good practice to verify that data is properly
 -- normalized.
@@ -250,7 +249,7 @@ for i,channel in ipairs(channels) do
 end
 
 ----------------------------------------------------------------------
-print '==> visualizing data'
+print '==> visualizing data:'
 
 -- Visualization is quite easy, using image.display(). Check out:
 -- help(image.display), for more info about options.
