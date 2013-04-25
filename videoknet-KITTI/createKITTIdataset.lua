@@ -61,7 +61,7 @@ function InCar(x1,x2,y1,y2)
 end
 
 
-function extractPatches(dspath, tracklet)
+function extractPatches(dspath, tracklet, train)
    videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
    for imgi = 1,videoframes do
 	  rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi-1)..'.png'))
@@ -102,8 +102,13 @@ function extractPatches(dspath, tracklet)
                y = math.random(detect.y1+h_patch/2,detect.y2-h_patch/2)
           
                randompatch = rawFrame[{{},{y-h_patch/2,y+h_patch/2-1},{x-w_patch/2,x+w_patch/2-1}}]
-               table.insert(trainData.data, randompatch)
-               table.insert(trainData.labels, 1)  -- car
+               if (train == 'train') then 
+                  table.insert(trainData.data, randompatch)
+                  table.insert(trainData.labels, 1)  -- car
+               else 
+                  table.insert(testData.data, randompatch)
+                  table.insert(testData.labels, 1)  -- car
+               end
                ncar = ncar+1
             end 
          end
@@ -123,13 +128,23 @@ function extractPatches(dspath, tracklet)
         table.insert(trainData.labels, 0)  -- bg
      end
   end
-f16S = torch.Tensor(256, 3, w_patch, w_patch)
-for i=1, 256 do 
-  k = math.random(1, trainData:size())
-  f16S[i]=trainData.data[k]
-end 
-image.display{image=f16S, nrow=16, nrow=16, padding=2, zoom=1, 
-            legend='Patches for dataset'}
+  f16S = torch.Tensor(256, 3, w_patch, w_patch)
+  for i=1, 256 do 
+    if (train == 'train') then 
+      k = math.random(1, trainData:size())
+      f16S[i]=trainData.data[k]  
+    else 
+      k = math.random(1, testData:size())
+      f16S[i]=testData.data[k]
+    end
+  end
+  if (train == 'train') then 
+     image.display{image=f16S, nrow=16, nrow=16, padding=2, zoom=1, 
+            legend='Patches for train dataset'}
+  else 
+     image.display{image=f16S, nrow=16, nrow=16, padding=2, zoom=1, 
+            legend='Patches for test dataset'}
+  end 
 
 end
 
@@ -154,32 +169,32 @@ dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_02/data/'--/000000000
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0001/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet)
+extractPatches(dspath, tracklet, 'train')
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0002/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0002/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet)
+extractPatches(dspath, tracklet, 'train')
 
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0005/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet)
+extractPatches(dspath, tracklet, 'train')
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0009/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet)
+extractPatches(dspath, tracklet, 'test')
 
 dspath = '../../datasets/KITTI/2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0011/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
-extractPatches(dspath, tracklet)
+extractPatches(dspath, tracklet, 'test')
 
 
 --[[dspath = '../../datasets/KITTI/2011_09_26_drive_0060/image_02/data/'--/0000000000.png' -- Right images
@@ -192,3 +207,4 @@ extractPatches(dspath, tracklet)
 
 
 print(trainData:size())
+print(testData:size())
