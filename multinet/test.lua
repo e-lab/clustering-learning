@@ -19,7 +19,7 @@ print '==> defining some tools'
 --local dropout = t.dropout
 
 -- classes
-local classes = {'1','0'}
+local classes = {'person','bg'}
 
 -- This matrix records the current confusion across classes
 local confusion = optim.ConfusionMatrix(classes)
@@ -44,7 +44,7 @@ function test(testData)
    local time = sys.clock()
 
    -- dropout -> off
-   dropout.p = 0
+   --dropout.p = 0
 
    -- test over test data
    print('==> testing on test set:')

@@ -71,7 +71,7 @@ else
 	local cropTeY = 35
 
 	local labelPerson = 1 -- label for person and background:
-	local labelBg = 0
+	local labelBg = 2
 
 	local trainDir = '../../datasets/INRIAPerson/96X160H96/Train/pos/'
 	local trainImaNumber = #ls(trainDir)
@@ -262,3 +262,10 @@ if opt.visualize then
    image.display{image=first256Samples_u, nrow=16, legend='Some training examples: ' ..channels[2].. ' channel'}
    image.display{image=first256Samples_v, nrow=16, legend='Some training examples: ' ..channels[3].. ' channel'}
 end
+
+
+-- Exports
+return {
+   trainData = trainData,
+   testData = testData
+}

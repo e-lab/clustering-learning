@@ -46,7 +46,7 @@ opt.videodata = true --	(default 1) 		true = load video file, otherwise ??? data
 
 opt.initstd = 0.1
 opt.niter = 15
-opt.batchsize = 1000
+opt.kmbatchsize = 1000 -- kmeans batchsize
 
 
 dname,fname = sys.fpath()
@@ -226,7 +226,7 @@ cTable2, kernels2 = createCoCnx(nlayer, videoData2, nk1, feat_group, fanin, 50, 
 nk2 = cTable2:max()
 nk = nk2
 if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is2), 
-		padding=2, symmetric=true, nrow = 32, zoom=2, legend = 'Layer 2 filters'} end
+		padding=2, symmetric=true, nrow = 64, zoom=2, legend = 'Layer 2 filters'} end
 
 
 ----------------------------------------------------------------------
@@ -287,6 +287,13 @@ vnet3.modules[1].weight = kernels3_
    
    
 ---------------------------------------------------------------------- 
+
+-- compute network creation time time 
+time = sys.clock() - time
+print("==>  time to CL train network = " .. (time*1000) .. 'ms')
+
+---------------------------------------------------------------------- 
+
 -- quick sanity check with Lena:
 
 --normkernel = image.gaussian1D(15)
@@ -310,49 +317,13 @@ end
 
 
 ----------------------------------------------------------------------
--- Classifier
-model = nn.Sequential()
--- a 2-layer perceptron
-model:add(nn.Tanh())
-model:add(nn.Reshape(cl_nk1))
-model:add(nn.Linear(cl_nk1,cl_nk2))
-model:add(nn.Tanh())
-model:add(nn.Linear(cl_nk2,#classes))
-
-
--- compute network creation time time 
-time = sys.clock() - time
-print("==>  time to CL train network = " .. (time*1000) .. 'ms')
-
--- Save model
-if opt.save then
-	print('==>  <trainer> saving bare network to '..opt.save)
-	os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-	torch.save(opt.save..'network.net', model)
-end
-
--- verbose
-print('==>  model:')
-print(model)
-
-
-----------------------------------------------------------------------
--- Loss: NLL
-loss = nn.ClassNLLCriterion()
-
-
-----------------------------------------------------------------------
--- load/get dataset
-print '==> load modules'
-
-dofile('data-person.lua')
-dofile('train.lua')
-dofile('test.lua')
-
-
-----------------------------------------------------------------------
 -- process images in dataset with unsupervised network 'tnet':
 --
+
+print "==> loading dataset:"
+data  = require 'data-person'
+
+
 print "==> processing dataset with videoknet:"
 -- train:
 local a = #tnet:forward(trainData.data[1])
@@ -376,13 +347,50 @@ testData.data = testData2
 print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.data[1]:mean())
 
 
--------------------------
--- do training:
+----------------------------------------------------------------------
+-- Classifier
+model = nn.Sequential()
+-- a 2-layer perceptron
+model:add(nn.Tanh())
+model:add(nn.Reshape(cl_nk1))
+model:add(nn.Linear(cl_nk1,cl_nk2))
+model:add(nn.Tanh())
+model:add(nn.Linear(cl_nk2,#classes))
+
+-- final stage: log probabilities
+model:add(nn.LogSoftMax())
+
+-- Save model
+if opt.save then
+	print('==>  <trainer> saving bare network to '..opt.save)
+	os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
+	torch.save(opt.save..'network.net', model)
+end
+
+-- verbose
+print('==>  model:')
+print(model)
+
+
+----------------------------------------------------------------------
+-- Loss: NLL
+loss = nn.ClassNLLCriterion()
+
+
+----------------------------------------------------------------------
+-- load/get dataset
+print '==> load modules'
+
+train = require 'train'
+test  = require 'test'
+
+
+----------------------------------------------------------------------
 print '==> training!'
 
 while true do
-   train(trainData)
-   test(testData)
+   train(data.trainData)
+   test(data.testData)
 end
 
 
