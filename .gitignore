@@ -11,3 +11,5 @@ session.txt
 /paper/clustering.log
 /datasets
 *.t7
+*.net
+/scratch
