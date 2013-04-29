@@ -107,6 +107,31 @@ for i,channel in ipairs(channels) do
    testData.data[{ {},i,{},{} }]:add(-mean[i])
    testData.data[{ {},i,{},{} }]:div(std[i])
 end
+
+
+-- Preprocessor (normalizer)
+normthres = 1e-1
+preproc = nn.Sequential()
+preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+do
+	ynormer = nn.Sequential()
+	ynormer:add(nn.Narrow(1,1,1))
+	ynormer:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(is0), normthres))
+	normer = nn.ConcatTable()
+	normer:add(ynormer)
+	normer:add(nn.Narrow(1,2,2))
+end
+preproc:add(normer)
+preproc:add(nn.JoinTable(1))
+
+for i = 1,trsize do
+   trainData.data[i] = preproc:forward(trainData.data[i])
+end
+for i = 1,tesize do
+   testData.data[i] = preproc:forward(testData.data[i])
+end
+
+
 ----------------------------------------------------------------------
 print '==> verify statistics:'
 

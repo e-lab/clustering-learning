@@ -42,7 +42,7 @@ opt = lapp[[
 
 opt.quicktest = true	--(default 0)			true = small test, false = full code running
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
-opt.videodata = true --	(default 1) 		true = load video file, otherwise ??? data
+opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
 opt.display = false
 opt.initstd = 0.1
 opt.niter = 15
@@ -107,14 +107,26 @@ preproc:add(normer)
 preproc:add(nn.JoinTable(1))
 
 
-print '==> loading ??? training-set:'
-
-dofile 'data-kitti.lua'
-
-ivch = trainData.data[1]:size(1) -- channels
-ivhe = trainData.data[1]:size(2) -- height
-ivwi = trainData.data[1]:size(3) -- width
+print '==> loading training-set:'
+if opt.videodata then
+   print '==> loading videt training-set:'
+   dspath = '../../datasets/driving1.mov'
+   source = ffmpeg.Video{path=dspath, width = 320, height = 240, encoding='jpg', fps=24, loaddump=false, load=false}
+   rawFrame = source:forward()
+   -- input video params:
+   ivch = rawFrame:size(1) -- channels
+   ivhe = rawFrame:size(2) -- height
+   ivwi = rawFrame:size(3) -- width
+   source.current = 1 -- rewind video frames
    
+else 
+   dofile 'data-kitti.lua'   
+   ivch = trainData.data[1]:size(1) -- channels
+   ivhe = trainData.data[1]:size(2) -- height
+   ivwi = trainData.data[1]:size(3) -- width  
+end
+
+
 
 -- number of frames to process:
 if opt.quicktest then nfpr = 10 -- batch process size [video frames]
@@ -128,9 +140,11 @@ function createDataBatch()
    videoData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
    for i = 1, nfpr do -- just get a few frames to begin with
       -- perform full LCN
-      procFrame = preproc:forward(trainData.data[i]:clone())
-      print('procsize', procFrame:size(), videoData:size())
-      videoData[i] = procFrame
+      if opt.videodata then
+         procFrame = preproc:forward(rawFrame)
+         videoData[i] = procFrame
+      else videoData[i] = trainData.data[i]:clone()
+      end
    end
    return videoData
 end
