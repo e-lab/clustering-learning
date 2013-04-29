@@ -348,49 +348,18 @@ print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.
 
 
 ----------------------------------------------------------------------
--- Classifier
-model = nn.Sequential()
--- a 2-layer perceptron
-model:add(nn.Tanh())
-model:add(nn.Reshape(cl_nk1))
-model:add(nn.Linear(cl_nk1,cl_nk2))
-model:add(nn.Tanh())
-model:add(nn.Linear(cl_nk2,#classes))
+-- DISTANCE CL Classifier:
 
--- final stage: log probabilities
-model:add(nn.LogSoftMax())
-
--- Save model
-if opt.save then
-	print('==>  <trainer> saving bare network to '..opt.save)
-	os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-	torch.save(opt.save..'network.net', model)
+aveOut = torch.zeros(#classes, trainData.data:size()) -- clustered average output class
+aveOutCnt = torch.zeros(#classes) -- count for each class
+for i = 1,trainData:size() do
+   aveOut[trainData.label[i]] = aveOut[trainData.label[i]] + trainData.data[i]
+   aveOutCnt[trainData.label[i]] = aveOutCnt[trainData.label[i]] + 1
+   xlua.progress(i, trainData:size())
 end
 
--- verbose
-print('==>  model:')
-print(model)
 
 
-----------------------------------------------------------------------
--- Loss: NLL
-loss = nn.ClassNLLCriterion()
 
-
-----------------------------------------------------------------------
--- load/get dataset
-print '==> load modules'
-
-train = require 'train'
-test  = require 'test'
-
-
-----------------------------------------------------------------------
-print '==> training!'
-
-while true do
-   train(data.trainData)
-   test(data.testData)
-end
 
 
