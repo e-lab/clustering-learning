@@ -124,12 +124,12 @@ if opt.videodata then
 
 else 
    print '==> loading ??? training-set:'
-	--dofile('sf-dataset.lua')
+	data  = require 'data-person'
    
    -- input image dateaset params:
-   ivch = trainData[1][1]:size(1) -- channels
-   ivhe = trainData[1][1]:size(2) -- height
-   ivwi = trainData[1][1]:size(3) -- width
+   ivch = trainData.data[1]:size(1) -- channels
+   ivhe = trainData.data[1]:size(2) -- height
+   ivwi = trainData.data[1]:size(3) -- width
    
 end
 
@@ -321,7 +321,7 @@ end
 --
 
 print "==> loading dataset:"
-data  = require 'data-person'
+if not data then data  = require 'data-person' end
 
 
 print "==> processing dataset with videoknet:"

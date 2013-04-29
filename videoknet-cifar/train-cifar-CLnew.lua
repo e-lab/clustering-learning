@@ -1,6 +1,7 @@
 ----------------------------------------------------------------------
 -- Run k-means on CIFAR10 dataset - 1st layer generation/load and test
 ----------------------------------------------------------------------
+-- bypass route color version: pass color info to final classifier AND net input!
 
 require 'image'
 require 'nnx'
@@ -101,6 +102,7 @@ if opt.slacmodel then
 else 
    -- AND/OR model or FULL CONNECT MODEL:
    -- get twice the kernels, then pick best ones:
+   print('here!')
    kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, 2*nk1, nnf1, is)
    -- sort kernels:
    _, j = torch.sort(counts,true)
@@ -326,34 +328,58 @@ print "==> creating final test dataset"
 l1netoutsize = ovhe2 -- 2 layers:
 
 
+
+-- color bypass: downsamples color info and pass it to final classifier:
+nlayer=1
+cnpoolsize=4
+colornet = nn.Sequential()
+colornet:add(nn.SpatialDownSampling(cnpoolsize,cnpoolsize,cnpoolsize,cnpoolsize))
+cdatasize = 3*(ivhe/cnpoolsize)^2 -- size of the color data
+
+
+-- process dataset throught net:
+
 trainDataF = {
-   data = torch.Tensor(trsize, nk*(l1netoutsize)^2),
+   data = torch.Tensor(trsize, nk*(l1netoutsize)^2+cdatasize),
+   color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
    labels = trainData.labels:clone(),
    size = function() return trsize end
   
 }
 
 testDataF = {
-   data = torch.Tensor(tesize, nk*(l1netoutsize)^2),
+   data = torch.Tensor(tesize, nk*(l1netoutsize)^2+cdatasize),
+   color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
    labels = testData.labels:clone(),
    size = function() return tesize end
 }
 
-trainDataF.data = trainData3
-for t = 1,trainDataF:size() do
-   --trainData2.data[t] = l1net:forward(trainData.data[t]:double())
-   --xlua.progress(t, trainData:size())
+--trainDataF.data = trainData3
+--testDataF.data = testData3
+
+print '==> process color info of dataset throught colornet:'
+for t = 1,trsize do
+   trainDataF.color[t] = colornet:forward(trainData.data[t][{{1,3}}])
+   xlua.progress(t, trainData:size())
+end
+for t = 1,tesize do
+   testDataF.color[t] = colornet:forward(testData.data[t][{{1,3}}])
+   xlua.progress(t, testData:size())
 end
 
-testDataF.data = testData3
-for t = 1,testDataF:size() do
-   --testData2.data[t] = l1net:forward(testData.data[t]:double())
-   --xlua.progress(t, testData:size())
+
+for t = 1,trsize do
+   trainDataF.data[t] = torch.cat(trainData3[t]:reshape(nk*(l1netoutsize)^2), trainDataF.color[t])
+   xlua.progress(t, trainData:size())
+end
+for t = 1,tesize do
+   testDataF.data[t] = torch.cat(testData3[t]:reshape(nk*(l1netoutsize)^2), testDataF.color[t])
+   xlua.progress(t, testData:size())
 end
 
 
-trainDataF.data = trainDataF.data:reshape(trsize, nk2, l1netoutsize, l1netoutsize)
-testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
+--trainDataF.data = trainDataF.data:reshape(trsize, nk2, l1netoutsize, l1netoutsize)
+--testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
 
 -- relocate pointers to new dataset:
 --trainData1 = trainData -- save original dataset
@@ -378,8 +404,8 @@ if opt.classify then
    outsize = 10 -- in CIFAR, SVHN datasets
 
    model = nn.Sequential()
-   model:add(nn.Reshape(nk*l1netoutsize^2))
-   model:add(nn.Linear(nk*l1netoutsize^2, nhiddens))
+   model:add(nn.Reshape(nk*l1netoutsize^2+cdatasize))
+   model:add(nn.Linear(nk*l1netoutsize^2+cdatasize, nhiddens))
    model:add(nn.Threshold())
    model:add(nn.Linear(nhiddens,outsize))
    

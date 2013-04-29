@@ -350,13 +350,31 @@ print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.
 ----------------------------------------------------------------------
 -- DISTANCE CL Classifier:
 
-aveOut = torch.zeros(#classes, trainData.data:size()) -- clustered average output class
+-- train:
+aveOut = torch.zeros(#classes, trainData.data:size(2)) -- clustered average output class
 aveOutCnt = torch.zeros(#classes) -- count for each class
 for i = 1,trainData:size() do
-   aveOut[trainData.label[i]] = aveOut[trainData.label[i]] + trainData.data[i]
-   aveOutCnt[trainData.label[i]] = aveOutCnt[trainData.label[i]] + 1
+   aveOut[trainData.labels[i]] = aveOut[trainData.labels[i]] + trainData.data[i]
+   aveOutCnt[trainData.labels[i]] = aveOutCnt[trainData.labels[i]] + 1
    xlua.progress(i, trainData:size())
 end
+for i = 1,#classes do
+	aveOut[i] = aveOut[i]/aveOutCnt[i]
+end
+
+-- test: 
+dist = torch.Tensor(#classes)
+correct = 0
+for i = 1,testData:size() do
+   for j=1,#classes do
+   	dist[j] = torch.dist(trainData.data[i], aveOut[j])
+   	max, idx = torch.max(dist,1)
+   	if trainData.labels[i] == idx[1] then correct = correct+1 end
+	end
+   xlua.progress(i, testData:size())
+end
+
+print('Final correct percentage: '.. correct/testData:size()*100)
 
 
 
