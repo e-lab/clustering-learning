@@ -18,10 +18,10 @@ cmd:text('Opions')
 cmd:option('-visualize',  true,    'display kernels')
 cmd:option('-seed',        1,      'initial random seed')
 cmd:option('-threads',     8,      'threads')
-cmd:option('-savedataset', false,  'save dataset')
-cmd:option('-width',       32*4,   'width of extracted patch')
-cmd:option('-height',      32*4,   'height of extracted patch')
-cmd:option('-down',        4,      'downsample of the extracted patch')
+cmd:option('-savedataset', true,  'save dataset')
+cmd:option('-width',       46*3,   'width of extracted patch')
+cmd:option('-height',      46*3,   'height of extracted patch')
+cmd:option('-down',        3,      'downsample of the extracted patch')
 cmd:option('-ratio',       0.8,    'ratio of train to test dataset split')
 cmd:option('-samplepercar',6,      'number of the patch to extract from per car (bounding box)')
 
@@ -97,13 +97,7 @@ function extractPatches(dspath, tracklet)
      for i, detect in ipairs(detections) do
         for j=1, opt.samplepercar do
           if (detect.objectType == 'Car') then 
-
-
-          -- if detect.x1~=1 and detect.y1~=1 and detect.x2~=iwidth and detect.y2~=iheight then
-            if detect.x1==1 and detect.y1==1 and detect.x2==iwidth and detect.y2==iheight then
-               a = rawFrame[{{},{detect.y1,detect.y2},{detect.x1,detect.x2}}]
-               print('whaat')
-            elseif(detect.x1+opt.width<=detect.x2) and (detect.y1+opt.height<=detect.y2) then
+             if(detect.x1+opt.width<=detect.x2) and (detect.y1+opt.height<=detect.y2) then
                x = random(detect.x1+opt.width/2,detect.x2-opt.width/2)
                y = random(detect.y1+opt.height/2,detect.y2-opt.height/2)
           
@@ -114,9 +108,9 @@ function extractPatches(dspath, tracklet)
                table.insert(carData.labels, 1)  -- car
       
                ncar = ncar+1
-            end 
-         end
-       end
+             end 
+          end
+        end
      end
 
 
@@ -161,52 +155,88 @@ backgroundData = {
 ----------------------------------------------------------------------
 
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0001/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0001/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0002/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0002/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0002/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0002/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0005/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0005/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
---[[dspath = '../../datasets/KITTI/2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0009/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0009/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0011/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0011/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0013/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0013/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0013/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0013/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
---[[dspath = '../../datasets/KITTI/2011_09_26_drive_0014/image_02/data/'--/0000000000.png' -- Right images
+
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0017/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0014/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0017/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0017/image_02/data/'--/0000000000.png' -- Right images
+
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0018/image_02/data/'--/0000000000.png' -- Right images
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0017/tracklet_labels.xml')
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0018/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0048/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0048/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+
+
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0057/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0057/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0059/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0059/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0084/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0084/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0091/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0091/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 
@@ -215,6 +245,22 @@ print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0060/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+
+
+dspath = '../../datasets/KITTI/2011_09_26_drive_0014/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0014/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)   14 give problem about tracklet a nil value 
+
+
+dspath = '../../datasets/KITTI/2011_09_26_drive_0056/image_02/data/'--/0000000000.png' -- Right images
+print '==> load KITTI tracklets'
+tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0056/tracklet_labels.xml')
+tracklet = parseXML(tracklet_labels)
+extractPatches(dspath, tracklet)
+
+
 ]]
 -- 60 is giving problems with the opening image 78
 
@@ -267,7 +313,7 @@ for i=1 , nTrainData/2  do
    trainData.data[2*i-1]   = carData.data[shuffleCar[i]]
    trainData.labels[2*i-1] = 1
    trainData.data[2*i]   = backgroundData.data[shufflebg[i]]
-   trainData.labels[2*i] = 0
+   trainData.labels[2*i] = 2
 end 
 
 
@@ -275,15 +321,15 @@ for i=1 , nTestData/2  do
    testData.data[2*i-1]   = carData.data[shuffleCar[i+nTrainData/2]]
    testData.labels[2*i-1] = 1
    testData.data[2*i]   = backgroundData.data[shufflebg[i+nTrainData/2]]
-   testData.labels[2*i] = 0
+   testData.labels[2*i] = 2
 end 
 
 print '==> display and save'
-image.display{image=trainData.data[{{1,120}}], nrow=15, ncol=15, legend='patches'}
 
 if opt.savedataset then
    torch.save('trainData-kitti.t7', trainData)
    torch.save('testData-kitti.t7', testData)
 end
-
+image.display{image=trainData.data[{{1,120}}], nrow=15, ncol=15}
 collectgarbage()
+
