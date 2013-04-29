@@ -118,7 +118,7 @@ if opt.videodata then
    ivhe = rawFrame:size(2) -- height
    ivwi = rawFrame:size(3) -- width
    source.current = 1 -- rewind video frames
-   
+   dofile 'data-kitti.lua' 
 else 
    dofile 'data-kitti.lua'   
    ivch = trainData.data[1]:size(1) -- channels
