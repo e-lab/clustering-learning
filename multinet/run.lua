@@ -42,7 +42,7 @@ opt = lapp[[
 
 opt.quicktest = false	--(default 0)			true = small test, false = full code running
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
-opt.videodata = true --	(default 1) 		true = load video file, otherwise ??? data
+opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
 
 opt.initstd = 0.1
 opt.niter = 15
@@ -123,7 +123,7 @@ if opt.videodata then
    source.current = 1 -- rewind video frames
 
 else 
-   print '==> loading ??? training-set:'
+   print '==> loading the INRIA Person dataset:'
 	data  = require 'data-person'
    
    -- input image dateaset params:
@@ -143,14 +143,17 @@ else nfpr = 200 end
 
 function createDataBatch()
    videoData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
-   for i = 1, nfpr do -- just get a few frames to begin with
-      -- perform full LCN
-      if opt.videodata then procFrame = preproc:forward(rawFrame) 
-      else procFrame = preproc:forward(trainData[i][1]:clone())
+   if opt.videodata then
+   	for i = 1, nfpr do -- just get a few frames from a video as dataset:
+      	-- perform full LCN
+      	procFrame = preproc:forward(rawFrame) 
       end
       videoData[i] = procFrame
-      if opt.videodata then rawFrame = source:forward() end
+      rawFrame = source:forward()
+   else 
+   	videoData = trainData.data 
    end
+   
    return videoData
 end
 
