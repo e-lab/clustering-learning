@@ -365,6 +365,17 @@ for i = 1,#classes do
 	aveOut[i] = aveOut[i]/aveOutCnt[i]
 end
 
+-- image of features:
+imaFeats = torch.Tensor(128,128)--trainData.data:size(1), trainData.data:size(2))
+for i = 1, 128--trainData:size() do
+   if trainData.labels[i] == 1 then
+   	imaFeats[i] = trainData.data[i]:reshape(128)
+   
+   end
+   --xlua.progress(i, trainData:size())
+end
+image.display{image=imaFeats, symmetric=true}
+
 -- test: 
 dist = torch.Tensor(#classes)
 correct = 0

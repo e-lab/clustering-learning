@@ -106,11 +106,21 @@ end
 
 
 function processLayer(lv, network, data_in, nkernels, oheight, owidth, verbose)
-   data_out = torch.Tensor(data_in:size(1), nkernels, oheight, owidth)
-   for i = nnf1, data_in:size(1) do -- just get a few frames to begin with
+   local data_out = torch.Tensor(data_in:size(1), nkernels, oheight, owidth)
+   local stdc1=0
+   local meac1=0
+   local stdo=0
+   local meao=0
+   for i = nnf1, data_in:size(1) do
       if ( nnf1>1 and lv == 1 ) then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
       else procFrames = data_in[i] end
       data_out[i] = network:forward(procFrames)
+      --stats: 
+      stdc1 = stdc1 + network.modules[1].output:std()
+      meac1 = meac1 + network.modules[1].output:mean()
+      stdo = stdo + network.output:std()
+      meao = meao + network.output:mean()      
+      
       xlua.progress(i, data_in:size(1))
       -- do a live display of the input video and output feature maps 
       if verbose then
@@ -118,7 +128,8 @@ function processLayer(lv, network, data_in, nkernels, oheight, owidth, verbose)
       end
    end
    -- data_out = nil --free memory if needed
-   return data_out
+   return data_out, stdc1/data_in:size(1), meac1/data_in:size(1), 
+   						stdo/data_in:size(1), meao/data_in:size(1)
 end
 
 
