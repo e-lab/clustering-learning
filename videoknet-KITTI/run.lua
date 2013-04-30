@@ -138,14 +138,14 @@ else nfpr = trsize end
 
 function createDataBatch()
    videoData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
-   for i = 1, nfpr do -- just get a few frames to begin with
-      -- perform full LCN
-      if opt.videodata then
+   if opt.videodata then
+      for i = 1, nfpr do -- just get a few frames to begin with
          procFrame = preproc:forward(rawFrame)
          videoData[i] = procFrame
-      else videoData[i] = trainData.data[i]:clone()
       end
+   else videoData = trainData.data
    end
+
    return videoData
 end
 
