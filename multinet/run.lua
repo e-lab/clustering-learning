@@ -91,6 +91,8 @@ opt.hiddens 	 = 64 			-- nb of hidden features for top perceptron (0=linear clas
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'person', 'bg'} -- classes of objects to find
 
+normkernel = image.gaussian1D(7)
+
 -- Preprocessor (normalizer)
 normthres = 1e-1
 preproc = nn.Sequential()
@@ -151,7 +153,7 @@ function createDataBatch()
       videoData[i] = procFrame
       rawFrame = source:forward()
    else 
-   	videoData = trainData.data 
+   	videoData = trainData.data[{{1,nfpr}}] 
    end
    
    return videoData
@@ -196,9 +198,8 @@ if nnf1 > 1 then
 elseif nnf1 == 1 then
 	vnet:add(nn.SpatialConvolution(ivch, nk1, is1, is1))
 end
-vnet:add(nn.Threshold())
 vnet:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
-
+vnet:add(nn.Threshold())
 
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
@@ -237,13 +238,12 @@ if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is
 
 vnet2 = nn.Sequential()
 vnet2:add(nn.SpatialConvolutionMap(cTable2, is2, is2)) -- connex table based on similarity of features
-vnet2:add(nn.Threshold())
 vnet2:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
-
+vnet2:add(nn.Threshold())
 
 -- setup net/ load kernels into network:
 vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels2_ = kernels2:clone():div(nk2/5) -- divide kernels so output of SpatialConv std is ~0.5
+kernels2_ = kernels2:clone():div(nk2/3) -- divide kernels so output of SpatialConv std is ~0.5
 vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 
 ----------------------------------------------------------------------
@@ -283,7 +283,7 @@ vnet3:add(nn.SpatialConvolutionMap(cTable3, is3, is3)) -- connex table based on 
 
 -- setup net/ load kernels into network:
 vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels3_ = kernels3:clone():div(nk3*fanin) -- divide kernels so output of SpatialConv std ~0.5
+kernels3_ = kernels3:clone():div(nk3*2) -- divide kernels so output of SpatialConv std ~0.5
 vnet3.modules[1].weight = kernels3_
 
 ----------------------------------------------------------------------
@@ -358,48 +358,145 @@ print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.
 
 ----------------------------------------------------------------------
 -- Classifier
-model = nn.Sequential()
--- a 2-layer perceptron
-model:add(nn.Tanh())
-model:add(nn.Reshape(cl_nk1))
-model:add(nn.Linear(cl_nk1,cl_nk2))
-model:add(nn.Tanh())
-model:add(nn.Linear(cl_nk2,#classes))
 
--- final stage: log probabilities
-model:add(nn.LogSoftMax())
+if false then
+	-- MLP classifier:
+	model = nn.Sequential()
+	-- a 2-layer perceptron
+	model:add(nn.Tanh())
+	model:add(nn.Reshape(cl_nk1))
+	model:add(nn.Linear(cl_nk1,cl_nk2))
+	model:add(nn.Tanh())
+	model:add(nn.Linear(cl_nk2,#classes))
 
--- Save model
-if opt.save then
-	print('==>  <trainer> saving bare network to '..opt.save)
-	os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-	torch.save(opt.save..'network.net', model)
+	-- final stage: log probabilities
+	model:add(nn.LogSoftMax())
+
+	-- Save model
+	if opt.save then
+		print('==>  <trainer> saving bare network to '..opt.save)
+		os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
+		torch.save(opt.save..'network.net', model)
+	end
+
+	-- verbose
+	print('==>  model:')
+	print(model)
+
+
+	----------------------------------------------------------------------
+	-- Loss: NLL
+	loss = nn.ClassNLLCriterion()
+
+
+	----------------------------------------------------------------------
+	-- load/get dataset
+	print '==> load modules'
+
+	train = require 'train'
+	test  = require 'test'
+
+
+	----------------------------------------------------------------------
+	print '==> training!'
+
+	while true do
+		train(data.trainData)
+		test(data.testData)
+	end
+
+
+else
+	----------------------------------------------------------------------
+	-- DISTANCE CL Classifier:
+
+	-- train:
+	
+	-- code multiple clusters per class:
+	-- split dataset into classes:
+	splitdata = torch.Tensor(#classes, trainData:size()/2, trainData.data:size(2))
+	for i = 1,trainData:size() do
+		splitdata[trainData.labels[i]][torch.ceil(i/2)] = trainData.data[i]
+		xlua.progress(i, trainData:size())
+	end
+	-- now run kmeans on each class:
+	nclusters = 32
+	clusteredclasses = torch.Tensor(#classes, nclusters, trainData.data:size(2))
+	for i = 1,#classes do
+		clusteredclasses[i] = okmeans(splitdata[i], nclusters, nil, 
+				opt.initstd, opt.niter, opt.kmbatchsize, nil, verbose)
+	end
+	
+	
+function SMRmatch(in1, in2, ratio) -- only compares top ratio of highest values
+	local sin1, idxin1 = torch.sort(in1,true)
+	local indextokeep = torch.ceil(ratio*(#in1)[1])
+	local distance = 0
+	for i=1,indextokeep do
+		distance = distance + torch.abs( in1[idxin1[i]] - in2[idxin1[i]] )
+	end
+	return distance
 end
+	
+	
+ 	-- test: 
+	dist = torch.Tensor(#classes, nclusters)
+	correct = 0
+	for i = 1,trainData:size() do
+		local temp = trainData.data[i]
+		--temp = temp - temp:mean() -- remove mean from input data
+		--temp = temp / temp:std()
+		for j=1,#classes do
+			for k=1,nclusters do
+				--dist[j][k] = SMRmatch(temp:reshape((#temp)[1]), clusteredclasses[j][k], 0.75)
+				dist[j][k] = torch.dist(temp, clusteredclasses[j][k])
+			end
+		end
+		max, idx = torch.min(torch.min(dist,2),1)
+		--print(idx[1][1])
+		if ( trainData.labels[i] == idx[1][1] ) then 
+			correct = correct+1 
+		end
+		--xlua.progress(i, testData:size())
+	end
+	print('Final correct percentage on trainData: '.. correct/trainData:size()*100)
+	
+	
+	-- test: 
+	dist = torch.Tensor(#classes, nclusters)
+	correct = 0
+	for i = 1,testData:size() do
+		local temp = testData.data[i]
+		--temp = temp - temp:mean() -- remove mean from input data
+		--temp = temp / temp:std()
+		for j=1,#classes do
+			for k=1,nclusters do
+				dist[j][k] = torch.dist(temp, clusteredclasses[j][k])
+			end
+		end
+		max, idx = torch.min(torch.min(dist,2),1)
+		--print(idx[1][1])
+		if ( testData.labels[i] == idx[1][1] ) then 
+			correct = correct+1 
+		end
+		--xlua.progress(i, testData:size())
+	end
+	print('Final correct percentage on trainData: '.. correct/testData:size()*100)
+	
 
--- verbose
-print('==>  model:')
-print(model)
+	--------
 
+	-- image of features:
+	imaFeats = torch.Tensor(128,128)--trainData.data:size(1), trainData.data:size(2))
+	j=1
+	for i = 1, 256 do --trainData:size() do
+		if trainData.labels[i] == 1 then
+			imaFeats[j] = trainData.data[j]:clone():reshape(128)
+			j = j+1
+		end
+		--xlua.progress(i, trainData:size())
+	end
+	image.display{image=imaFeats, zoom=4}--, symmetric=true}
 
-----------------------------------------------------------------------
--- Loss: NLL
-loss = nn.ClassNLLCriterion()
-
-
-----------------------------------------------------------------------
--- load/get dataset
-print '==> load modules'
-
-train = require 'train'
-test  = require 'test'
-
-
-----------------------------------------------------------------------
-print '==> training!'
-
-while true do
-   train(data.trainData)
-   test(data.testData)
 end
-
 

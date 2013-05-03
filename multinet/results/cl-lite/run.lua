@@ -40,9 +40,9 @@ opt = lapp[[
 	--seed				(default 1)					use fixed seed for randomized initialization
 ]]
 
-opt.quicktest = true	--(default 0)			true = small test, false = full code running
+opt.quicktest = false	--(default 0)			true = small test, false = full code running
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
-opt.videodata = true --	(default 1) 		true = load video file, otherwise ??? data
+opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
 
 opt.initstd = 0.1
 opt.niter = 15
@@ -91,6 +91,8 @@ opt.hiddens 	 = 64 			-- nb of hidden features for top perceptron (0=linear clas
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'person', 'bg'} -- classes of objects to find
 
+normkernel = image.gaussian1D(7)
+
 -- Preprocessor (normalizer)
 normthres = 1e-1
 preproc = nn.Sequential()
@@ -123,13 +125,13 @@ if opt.videodata then
    source.current = 1 -- rewind video frames
 
 else 
-   print '==> loading ??? training-set:'
-	--dofile('sf-dataset.lua')
+   print '==> loading the INRIA Person dataset:'
+	data  = require 'data-person'
    
    -- input image dateaset params:
-   ivch = trainData[1][1]:size(1) -- channels
-   ivhe = trainData[1][1]:size(2) -- height
-   ivwi = trainData[1][1]:size(3) -- width
+   ivch = trainData.data[1]:size(1) -- channels
+   ivhe = trainData.data[1]:size(2) -- height
+   ivwi = trainData.data[1]:size(3) -- width
    
 end
 
@@ -143,14 +145,17 @@ else nfpr = 200 end
 
 function createDataBatch()
    videoData = torch.Tensor(nfpr,ivch,ivhe,ivwi)
-   for i = 1, nfpr do -- just get a few frames to begin with
-      -- perform full LCN
-      if opt.videodata then procFrame = preproc:forward(rawFrame) 
-      else procFrame = preproc:forward(trainData[i][1]:clone())
+   if opt.videodata then
+   	for i = 1, nfpr do -- just get a few frames from a video as dataset:
+      	-- perform full LCN
+      	procFrame = preproc:forward(rawFrame) 
       end
       videoData[i] = procFrame
-      if opt.videodata then rawFrame = source:forward() end
+      rawFrame = source:forward()
+   else 
+   	videoData = trainData.data[{{1,nfpr}}] 
    end
+   
    return videoData
 end
 
@@ -193,9 +198,8 @@ if nnf1 > 1 then
 elseif nnf1 == 1 then
 	vnet:add(nn.SpatialConvolution(ivch, nk1, is1, is1))
 end
-vnet:add(nn.Threshold())
 vnet:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
-
+vnet:add(nn.Threshold())
 
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
@@ -205,11 +209,11 @@ vnet.modules[1].weight = kernels1_:reshape(nk1,ivch,is1,is1)
 
 ----------------------------------------------------------------------
 print '==> process video throught 1st layer:'
-videoData2 = processLayer(nlayer, vnet, videoData, nk1, ovhe, ovwi)
+videoData2, stdc1, meac1, stdo, meao  = processLayer(nlayer, vnet, videoData, nk1, ovhe, ovwi)
 
 --report some statistics:
-print('1st layer conv out. std: '..vnet.modules[1].output:std()..' and mean: '..vnet.modules[1].output:mean())
-print('1st layer output. std: '..vnet.output:std()..' and mean: '..vnet.output:mean())
+print('1st layer conv out. std: '..stdc1..' and mean: '..meac1)
+print('1st layer output. std: '..stdo..' and mean: '..meao)
 
 
 
@@ -222,7 +226,7 @@ ovwi2 = (ovwi-is2+1)/ss2 -- output video feature width
 
 -- OUTPUT Co-occurence CONNEX MODEL:
 print '==> Computing connection tables based on co-occurence of features: [nk1*feat_group*(fanin+fanin*2)]'
-cTable2, kernels2 = createCoCnx(nlayer, videoData2, nk1, feat_group, fanin, 50, nnf2, is2, false)
+cTable2, kernels2 = createCoCnx(nlayer, videoData2, nk1, feat_group, fanin, opt.nsamples/10, nnf2, is2, false)
 nk2 = cTable2:max()
 nk = nk2
 if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is2), 
@@ -234,24 +238,21 @@ if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is
 
 vnet2 = nn.Sequential()
 vnet2:add(nn.SpatialConvolutionMap(cTable2, is2, is2)) -- connex table based on similarity of features
-vnet2:add(nn.Threshold())
 vnet2:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
-
+vnet2:add(nn.Threshold())
 
 -- setup net/ load kernels into network:
 vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels2_ = kernels2:clone():div(nk2/2) -- divide kernels so output of SpatialConv is about ~1 or more
+kernels2_ = kernels2:clone():div(nk2/3) -- divide kernels so output of SpatialConv std is ~0.5
 vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 
 ----------------------------------------------------------------------
 print '==> process video throught 2nd layer:'
-print 'Initial frames will be blank because of the VolConv on 1st layer~'
-
-videoData3 = processLayer(nlayer, vnet2, videoData2, nk2, ovhe2, ovwi2)
+videoData3, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet2, videoData2, nk2, ovhe2, ovwi2)
 
 --report some statistics:
-print('2nd layer conv out. std: '..vnet2.modules[1].output:std()..' and mean: '..vnet2.modules[1].output:mean())
-print('2nd layer output. std: '..vnet2.output:std()..' and mean: '..vnet2.output:mean())
+print('2nd layer conv out. std: '..stdc1..' and mean: '..meac1)
+print('2nd layer output. std: '..stdo..' and mean: '..meao)
 
 
 ----------------------------------------------------------------------
@@ -260,13 +261,13 @@ nlayer = 3
 nnf3 = 1  -- just one frames goes into layer 3
 feat_group = 8 
 cvstepsize = 1
---ovhe3 = (ovhe2-is+1)/poolsize/cvstepsize -- output video feature height
---ovwi3 = (ovwi2-is+1)/poolsize/cvstepsize -- output video feature width
+ovhe3 = (ovhe2-is3+1) -- output video feature height
+ovwi3 = (ovwi2-is3+1) -- output video feature width
 
 
 -- OUTPUT Co-occurence CONNEX MODEL:
 print '==> Computing connection tables based on co-occurence of features'
-cTable3, kernels3 = createCoCnx(nlayer, videoData3, nk2, feat_group, fanin, 50, nnf3, is3, false)
+cTable3, kernels3 = createCoCnx(nlayer, videoData3, nk2, feat_group, fanin, opt.nsamples/10, nnf3, is3, false)
 nk3 = cTable3:max()
 --nk = nk3
 if opt.display then image.display{image=kernels3, padding=2, padding=2, symmetric=true, 
@@ -282,8 +283,16 @@ vnet3:add(nn.SpatialConvolutionMap(cTable3, is3, is3)) -- connex table based on 
 
 -- setup net/ load kernels into network:
 vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels3_ = kernels3:clone():div(nk3*fanin) -- divide kernels so output of SpatialConv std ~0.5
+kernels3_ = kernels3:clone():div(nk3*2) -- divide kernels so output of SpatialConv std ~0.5
 vnet3.modules[1].weight = kernels3_
+
+----------------------------------------------------------------------
+print '==> process video throught 3rd layer:'
+videoData4, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet3, videoData3, nk3, ovhe3, ovwi3) -- just a few samples
+
+--report some statistics:
+print('3rd layer conv out. std: '..stdc1..' and mean: '..meac1)
+print('3rd layer output. std: '..stdo..' and mean: '..meao)
    
    
 ---------------------------------------------------------------------- 
@@ -321,7 +330,7 @@ end
 --
 
 print "==> loading dataset:"
-data  = require 'data-person'
+if not data then data  = require 'data-person' end
 
 
 print "==> processing dataset with videoknet:"
