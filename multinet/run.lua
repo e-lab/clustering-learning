@@ -495,7 +495,7 @@ else
 	-- train clusters on each trainData category separately:
 	results = {}
 	nclusters = 32 -- number of clusters per class
-	for fracDataset = 0, 1, 0.1 do
+	for fracDataset = 0.1, 1, 0.1 do
 		clusteredClasses = trainCLClassifier(fracDataset,nclusters)
 		-- test on train and test sets:
 		ctr, cte = testCLnet(fracDataset, clusteredClasses, nclusters)
