@@ -437,9 +437,10 @@ function testCLnet(fracDataSet, clusteredClasses, nclusters)
 		end
 		--xlua.progress(i, limitDataTe)
 	end
+	
 	print('Final correct percentage on testData: '.. correctTe/limitDataTe*100)
 	
-	return correctTr,correctTe
+	return correctTr/limitDataTr*100,correctTe/limitDataTe*100
 end
 
 if false then
@@ -493,16 +494,21 @@ else
 	-- DISTANCE CL Classifier:
 
 	-- train clusters on each trainData category separately:
-	results = {}
+	results = {}--torch.Tensor(20,2)
 	nclusters = 32 -- number of clusters per class
+	i=1
 	for fracDataset = 0.1, 1, 0.1 do
 		clusteredClasses = trainCLClassifier(fracDataset,nclusters)
 		-- test on train and test sets:
 		ctr, cte = testCLnet(fracDataset, clusteredClasses, nclusters)
 		table.insert(results, {ctr, cte})
+		--results[i]=torch.Tensor({ctr, cte})
+		i = i+1
 	end
 
-
+	require 'csv'
+	csv.save('multinet_results.txt', results)
+	
 	--------
 
 	-- image of features:
