@@ -60,8 +60,8 @@ function trainLayer(nlayer, invdata, nsamples, kernels, nk, nnf, is, verbose)
    --local counts = torch.Tensor(nk, ivch, 1)
    --kernels = kmec(data, nk, opt.initstd, opt.niter, opt.kmbatchsize, cb, true) -- Euge kmeans (not good init yet)
    --kernels = unsup.kmeans(data, nk, opt.initstd, opt.niter, opt.kmbatchsize, cb, true)
-   --kernels, counts = okmeans(data, nk, nil, opt.initstd, opt.niter, opt.kmbatchsize, cb, verbose)
-    kernels, counts = topokmeans(data, nk, nil, opt.initstd, opt.niter, opt.kmbatchsize, cb, verbose)
+   kernels, counts = okmeans(data, nk, nil, opt.initstd, opt.niter, opt.kmbatchsize, cb, verbose)
+   --kernels, counts = topokmeans(data, nk, nil, opt.initstd, opt.niter, opt.kmbatchsize, cb, verbose)
 --   for i = 1, ivch do
 --      kernelss, countss = okmeans(data[{{},{i}}]:reshape(nsamples,nnf*is*is), nk, nil, opt.initstd, opt.niter, opt.kmbatchsize, cb, verbose) -- online version to upadte filters
 --      kernels[{{},{i}}] = kernelss:reshape(nk,1,nnf, is, is)

@@ -13,7 +13,6 @@ require 'image'
 require 'nnx'
 require 'optim'
 require 'online-kmeans' -- allow you to re-train k-means kernels
-require 'topo-kmeans'
 require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
 require 'unsup'
