@@ -13,6 +13,7 @@ require 'image'
 require 'nnx'
 require 'optim'
 require 'online-kmeans' -- allow you to re-train k-means kernels
+require 'topo-kmeans'
 require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
 require 'unsup'
@@ -182,7 +183,7 @@ ovwi = (ivwi-is1+1)/ss1 -- output video feature width
 
  
 -- AND/OR model or FULL CONNECT MODEL:
-kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is1, false) 
+kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is1, true) 
 
 if opt.display then image.display{image=kernels1:reshape(nk1,ivch,is1,is1),
 		padding=2, symmetric=true, nrow = 8, zoom=2, legend = 'Layer 1 filters'} end
@@ -428,12 +429,13 @@ else
 	end
 	
 	
-function SMRmatch(in1, in2, ratio) -- only compares top ratio of highest values
-	local sin1, idxin1 = torch.sort(in1,true)
+	-- this function does not work great...
+function SMRmatch(in1, in2, ratio) -- only compares top ratio of highest values -- in2=template!
+	local sin2, idxin2 = torch.sort(in2,true) -- we suppose in2 is the template (averaged sample)
 	local indextokeep = torch.ceil(ratio*(#in1)[1])
 	local distance = 0
 	for i=1,indextokeep do
-		distance = distance + torch.abs( in1[idxin1[i]] - in2[idxin1[i]] )
+		distance = distance + torch.abs( in1[idxin2[i]] - in2[idxin2[i]] )
 	end
 	return distance
 end
@@ -481,7 +483,7 @@ end
 		end
 		--xlua.progress(i, testData:size())
 	end
-	print('Final correct percentage on trainData: '.. correct/testData:size()*100)
+	print('Final correct percentage on testData: '.. correct/testData:size()*100)
 	
 
 	--------
