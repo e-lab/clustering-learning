@@ -263,6 +263,9 @@ if opt.visualize then
 end
 
 
+trainData.size = function() return trsize end
+testData.size = function() return tesize end
+
 -- Exports
 return {
    trainData = trainData,
