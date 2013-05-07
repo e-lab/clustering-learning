@@ -5,7 +5,7 @@
 *.dvi
 *.log
 *.jpg
-.synctex.gz
+*.synctex.gz
 .out
 session.txt
 /paper/clustering.log
