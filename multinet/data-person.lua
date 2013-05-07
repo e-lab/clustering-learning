@@ -89,16 +89,16 @@ else
 
    -- load person data:
    for i = 1, trainImaNumber, 2 do
-      imatoload = image.loadPNG(trainDir..ls(trainDir)[i],ivch)
-      trainData.data[i] = image.crop(imatoload, cropTrX-desImaX/2, cropTrY-desImaY/2, 
+      img = image.loadPNG(trainDir..ls(trainDir)[i],ivch)
+      trainData.data[i] = image.crop(img, cropTrX-desImaX/2, cropTrY-desImaY/2, 
       cropTrX+desImaX/2, cropTrY+desImaY/2):clone()
       trainData.labels[i] = labelPerson
 
       -- load background data:
-      imatoload = source:forward()
+      img = source:forward()
       local x = math.random(1, ivwi-desImaX+1)
       local y = math.random(15, ivhe-desImaY+1-30) -- added # to get samples more or less from horizon
-      trainData.data[i+1] = imatoload[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
+      trainData.data[i+1] = img[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
       trainData.labels[i+1] = labelBg
    end
    -- display some examples:
@@ -113,24 +113,24 @@ else
 
    -- load person data:
    for i = 1, testImaNumber, 2 do
-      imatoload = image.loadPNG(testDir..ls(testDir)[i],ivch)
-      testData.data[i] = image.crop(imatoload, cropTeX-desImaX/2, cropTeY-desImaY/2, 
+      img = image.loadPNG(testDir..ls(testDir)[i],ivch)
+      testData.data[i] = image.crop(img, cropTeX-desImaX/2, cropTeY-desImaY/2, 
       cropTeX+desImaX/2, cropTeY+desImaY/2):clone()
       testData.labels[i] = labelPerson
 
       -- load background data:
-      imatoload = source:forward()
+      img = source:forward()
       local x = math.random(1,ivwi-desImaX+1)
       local y = math.random(15,ivhe-desImaY+1-30) -- added # to get samples more or less from horizon
-      testData.data[i+1] = imatoload[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
+      testData.data[i+1] = img[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
       testData.labels[i+1] = labelBg
    end
    -- display some examples:
    image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
    --save created dataset:
-   torch.save('train.t7',trainData)
-   torch.save('test.t7',testData)
+   torch.save('../../datasets/INRIAPerson/train.t7',trainData)
+   torch.save('../../datasets/INRIAPerson/test.t7',testData)
 end
 
 
@@ -261,8 +261,8 @@ if opt.visualize then
 end
 
 
-trainData.size = function() return trsize end
-testData.size = function() return tesize end
+-- trainData.size = function() return trsize end
+-- testData.size = function() return tesize end
 
 -- Exports
 return {
