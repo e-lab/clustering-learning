@@ -28,10 +28,8 @@ if not opt then
 end
 
 ----------------------------------------------------------------------
--- 
 
 function ls(path) return sys.split(sys.ls(path),'\n') end -- alf ls() nice function!
-
 
 ----------------------------------------------------------------------
 -- load or generate new dataset:
