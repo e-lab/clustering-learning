@@ -13,3 +13,4 @@ session.txt
 *.t7
 *.net
 scratch/
+scratch*
