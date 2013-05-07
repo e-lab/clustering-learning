@@ -132,7 +132,7 @@ model:add(nn.LogSoftMax())
 -- Save model
 if opt.save then
    print('==>  <trainer> saving bare network to '..opt.save)
-   os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
+   os.execute('mkdir -p ' .. opt.save)
    torch.save(opt.save..'network.net', model)
 end
 
