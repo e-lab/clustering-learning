@@ -6,10 +6,10 @@
 *.log
 *.jpg
 *.synctex.gz
-.out
+*.out
 session.txt
-/paper/clustering.log
-/datasets
+paper/clustering.log
+datasets/
 *.t7
 *.net
 scratch/
