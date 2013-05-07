@@ -1,5 +1,5 @@
 
--- topo test
+-- topo test Spring 2013
 
 ----------------------------------------------------------------------
 -- E. Culurciello Fall 2012
@@ -7,13 +7,10 @@
 -- simulate the Online Learner (OL) network as a robotic vision template
 ----------------------------------------------------------------------
 
-import 'torch'
 require 'image'
 require 'unsup'
 require 'nnx'
 require 'topo-kmeans'
---require 'eex'
---require 'MulAnySize'
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -24,13 +21,12 @@ cmd:option('-datafile', 'http://data.neuflow.org/data/tr-berkeley-N5K-M56x56-lcn
 cmd:option('-visualize', true, 'display kernels')
 cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 7, 'size of each input patches') -- OL: 7x7
-cmd:option('-nkernels1', 64, 'number of kernels 1st layer') -- OL: 16
+cmd:option('-inputsize', 9, 'size of each input patches') -- OL: 7x7
+cmd:option('-nkernels1', 256, 'number of kernels 1st layer') -- OL: 16
 cmd:option('-niter1', 15, 'nb of k-means iterations')
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 10*1000, 'nb of random training samples')
 cmd:option('-initstd1', 0.1, 'standard deviation to generate random initial templates')
-cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to rest of file:
 
@@ -107,10 +103,10 @@ print '==> running k-means'
  function cb (kernels1)
     if opt.visualize then
        win1 = image.display{image=kernels1:reshape(nk1,is,is), padding=2, symmetric=true, 
-       zoom=4, win=win1, nrow=math.floor(math.sqrt(nk1)), legend='1st layer filters'}
+       zoom=2, win=win1, nrow=math.floor(math.sqrt(nk1)), legend='1st layer filters'}
     end
 end                    
-kernels1 = topokmeans(data1, nk1, nil, opt.initstd1, opt.niter1, opt.batchsize, cb, true)
+kernels1 = topokmeans(data1, nk1, nil, opt.initstd1, opt.niter1, 'topo+', cb, true)
  
 -- clear nan kernels if kmeans initstd is not right!
 for i=1,nk1 do   
@@ -120,13 +116,13 @@ for i=1,nk1 do
    end
  
    -- normalize kernels to 0 mean and 1 std:  
-   --kernels1[i]:add(-kernels1[i]:mean())
-   --kernels1[i]:div(kernels1[i]:std())
+	kernels1[i]:add(-kernels1[i]:mean())
+	kernels1[i]:div(kernels1[i]:std())
 end
 
 -- visualize final kernels:
 image.display{image=kernels1:reshape(nk1,is,is), padding=2, symmetric=true, 
-       zoom=4, win=win1, nrow=math.floor(math.sqrt(nk1)), legend='1st layer filters'}
+       zoom=2, win=win1, nrow=math.floor(math.sqrt(nk1)), legend='1st layer filters'}
 
 
 
