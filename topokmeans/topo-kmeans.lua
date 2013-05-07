@@ -1,20 +1,19 @@
 
 -- Topographic k-means onld stye: no batch - May 4th 2013
 -- supposes a k = pow(2)
-
 -- E. Culurciello
--- The k-means algorithm. ONLINE VERSION by E. Culurciello Jan 2013
---
+
 --   > x: is supposed to be an MxN matrix, where M is the nb of samples and each sample is N-dim
 --   > k: is the number of kernels
 --   > niter: the number of iterations
---   > batchsize: the batch size [large is good, to parallelize matrix multiplications]
+--   > topo = nil for no topographic arrangement, 'topo+' for NSWE and 'topo#' for all 8 values around pix
 --   > callback: optional callback, at each iteration end
 --   > verbose: prints a progress bar...
 --
 --   < returns the k means (centroids)
 --
-function topokmeans(x, k, centroids, std, niter, batchsize, callback, verbose)
+
+function topokmeans(x, k, centroids, std, niter, topo, callback, verbose)
    -- args
    --batchsize = batchsize or 1000
    std = std or 0.1 -- should be:  x:std(2):std()
@@ -35,7 +34,6 @@ function topokmeans(x, k, centroids, std, niter, batchsize, callback, verbose)
       if verbose then xlua.progress(i,niter) end
 
       -- init some variables
-      --local summation = torch.zeros(k,ndims)
       local counts = torch.ones(k)
 
       -- process
@@ -55,8 +53,7 @@ function topokmeans(x, k, centroids, std, niter, batchsize, callback, verbose)
       		counts[a] = counts[a] + 1
       		
       		-- also average topographically to neighbors:
-      		local topo = false
-      		if topo  then
+      		if (topo == 'topo+' or topo == 'topo#') then
 					local sqk = torch.sqrt(k)
 
 					-- h+
@@ -74,16 +71,31 @@ function topokmeans(x, k, centroids, std, niter, batchsize, callback, verbose)
 					-- v-
 					local e = ((a-1)-sqk)%k+1
 					centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] + 1)
-					counts[e] = counts[e] + 1     		
-      		
-      			--print(a,b,c,d,e)
+					counts[e] = counts[e] + 1
+					
+					if topo == 'topo#' then					
+						-- v+-
+						local d = ((a-1)+sqk-1)%k+1
+						centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] + 1)
+						counts[d] = counts[d] + 1
+						-- v-+
+						local e = ((a-1)-sqk+1)%k+1
+						centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] + 1)
+						counts[e] = counts[e] + 1 
+						-- v++
+						local d = ((a-1)+sqk+1)%k+1
+						centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] + 1)
+						counts[d] = counts[d] + 1
+						-- v--
+						local e = ((a-1)-sqk-1)%k+1
+						centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] + 1)
+						counts[e] = counts[e] + 1      		
+      			end
       		end
-      	end
-      	--callback(centroids)
---      	require 'sys'
---      	sys.sleep(0.5)
+      	end      	
       end
-      
+
+-- test matrix:
 --1	2	3	4	5	6	7	8
 --9	10	11	12	13	14	15	16
 --17	18	19	20	21	22	23	24
