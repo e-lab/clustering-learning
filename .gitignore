@@ -14,3 +14,5 @@ datasets/
 *.net
 scratch/
 *.swp
+results*
+results/

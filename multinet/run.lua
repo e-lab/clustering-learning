@@ -12,11 +12,11 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
-require 'online-kmeans' -- allow you to re-train k-means kernels
 require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
-require 'unsup'
-require 'topo-kmeans'
+require 'online-kmeans' -- allow you to re-train k-means kernels
+--require 'unsup' -- standard kmeans
+--require 'topo-kmeans' -- new topographic disc kmeans (gives about same results...)
 
 ----------------------------------------------------------------------
 print '==> processing options'
@@ -87,8 +87,8 @@ is0,is1,is2,is3 = 15,7,7,7 	-- size of kernels
 ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
 scales          = 1 				-- scales
 fanin 			 = 2 				-- createCoCnxTable creates also 2*fanin connections
-feat_group 		 = 32 			--features per group (32=best in CIFAR, nk1=32, fanin=2)
-opt.hiddens 	 = 64 			-- nb of hidden features for top perceptron (0=linear classifier)
+feat_group 		 = 16 			--features per group (16=best in INRIA nk1=32, fanin=2)
+opt.hiddens 	 = 128 			-- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'person', 'bg'} -- classes of objects to find
 

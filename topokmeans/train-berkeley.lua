@@ -102,7 +102,7 @@ image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches 
 print '==> running k-means'
  function cb (kernels1)
     if opt.visualize then
-       win1 = image.display{image=kernels1:reshape(nk1,is,is), padding=2, symmetric=true, 
+       win1 = image.display{image=kernels1:reshape(nk1,is,is), padding=1, symmetric=true, 
        zoom=2, win=win1, nrow=math.floor(math.sqrt(nk1)), legend='1st layer filters'}
     end
 end                    
@@ -121,7 +121,7 @@ for i=1,nk1 do
 end
 
 -- visualize final kernels:
-image.display{image=kernels1:reshape(nk1,is,is), padding=2, symmetric=true, 
+image.display{image=kernels1:reshape(nk1,is,is), padding=1, symmetric=true, 
        zoom=2, win=win1, nrow=math.floor(math.sqrt(nk1)), legend='1st layer filters'}
 
 
