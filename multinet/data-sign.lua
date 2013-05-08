@@ -14,10 +14,13 @@ function ls(path) return sys.split(sys.ls(path),'\n') end -- alf ls() nice funct
 -- Parameters ----------------------------------------------------------------
 path = '../../datasets/GTSRB/Final_Training/Images/'
 --sign = sign or 2
+
+-- Main program -------------------------------------------------------------
+print 'Visualising the dataset'
 for sign = 1, #ls(path) do
 
    -- Showing a couple of images
-   for i = 1,#ls(path .. ls(path)[sign] .. '/*.png'),5 do
+   for i = 1,#ls(path .. ls(path)[sign] .. '/*.png'),1 do
       img = image.load(ls(path .. ls(path)[sign] .. '/*.png')[i])
       win = image.display{image=img,zoom=10,win=win}
       --io.read()
