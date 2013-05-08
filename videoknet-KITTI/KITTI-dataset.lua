@@ -21,10 +21,6 @@ cmd:option('-threads', 8, 'threads')
 cmd:text()
 opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
-torch.setdefaulttensortype('torch.DoubleTensor')
---if not qt then
---   opt.visualize = false
---end
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
@@ -42,33 +38,31 @@ print '==> test KITTI dataset'
 
 ----------------------------------------------------------------------
 print '==> load KITTI tracklets'
-tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0001/tracklet_labels.xml')
-tracklet = parseXML(tracklet_labels)
+local tracklet_labels = xml.load('../../datasets/KITTI/2011_09_26_drive_0005/tracklet_labels.xml')
+local tracklet = parseXML(tracklet_labels)
 
 
 
 ----------------------------------------------------------------------
 print '==> loading and processing (local-contrast-normalization) of dataset'
 
-dspath = '../../datasets/KITTI/2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
+dspath = '../../datasets/KITTI/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
 imgi = 0
 rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi)..'.png'))
-print(rawFrame:size())
-
 
 
 win = image.display{image=rawFrame, zoom=1}
-videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
+local videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
 for imgi = 1,videoframes do
-	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi-1)..'.png'))
+	local rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi-1)..'.png'))
 	image.display{image=rawFrame, win=win, zoom=0.5}
 
 	-- get bounding boxes from tracklets:
-	detections = {}
+	local detections = {}
   
     for k=1, tracklet.count do
-      first = tonumber(tracklet.item[k].first_frame)
-      count = tonumber(tracklet.item[k].poses.count)+first
+      local first = tonumber(tracklet.item[k].first_frame)
+      local count = tonumber(tracklet.item[k].poses.count)+first
 	  if  first<imgi and imgi<=count then
 
         w=tracklet.item[k].w
@@ -95,44 +89,4 @@ for imgi = 1,videoframes do
    end
 sys.sleep(0.5)
 end
-
-win = image.display{image=rawFrame, zoom=1}
-videoframes = #sys.dir(dspath)-2 -- #sys.dir(dspath) == total number of frames in video dump (minum . and ..)
-for imgi = 1,videoframes do
-	rawFrame = image.loadPNG(tostring(dspath..string.format("%010u", imgi-1)..'.png'))
-	image.display{image=rawFrame, win=win, zoom=0.5}
-
-	-- get bounding boxes from tracklets:
-	detections = {}
-  
-    for k=1, tracklet.count do
-      first = tonumber(tracklet.item[k].first_frame)
-      count = tonumber(tracklet.item[k].poses.count)+first
-	  if  first<imgi and imgi<=count then
-
-        w=tracklet.item[k].w
-        h=tracklet.item[k].h
-        l=tracklet.item[k].l
-        box = kitti2Dbox(tracklet.item[k].poses.item[imgi-first])
-        box.objectType = tracklet.item[k].objectType
-        table.insert(detections, box)-- print(detections) 
-	   end
-    end
-
-	for i, detect in ipairs(detections) do
-   	if (detect.objectType == 'Car') then  win.painter:setcolor('green')
-     		elseif (detect.objectType == 'Cyclist') then  win.painter:setcolor('blue')
-     		else win.painter:setcolor('red') 
-		end
-	end
- 
-     win.painter:rectangle(math.floor(detect.x1-1), detect.y1-1, detect.x2-detect.x1+1, detect.y2-detect.y1+1)
-     win.painter:stroke()
-     win.painter:setfont(qt.QFont{serif=false,italic=false,size=16})
-     win.painter:moveto(detect.x1, detect.y1)
-     win.painter:show(detect.objectType)
-     
-     sys.sleep(0.5)
-end
-
 
