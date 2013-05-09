@@ -72,6 +72,7 @@ network = nn.Sequential()
 network = torch.load(opt.network):float()
 network_fov = 46
 network_sub = 4
+is0 = 15-- gauussian kernel is 15 in training script
 
 -- Preprocessor (normalizer)
 normthres = 1e-1
@@ -138,6 +139,8 @@ function process()
    end
 
    -- (7) clean up results
+   a=0
+   k=0
    detections = {}
    for i,res in ipairs(rawresults) do
       local scale = res[3]
@@ -145,7 +148,22 @@ function process()
       local y = res[2]*network_sub/scale
       local w = network_fov/scale
       local h = network_fov/scale
-      detections[i] = {x=x, y=y, w=w, h=h}
+      --detections[i] = {x=x, y=y, w=w, h=h} -- below is rectangles cleanup from Ayse:s
+      for m=1, k do
+    		if (detections[m].x<=x) and x<=(detections[m].x+detections[m].w) and (detections[m].y<=y) and (y<=(detections[m].y+detections[m].h)) then 
+            a=1								  			
+			end
+	   end   
+	   for m=1, k do 
+			if (detections[m].x>=x)and (x+w)>=detections[m].x and (detections[m].y>=y) and (y + h)>=detections[m].y  then 
+             a=1						
+		 	end
+	   end
+      if (a==0) then	
+	  		k=k+1	
+      	detections[k] = {x=x, y=y, w=w, h=h}
+   	end
+      a=0
    end
 end
 
