@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
--- Loading street signals
+-- Loading street signs
 ------------------------------------------------------------------------------
 -- Alfredo Canziani May 2013
 ------------------------------------------------------------------------------
@@ -7,23 +7,37 @@
 -- Requires ------------------------------------------------------------------
 require 'image'
 require 'sys'
+require 'pl'
+require 'eex'
 
--- Useful functions ----------------------------------------------------------
-function ls(path) return sys.split(sys.ls(path),'\n') end -- alf ls() nice function!
+-- Exporting functions to the global namespace -------------------------------
+ls = eex.ls
+
+-- Parsing the command line --------------------------------------------------
+if not opt then
+   print '==> Processing options'
+   opt = lapp [[
+   --playDataset visualise the whole signs dataset
+]]
+end
 
 -- Parameters ----------------------------------------------------------------
-path = '../../datasets/GTSRB/Final_Training/Images/'
---sign = sign or 2
+ds = eex.datasetsPath()
+path = ds .. 'GTSRB/Final_Training/Images/'
+print(path)
 
 -- Main program -------------------------------------------------------------
-print 'Visualising the dataset'
-for sign = 1, #ls(path) do
+-- Play the dataset, if requested
+if opt.playDataset then
+   print 'Visualising the dataset'
+   for sign = 1, #ls(path) do
 
-   -- Showing a couple of images
-   for i = 1,#ls(path .. ls(path)[sign] .. '/*.png'),1 do
-      img = image.load(ls(path .. ls(path)[sign] .. '/*.png')[i])
-      win = image.display{image=img,zoom=10,win=win}
-      --io.read()
+      -- Showing a couple of images
+      for i = 1,#ls(path .. ls(path)[sign] .. '/*.png'),1 do
+         img = image.load(ls(path .. ls(path)[sign] .. '/*.png')[i])
+         win = image.display{image=img,zoom=10,win=win}
+         --io.read()
+      end
+
    end
-
 end
