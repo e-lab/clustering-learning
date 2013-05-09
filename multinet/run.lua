@@ -445,18 +445,17 @@ function testCLnet(fracDataSet, clusteredClasses, nclusters)
 end
 
 if true then
-	trainNet = true
+	trainNet = false
 	if trainNet then
 		model = nn.Sequential()
 		model:add(nn.Tanh())
+		--model:add(nn.Reshape(cl_nk1))
 		model:add(nn.SpatialLinear(cl_nk1,#classes))
-		
-		-- retrieve parameters and gradients
-		parameters,gradParameters = model:getParameters()
+		-- final stage: log probabilities
+		model:add(nn.LogSoftMax())
 
 		-- training criterion: a simple Mean-Square Error
-		loss = nn.MSECriterion()	
-		loss.sizeAverage = true
+		loss = nn.ClassNLLCriterion()
 	else
 		-- MLP classifier:
 		model = nn.Sequential()
@@ -492,11 +491,16 @@ if true then
 		test(data.testData)
 	end
 	
-	-- Save model
+	-- Save model for demos:
 	if opt.save then
+	
+		-- replace classifier (2nd module) by SpatialClassifier
+		sclassifier = nn.SpatialClassifier(model)
+		tnet:add(sclassifier)	
+		
 		print('==>  <trainer> saving bare network to '..opt.save)
 		os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-		torch.save(opt.save..'network.net', model)
+		torch.save(opt.save..'demo.net', tnet)
 	end
 
 else
