@@ -444,35 +444,38 @@ function testCLnet(fracDataSet, clusteredClasses, nclusters)
 	return correctTr/limitDataTr*100,correctTe/limitDataTe*100
 end
 
-if false then
-	-- MLP classifier:
-	model = nn.Sequential()
-	-- a 2-layer perceptron
-	model:add(nn.Tanh())
-	model:add(nn.Reshape(cl_nk1))
-	model:add(nn.Linear(cl_nk1,cl_nk2))
-	model:add(nn.Tanh())
-	model:add(nn.Linear(cl_nk2,#classes))
+if true then
+	trainNet = true
+	if trainNet then
+		model = nn.Sequential()
+		model:add(nn.Tanh())
+		model:add(nn.SpatialLinear(cl_nk1,#classes))
+		
+		-- retrieve parameters and gradients
+		parameters,gradParameters = model:getParameters()
 
-	-- final stage: log probabilities
-	model:add(nn.LogSoftMax())
-
-	-- Save model
-	if opt.save then
-		print('==>  <trainer> saving bare network to '..opt.save)
-		os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-		torch.save(opt.save..'network.net', model)
+		-- training criterion: a simple Mean-Square Error
+		loss = nn.MSECriterion()	
+		loss.sizeAverage = true
+	else
+		-- MLP classifier:
+		model = nn.Sequential()
+		-- a 2-layer perceptron
+		model:add(nn.Tanh())
+		model:add(nn.Reshape(cl_nk1))
+		model:add(nn.Linear(cl_nk1,cl_nk2))
+		model:add(nn.Tanh())
+		model:add(nn.Linear(cl_nk2,#classes))
+		-- final stage: log probabilities
+		model:add(nn.LogSoftMax())
+		
+		-- Loss: NLL
+		loss = nn.ClassNLLCriterion()
 	end
 
 	-- verbose
 	print('==>  model:')
 	print(model)
-
-
-	----------------------------------------------------------------------
-	-- Loss: NLL
-	loss = nn.ClassNLLCriterion()
-
 
 	----------------------------------------------------------------------
 	-- load/get dataset
@@ -481,13 +484,19 @@ if false then
 	train = require 'train'
 	test  = require 'test'
 
-
 	----------------------------------------------------------------------
 	print '==> training!'
 
 	while true do
 		train(data.trainData)
 		test(data.testData)
+	end
+	
+	-- Save model
+	if opt.save then
+		print('==>  <trainer> saving bare network to '..opt.save)
+		os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
+		torch.save(opt.save..'network.net', model)
 	end
 
 else
