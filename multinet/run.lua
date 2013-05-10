@@ -46,7 +46,7 @@ opt.plot = false -- because otherwise it would be a string...
 opt.quicktest = false	--(default 0)			true = small test, false = full code running
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
 opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
-opt.colorbypass = true
+opt.colorbypass = false -- still under development
 
 opt.initstd = 0.1
 opt.niter = 15
