@@ -18,11 +18,12 @@ ls = eex.ls
 if not opt then
    print '==> Processing options'
    opt = lapp [[
-   --playDataset visualise the whole signs dataset
-   --firstFrame (default 21)
-   --lastFrame  (default 30)
-   -h, --height (default 46)
-   -w, --width (default 46)
+       --playDataset                     visualise the whole signs dataset
+       --firstFrame         (default 21)
+       --lastFrame          (default 30)
+   -h, --height             (default 46)
+   -w, --width              (default 46)
+       --maxNbPhysicalSigns (default 75)
 ]]
 end
 
@@ -35,9 +36,11 @@ width = opt.width
 -- Main program -------------------------------------------------------------
 print '==> creating a new dataset from raw files:'
 totNbSign = 0
+nbSign = {}
 for i = 1, #ls(path) do
-   nbSign = #ls(path..ls(path)[i]..'/*.png')/30
-   totNbSign = totNbSign + nbSign
+   nbSign[i] = #ls(path..ls(path)[i]..'/*.png')/30
+   nbSign[i] = (nbSign[i] < opt.maxNbPhysicalSigns) and nbSign[i] or opt.maxNbPhysicalSigns
+   totNbSign = totNbSign + nbSign[i]
 end
 dsSize = totNbSign * (opt.lastFrame - opt.firstFrame + 1)
 
@@ -50,8 +53,7 @@ dataset = {
 -- Load, crop and resize image
 idx = 0
 for i = 1, #ls(path) do -- loop over different signs type
-   nbSign = #ls(path..ls(path)[i]..'/*.png')/30
-   for j = 1, nbSign do -- loop over different sample of same sign type
+   for j = 1, nbSign[i] do -- loop over different sample of same sign type
       for k = opt.firstFrame, opt.lastFrame do -- loop over different frames of the same physical sign
          img = image.load(string.format('%s%s/%05d_%05d.png',path,ls(path)[i],j-1,k-1))
          w,h = (#img)[3],(#img)[2]
@@ -59,6 +61,7 @@ for i = 1, #ls(path) do -- loop over different signs type
          idx = idx + 1
          img  = image.crop(img,math.floor((w-min)/2),math.floor((h-min)/2),w-math.ceil((w-min)/2),h-math.ceil((h-min)/2))
          image.scale(img,dataset.data[idx])
+         dataset.labels[idx] = i-1
          xlua.progress(idx,dsSize)
       end
    end
