@@ -95,8 +95,9 @@ We then obtain both a set of connections from layer $N$ to layer $N+1$ and the f
 
 The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{hebbia}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. Our idea above implements a real-valued approximation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule.
 
+We call this connection matric algorithm 'CL-connex'.
 
-
+About other literature:
 There is not much other work in learning connections [cite: adam coates, yi-lan boreau] 
 
 
@@ -109,28 +110,11 @@ We used the Torch7 software for all our experiments \cite{collobert_torch7_2011}
 
 \subsection{Input data}
 
-We use input color video sequences of people talking in front of a camera as captured from a computer camera. The input video was resized to 120x 80 pixels and was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.Spatial Contrastive Normalization" function.
+We tested and obtained results using the CIFAR10 \cite{krizhevsky_learning_2009} and the Street View House Numbers (SVHN) \cite{netzer_reading_2011} datasets. The SVHN dataset has a training size of 73,257 32x32 images and test size of 26,032 32x32 images. The CIFAR10 dataset has a training size of 20,000 32x32 images and a test size of 2,000 32x32 images. Both datasets offer a 10 categories classification task on 32x32 size images. The train dataset was in all cases learned to 100\% accuracy, and training was then stopped. Input data was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.SpatialContrastiveNormalization" function.
 
-We use the XXXX dataset to test how the unsupervised network would perform on labeled data. The XXXXX dataset has a training size of 52,684 32x32 images and a test size of 5,854 32x32 images. The dataset has two classes: 'face' and 'background'. Input data was contrast normalized separately on each RGB channel with a 9x9 gaussian filter using the Torch7 "nn.Spatial Contrastive Normalization" function.
+ADD: INRIA Person dataset used in 3-layer networks!
 
-%\begin{figure}
-%        \centering
-%        \begin{subfigure}[b]{0.5\textwidth}
-%                \centering
-%                \includegraphics[width=2.65in]{fig-examplevideo.png}
-%                \caption{Example frame of the training video sequence.}
-%        \end{subfigure}%
-%        ~%add desired spacing between images, e. g. ~, \quad, \qquad etc. 
-%          %(or a blank line to force the subfigure onto a new line)
-%        \begin{subfigure}[b]{0.5\textwidth}
-%                \centering
-%                \includegraphics[width=2in]{fig-faceds.png}
-%                \caption{Examples from the NYU face dataset.}
-%        \end{subfigure}
-%        \caption{}
-%\end{figure}
-
-Even if other groups showed slight improvements using the YUV color space \cite{jarrett_what_2009}, we did not use it. Rather, we kept the images in their original RGB to keep the model closer to biological human vision, where the retina is broadly sensitive to roughly RGB \cite{wandell_foundations_1995}. 
+Even if other groups showed slight improvements using the YUV color space \cite{jarrett_what_2009}, we did not use it because they were reporting $\sim 2-4\%$ loss in accuracy. Rather, we kept the images in their original RGB format. In our experiment we fed all RGB planes to the deep network. We also subsampled the RGB data as much as the deep network. We then concatenated teh subsampled RGB data with the ouput of the deep network into a final vector. This final vector was then passed to a 2-layer MLP classifier.
 
 Also we did not use whitening of data (such as ZCA whitening) even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first, it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second, whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique to whiten the input data removing its mean bias and adapting the input dynamic range.
 
@@ -143,17 +127,30 @@ We experimented by training an unsupervised deep neural network with 2 layers, n
 The filters of the first two layers are generated with unsupervised clustering algorithms, as explained below. 
 Using the naming convention in \cite{lecun_convolutional_2010}, for each layer $l$  $x_i$ is an input feature map, $y_i$ is an output feature map. The input of each layer is a 3D array with $n_l$ 2D feature maps of size $n_{l1} \cdot n_{l2}$. Each component (pixel, neuron) is denoted $x_{ijk}$. The output is also a 3D array, $y_i$ composed of $m_l$ feature maps of size $m_{l1} \cdot m_{l2}$.
 
+
+\begin{figure}
+\includegraphics[width=5in]{fig-netarch.pdf}
+\caption{Architecture of the CL network used in this paper: a 2 or 3 layer convolutional network with color bypass.}
+\label{fig-netarch}
+\end{figure}
+
+
 The layers in the clustering learning network used the following sequence of operations:
 \begin{enumerate}
-\item Volumetric Convolution module (1st layer): performing convolutions on images with the learned volumetric CL filters
-\item Spatial Convolution module (2nd layer): performing convolutions on images with the learned CL filters: $yc_i=b_j+\sum_i{k_{ij}\ast x_i}$, where $\ast$ is the 2D discrete convolution operator and $b_j$ is a trainable bias parameter.
+\item Spatial Convolution module: performing convolutions on images with the learned CL filters: $yc_i=b_j+\sum_i{k_{ij}\ast x_i}$, where $\ast$ is the 2D discrete convolution operator and $b_j$ is a trainable bias parameter.
 \item Spatial Max Pooling module: $yp_i = max_{n \times n}(yc_{ij})$ with $n =  2$ in this work.
-\item Hyperbolic tangent nonlinearity: $ynl_i = tanh(yp_i )$
-\item Spatial Subtractive or Contrastive Normalization: to zero the data mean, reset std to unity. The subtractive normalization operation for a given site $ynl_{ijk}$ computes: $v_{ijk} = ynl_{ijk} - \sum_{ipq} w_{pq} \cdot ynl_{i,j+p,k+q}$, where $w_{pq}$ is a normalized truncated Gaussian weighting window (typically of size 9x9). The divisive normalization computes $y_{ijk} = v_{ijk}/max(mean(\sigma_{jk}),\sigma_{jk})$ where $\sigma_{jk} = (\sum_{ipq} w_{pq} \cdot v^2_{i,j+p,k+q})^{1/2}$. The local contrast normalization layer is inspired by visual neuroscience models.
+\item Threshold nonlinearity: $ynl_i = 0$ if $yp_i < 0$, $yp_i$ if $yp_i >= 0$
+%\item Spatial Subtractive or Contrastive Normalization: to zero the data mean, reset std to unity. The subtractive normalization operation for a given site $ynl_{ijk}$ computes: $v_{ijk} = ynl_{ijk} - \sum_{ipq} w_{pq} \cdot ynl_{i,j+p,k+q}$, where $w_{pq}$ is a normalized truncated Gaussian weighting window (typically of size 9x9). The divisive normalization computes $y_{ijk} = v_{ijk}/max(mean(\sigma_{jk}),\sigma_{jk})$ where $\sigma_{jk} = (\sum_{ipq} w_{pq} \cdot v^2_{i,j+p,k+q})^{1/2}$. The local contrast normalization layer is inspired by visual neuroscience models.
 \end{enumerate}
 
 
-All networks used 32 filters on the first layer, 64 filters on the second layer. Clustering learning networks used a fully connected input to 1st, and 1st to 2nd layer. We experimented with SLAC connections \cite{coates2012emergence}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers.
+All networks used 32 filters on the first layer, 64 filters on the second layer. Clustering learning networks used the connection matrix technique CL-connex, with receptive fields of size 32 and groups of features of size 2 and 4. The CNN networks used a fully connected input to 1st, and 1st to 2nd layer. 
+
+For the INRIA person dataset, we used a 3-layer network of size 32, 64, 128 filters in each convolutional layer.
+
+We experimented with SLAC connections \cite{coates2012emergence}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers. Unfortunately SLAC did not give us any advantege because of the small number of feateures used, so we removed it from our workflow.
+
+The final classifier was fixed to 128 hidden units and 10 output classes for CIFAR and SVHN, 2 classes for the INRIA datasets.
 
 
 
@@ -173,8 +170,33 @@ We use k-means clustering algorithm (we refer to this step as \textit{Clustering
 \section{Results}
 \label{sec-results}
 
+In Fig. \ref{fig-results1} we present the results of our test on the CIFAR10 and SVHN datasets. We compared accuracy in the test-set between our CL network and a standard convolutional neural network (CNN). We report learning rates per epochs to visualize converge speed and overfitting issues.
+
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \includegraphics[width=2.8in]{fig-cifar10-clnet.eps}
+                \caption{Results of CL network applied to CIFAR10.}
+        \end{subfigure}%
+        ~%add desired spacing between images, e. g. ~, \quad, \qquad etc. 
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \includegraphics[width=2.8in]{fig-svhn-clnet.eps}
+                \caption{Results of CL network applied to SVHN.}
+        \end{subfigure}
+        \caption{Comparions of results between CL network and CNN.}
+        \label{fig-results1}
+\end{figure}
 
 
+As one can see Fig. \ref{fig-results1}, our CL network performs very closely to the accuracy of the CNN. The CNN is always slightly better, since it uses global optimization techniques based on stochastic gradient descent (SGD) to adapt to both the signal and the noise. 
+
+Training the CNN takes $\sim 2$ hours on our test computer with a quad core Intel i7. Training of the CL network takes $\sim 4$ minutes.
+The two convolutional layers CL network are trained unsupervised using Cl on the train set for CIFAR10 and SVHN respectively. IThese layers can also be also trained with another set of natural images (a video of driving taken from YouTube), with only a slight loss of performance of $\sim 2\%$. 
+
+Notice also that the test accuracy curves per epoch of the CL network do not overfit. Rather, they saturate to a constant average value. CL network cannot overfit by design, since they perform averages on the train-set. Because of the averaging intrinsic to the algorithms of CL, the network cannot learn specific examples of the dataset and thus overfit in the test data.
 
 %\begin{table}[htdp]
 %\caption{Network execution time on a 320 x 240 frame.}
