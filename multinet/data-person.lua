@@ -41,8 +41,8 @@ if paths.filep('../../datasets/INRIAPerson/train.t7')
    trainData = torch.load('../../datasets/INRIAPerson/train.t7')
    testData = torch.load('../../datasets/INRIAPerson/test.t7')
 
-   trsize = trainData.data:size(1)
-   tesize = testData.data:size(1)
+   trSize = trainData.data:size(1)
+   teSize = testData.data:size(1)
 
 else
 
@@ -78,13 +78,13 @@ else
 
    -- dataset size:
    local dataMultiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
-   trsize = dataMultiplier * trainImaNumber
-   tesize = dataMultiplier * testImaNumber
+   trSize = dataMultiplier * trainImaNumber
+   teSize = dataMultiplier * testImaNumber
 
    trainData = {
-      data = torch.Tensor(trsize, ivch,desImaX,desImaY),
-      labels = torch.Tensor(trsize),
-      size = function() return trsize end
+      data = torch.Tensor(trSize, ivch,desImaX,desImaY),
+      labels = torch.Tensor(trSize),
+      size = function() return trSize end
    }
 
    -- load person data:
@@ -106,9 +106,9 @@ else
 
 
    testData = {
-      data = torch.Tensor(tesize, ivch,desImaX,desImaY),
-      labels = torch.Tensor(tesize),
-      size = function() return tesize end
+      data = torch.Tensor(teSize, ivch,desImaX,desImaY),
+      labels = torch.Tensor(teSize),
+      size = function() return teSize end
    }
 
    -- load person data:
@@ -169,10 +169,10 @@ testData.data = testData.data:float()
 
 -- Convert all images to YUV
 print '==> preprocessing data: colorspace RGB -> YUV:'
-for i = 1,trsize do
+for i = 1,trSize do
    trainData.data[i] = image.rgb2yuv(trainData.data[i])
 end
-for i = 1,tesize do
+for i = 1,teSize do
    testData.data[i] = image.rgb2yuv(testData.data[i])
 end
 
@@ -217,10 +217,10 @@ local normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):
 
 -- Normalize all channels locally:
 for c=1,1 do-- in ipairs(channels) do
-   for i = 1,trsize do
+   for i = 1,trSize do
       trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
    end
-   for i = 1,tesize do
+   for i = 1,teSize do
       testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
    end
 end
@@ -259,10 +259,6 @@ if opt.visualize then
    image.display{image=first256Samples_u, nrow=16, legend='Some training examples: ' ..channels[2].. ' channel'}
    image.display{image=first256Samples_v, nrow=16, legend='Some training examples: ' ..channels[3].. ' channel'}
 end
-
-
--- trainData.size = function() return trsize end
--- testData.size = function() return tesize end
 
 -- Exports
 return {
