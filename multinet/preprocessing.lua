@@ -106,8 +106,8 @@ for i,channel in ipairs(channels) do
    print('       training data, '..channel..'-channel, mean:               ' .. trainMean)
    print('       training data, '..channel..'-channel, standard deviation: ' .. trainStd)
 
-   print('       test data, '..channel..'-channel, mean:               ' .. testMean)
-   print('       test data, '..channel..'-channel, standard deviation: ' .. testStd)
+   print('       test data, '..channel..'-channel, mean:                   ' .. testMean)
+   print('       test data, '..channel..'-channel, standard deviation:     ' .. testStd)
 end
 
 ----------------------------------------------------------------------
@@ -117,10 +117,19 @@ print '==> visualizing data:'
 -- help(image.display), for more info about options.
 
 if opt.visualize then
-   local first256Samples_y = trainData.data[{ {1,256},1 }]
-   local first256Samples_u = trainData.data[{ {1,256},2 }]
-   local first256Samples_v = trainData.data[{ {1,256},3 }]
-   image.display{image=first256Samples_y, nrow=16, legend='Some training examples: ' ..channels[1].. ' channel'}
-   image.display{image=first256Samples_u, nrow=16, legend='Some training examples: ' ..channels[2].. ' channel'}
-   image.display{image=first256Samples_v, nrow=16, legend='Some training examples: ' ..channels[3].. ' channel'}
+   -- Showing some training exaples
+   local first128Samples_y = trainData.data[{ {1,128},1 }]
+   local first128Samples_u = trainData.data[{ {1,128},2 }]
+   local first128Samples_v = trainData.data[{ {1,128},3 }]
+   image.display{image=first128Samples_y, nrow=16, legend='Some training examples: ' ..channels[1].. ' channel'}
+   image.display{image=first128Samples_u, nrow=16, legend='Some training examples: ' ..channels[2].. ' channel'}
+   image.display{image=first128Samples_v, nrow=16, legend='Some training examples: ' ..channels[3].. ' channel'}
+
+   -- Showing some testing exaples
+   local first128Samples_y = testData.data[{ {1,128},1 }]
+   local first128Samples_u = testData.data[{ {1,128},2 }]
+   local first128Samples_v = testData.data[{ {1,128},3 }]
+   image.display{image=first128Samples_y, nrow=16, legend='Some testing examples: ' ..channels[1].. ' channel'}
+   image.display{image=first128Samples_u, nrow=16, legend='Some testing examples: ' ..channels[2].. ' channel'}
+   image.display{image=first128Samples_v, nrow=16, legend='Some testing examples: ' ..channels[3].. ' channel'}
 end
