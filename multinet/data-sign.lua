@@ -18,13 +18,14 @@ ls = eex.ls
 if not opt then
    print '==> Processing options'
    opt = lapp [[
-       --playDataset                     visualise the whole signs dataset
-       --firstFrame         (default 21) choose 1st valid frame to load [1, 30]
-       --lastFrame          (default 30) choose last valid frame to load [1, 30]
-   -h, --height             (default 46) height of dataset images
-   -w, --width              (default 46) width of dataset images
-       --maxNbPhysicalSigns (default 75) max number of physical signs to pick from each category
-       --checkTestDataset                check correctness of testing dataset
+       --playDataset                        visualise the whole signs dataset
+       --firstFrame         (default 21)    choose 1st valid frame to load [1, 30]
+       --lastFrame          (default 30)    choose last valid frame to load [1, 30]
+   -h, --height             (default 46)    height of dataset images
+   -w, --width              (default 46)    width of dataset images
+       --maxNbPhysicalSigns (default 75)    max number of physical signs to pick from each category
+       --checkTestDataset                   check correctness of testing dataset
+       --teSize             (default 12630) enter the testing dataset size [1,12630]
 ]]
 end
 
@@ -35,7 +36,7 @@ trPath = path .. 'Final_Training/Images/'
 tePath = path .. 'Final_Test/Images/'
 height = opt.height
 width = opt.width
-teSize = #ls(tePath .. '*.png')
+teSize = opt.teSize
 
 -- Main program -------------------------------------------------------------
 print '==> Loading human readable labels'
