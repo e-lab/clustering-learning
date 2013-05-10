@@ -232,30 +232,64 @@ end
 -- image.display{image=videoData2[6], padding=2, zoom=1,  nrow=8}
 
 
+function colorBypass(cnpoolsize, trainDataIN , testDataIN)
+	-- Color Bypass function to concatenate final network output 
+	-- with a subsampled version of the input
+	-- E. Culurciello, May 2013
+	
+	-- cnpoolsize = pooling amount of deep net
+	
+	print "==> Color bypass: creating final test dataset:"
+	local trsize = trainData:size()
+	local tesize = testData:size()
+
+	-- color bypass: downsamples color info and pass it to final classifier:
+	colornet = nn.Sequential()
+	colornet:add(nn.SpatialDownSampling(cnpoolsize,cnpoolsize,cnpoolsize,cnpoolsize))
+	cdatasize = 3*(torch.floor(ivhe/cnpoolsize))^2 -- size of the color data
+
+	-- process dataset throught net:
+	trainDataF = {
+		data = torch.Tensor(trsize, ((#trainData.data[1])[1]+cdatasize)),
+		color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
+		labels = trainData.labels:clone(),
+		size = function() return trsize end
+  
+	}
+	testDataF = {
+		data = torch.Tensor(tesize, ((#trainData.data[1])[1]+cdatasize)),
+		color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
+		labels = testData.labels:clone(),
+		size = function() return tesize end
+	}
+
+	print '==> Color bypass: process color info of dataset throught colornet:'
+	for t = 1,trsize do
+		trainDataF.color[t] = colornet:forward(trainData.data[t][{{1,3}}])
+		xlua.progress(t, trainData:size())
+	end
+	for t = 1,tesize do
+		testDataF.color[t] = colornet:forward(testData.data[t][{{1,3}}])
+		xlua.progress(t, testData:size())
+	end
 
 
---function createConnexTable(nkP, nkN, level)
---   -- computes a connection matrix LeNet5-style:
---   -- each higher layer neurons are connected to 1,2,4,8,16... in lower level 
---   -- nkP = lower layer features #
---   -- nkN = higher layer feature #
---   -- level = fanin level:
---   -- level 1,2,3,4.. means each nkN gets fanin of 2,4,8,16..
---   -- fanin units are randomized (might not be best option!!!)
---   table_size = 0
---   indexL = 1
---   indexH = 0
---   for i=1,level do
---      table_size = table_size + 2^i*nkN
---   end
---   connTable = torch.Tensor(table_size,2)
---   for i=1,level do
---      indexH = indexH + nn.tables.random(nkP,nkN,2^i):size(1)
---      connTable[{{indexL,indexH}}]=nn.tables.random(nkP,nkN,2^i)
---      indexL = indexL + nn.tables.random(nkP,nkN,2^i):size(1)
---   end
---   return connTable
---end
+	for t = 1,trsize do
+		trainDataF.data[t] = torch.cat(trainData.data[t]:reshape((#trainData.data[1])[1]), trainDataF.color[t])
+		xlua.progress(t, trainData:size())
+	end
+	for t = 1,tesize do
+		testDataF.data[t] = torch.cat(testData.data[t]:reshape((#trainData.data[1])[1]), testDataF.color[t])
+		xlua.progress(t, testData:size())
+	end
+
+	-- relocate pointers to new dataset:
+	--trainData1 = trainData -- save original dataset
+	--testData1 = testData
+	trainData = trainDataF -- relocate new dataset
+	testData = testDataF
+
+end
 
 
 

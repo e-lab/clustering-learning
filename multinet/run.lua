@@ -46,6 +46,7 @@ opt.plot = false -- because otherwise it would be a string...
 opt.quicktest = false	--(default 0)			true = small test, false = full code running
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
 opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
+opt.colorbypass = true
 
 opt.initstd = 0.1
 opt.niter = 15
@@ -213,6 +214,7 @@ vnet.modules[1].weight = kernels1_:reshape(nk1,ivch,is1,is1)
 ----------------------------------------------------------------------
 print '==> process video throught 1st layer:'
 videoData2, stdc1, meac1, stdo, meao  = processLayer(nlayer, vnet, videoData, nk1, ovhe, ovwi)
+videoData = nil -- free space!
 
 --report some statistics:
 print('1st layer conv out. std: '..stdc1..' and mean: '..meac1)
@@ -252,6 +254,7 @@ vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2
 ----------------------------------------------------------------------
 print '==> process video throught 2nd layer:'
 videoData3, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet2, videoData2, nk2, ovhe2, ovwi2)
+videoData2 = nil -- free space!
 
 --report some statistics:
 print('2nd layer conv out. std: '..stdc1..' and mean: '..meac1)
@@ -292,6 +295,7 @@ vnet3.modules[1].weight = kernels3_
 ----------------------------------------------------------------------
 print '==> process video throught 3rd layer:'
 videoData4, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet3, videoData3, nk3, ovhe3, ovwi3) -- just a few samples
+videoData3 = nil -- free space!
 
 --report some statistics:
 print('3rd layer conv out. std: '..stdc1..' and mean: '..meac1)
@@ -330,7 +334,7 @@ end
 
 ----------------------------------------------------------------------
 -- process images in dataset with unsupervised network 'tnet':
---
+-- 
 
 print "==> loading dataset:"
 if not data then data  = require 'data-person' end
@@ -341,23 +345,34 @@ print "==> processing dataset with videoknet:"
 local a = #tnet:forward(trainData.data[1])
 trainData2 = torch.Tensor(trainData:size(), a[1], a[2], a[3])
 for i = 1,trainData:size() do
-   trainData2[i] = tnet:forward(trainData.data[i])
-   xlua.progress(i, trainData:size())
+	trainData2[i] = tnet:forward(trainData.data[i])
+	xlua.progress(i, trainData:size())
 end
-trainData.data = trainData2
---report some statistics:
-print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainData.data[1]:mean())
 -- test:
 local a = #tnet:forward(testData.data[1])
 testData2 = torch.Tensor(testData:size(), a[1], a[2], a[3])
 for i = 1,testData:size() do
-   testData2[i] = tnet:forward(testData.data[i])
-   xlua.progress(i, testData:size())
+	testData2[i] = tnet:forward(testData.data[i])
+	xlua.progress(i, testData:size())
 end
-testData.data = testData2
+
+if not opt.colorbypass then -- then this is the final dataset!
+	trainData.data = trainData2
+	testData.data = testData2
+end
 --report some statistics:
 print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.data[1]:mean())
+print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainData.data[1]:mean())
 
+
+----------------------------------------------------------------------
+-- Color bypass
+if opt.colorbypass then
+	totalpool = ss1*ss2
+	colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 
+	
+	cl_nk1 = (#trainDataF.data)[1]
+end
 
 ----------------------------------------------------------------------
 -- Classifier

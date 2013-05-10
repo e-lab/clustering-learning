@@ -73,6 +73,7 @@ function test(testData)
          confusion:add(preds[i], targets[i])
       end
    end
+   xlua.progress(testData:size(), testData:size())
 
    -- timing
    time = sys.clock() - time

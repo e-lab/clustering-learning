@@ -12,10 +12,11 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
-require 'online-kmeans' -- allow you to re-train k-means kernels
 require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
-require 'unsup'
+require 'online-kmeans' -- allow you to re-train k-means kernels
+--require 'unsup' -- standard kmeans
+--require 'topo-kmeans' -- new topographic disc kmeans (gives about same results...)
 
 ----------------------------------------------------------------------
 print '==> processing options'
@@ -40,9 +41,12 @@ opt = lapp[[
 	--seed				(default 1)					use fixed seed for randomized initialization
 ]]
 
+
+opt.plot = false -- because otherwise it would be a string...
 opt.quicktest = false	--(default 0)			true = small test, false = full code running
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
 opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
+opt.colorbypass = true
 
 opt.initstd = 0.1
 opt.niter = 15
@@ -86,8 +90,8 @@ is0,is1,is2,is3 = 15,7,7,7 	-- size of kernels
 ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
 scales          = 1 				-- scales
 fanin 			 = 2 				-- createCoCnxTable creates also 2*fanin connections
-feat_group 		 = 32 			--features per group (32=best in CIFAR, nk1=32, fanin=2)
-opt.hiddens 	 = 64 			-- nb of hidden features for top perceptron (0=linear classifier)
+feat_group 		 = 16 			--features per group (16=best in INRIA nk1=32, fanin=2)
+opt.hiddens 	 = 128 			-- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'person', 'bg'} -- classes of objects to find
 
@@ -182,7 +186,7 @@ ovwi = (ivwi-is1+1)/ss1 -- output video feature width
 
  
 -- AND/OR model or FULL CONNECT MODEL:
-kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is1, false) 
+kernels1 = trainLayer(nlayer, videoData, opt.nsamples, nil, nk1, nnf1, is1, true) 
 
 if opt.display then image.display{image=kernels1:reshape(nk1,ivch,is1,is1),
 		padding=2, symmetric=true, nrow = 8, zoom=2, legend = 'Layer 1 filters'} end
@@ -210,6 +214,7 @@ vnet.modules[1].weight = kernels1_:reshape(nk1,ivch,is1,is1)
 ----------------------------------------------------------------------
 print '==> process video throught 1st layer:'
 videoData2, stdc1, meac1, stdo, meao  = processLayer(nlayer, vnet, videoData, nk1, ovhe, ovwi)
+videoData = nil -- free space!
 
 --report some statistics:
 print('1st layer conv out. std: '..stdc1..' and mean: '..meac1)
@@ -249,6 +254,7 @@ vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2
 ----------------------------------------------------------------------
 print '==> process video throught 2nd layer:'
 videoData3, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet2, videoData2, nk2, ovhe2, ovwi2)
+videoData2 = nil -- free space!
 
 --report some statistics:
 print('2nd layer conv out. std: '..stdc1..' and mean: '..meac1)
@@ -289,6 +295,7 @@ vnet3.modules[1].weight = kernels3_
 ----------------------------------------------------------------------
 print '==> process video throught 3rd layer:'
 videoData4, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet3, videoData3, nk3, ovhe3, ovwi3) -- just a few samples
+videoData3 = nil -- free space!
 
 --report some statistics:
 print('3rd layer conv out. std: '..stdc1..' and mean: '..meac1)
@@ -327,7 +334,7 @@ end
 
 ----------------------------------------------------------------------
 -- process images in dataset with unsupervised network 'tnet':
---
+-- 
 
 print "==> loading dataset:"
 if not data then data  = require 'data-person' end
@@ -338,68 +345,214 @@ print "==> processing dataset with videoknet:"
 local a = #tnet:forward(trainData.data[1])
 trainData2 = torch.Tensor(trainData:size(), a[1], a[2], a[3])
 for i = 1,trainData:size() do
-   trainData2[i] = tnet:forward(trainData.data[i])
-   xlua.progress(i, trainData:size())
+	trainData2[i] = tnet:forward(trainData.data[i])
+	xlua.progress(i, trainData:size())
 end
-trainData.data = trainData2
---report some statistics:
-print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainData.data[1]:mean())
 -- test:
 local a = #tnet:forward(testData.data[1])
 testData2 = torch.Tensor(testData:size(), a[1], a[2], a[3])
 for i = 1,testData:size() do
-   testData2[i] = tnet:forward(testData.data[i])
-   xlua.progress(i, testData:size())
+	testData2[i] = tnet:forward(testData.data[i])
+	xlua.progress(i, testData:size())
 end
-testData.data = testData2
+
+if not opt.colorbypass then -- then this is the final dataset!
+	trainData.data = trainData2
+	testData.data = testData2
+end
 --report some statistics:
 print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.data[1]:mean())
+print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainData.data[1]:mean())
 
+
+----------------------------------------------------------------------
+-- Color bypass
+if opt.colorbypass then
+	totalpool = ss1*ss2
+	colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 
+	
+	cl_nk1 = (#trainDataF.data)[1]
+end
 
 ----------------------------------------------------------------------
 -- Classifier
-model = nn.Sequential()
--- a 2-layer perceptron
-model:add(nn.Tanh())
-model:add(nn.Reshape(cl_nk1))
-model:add(nn.Linear(cl_nk1,cl_nk2))
-model:add(nn.Tanh())
-model:add(nn.Linear(cl_nk2,#classes))
 
--- final stage: log probabilities
-model:add(nn.LogSoftMax())
-
--- Save model
-if opt.save then
-	print('==>  <trainer> saving bare network to '..opt.save)
-	os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
-	torch.save(opt.save..'network.net', model)
+-- this function does not work great...
+function SMRmatch(in1, in2, ratio) -- only compares top ratio of highest values -- in2=template!
+	local sin2, idxin2 = torch.sort(in2,true) -- we suppose in2 is the template (averaged sample)
+	local indextokeep = torch.ceil(ratio*(#in1)[1])
+	local distance = 0
+	for i=1,indextokeep do
+		distance = distance + torch.abs( in1[idxin2[i]] - in2[idxin2[i]] )
+	end
+	return distance
 end
 
--- verbose
-print('==>  model:')
-print(model)
 
-
-----------------------------------------------------------------------
--- Loss: NLL
-loss = nn.ClassNLLCriterion()
-
-
-----------------------------------------------------------------------
--- load/get dataset
-print '==> load modules'
-
-train = require 'train'
-test  = require 'test'
-
-
-----------------------------------------------------------------------
-print '==> training!'
-
-while true do
-   train(data.trainData)
-   test(data.testData)
+-- trains a CL lassifier based on clustering of train data:
+function trainCLClassifier(fracDataSet,nclusters) -- param = fraction of dataset [0 to 1]
+	-- split dataset into classes and train clusters for each category:
+	local limitData = torch.ceil(trainData:size()*fracDataSet)
+	if limitData%2 ~= 0 then limitData = limitData-1 end
+	local splitdata = torch.Tensor(#classes, limitData/2, trainData.data:size(2))
+	for i = 1,limitData do
+		splitdata[trainData.labels[i]][torch.ceil(i/2)] = trainData.data[i]
+		xlua.progress(i, limitData)
+	end
+	-- now run kmeans on each class:
+	local clusteredClasses = torch.Tensor(#classes, nclusters, trainData.data:size(2))
+	for i = 1,#classes do
+		clusteredClasses[i] = okmeans(splitdata[i], nclusters, nil, 
+				opt.initstd, opt.niter, opt.kmbatchsize, nil, verbose)
+	end
+	
+	return clusteredClasses
 end
 
+
+function testCLnet(fracDataSet, clusteredClasses, nclusters)
+	local limitDataTr = torch.ceil(trainData:size()*fracDataSet)
+	if limitDataTr%2 ~= 0 then limitDataTr = limitDataTr-1 end
+ 	-- test on trainData: 
+	local dist = torch.Tensor(#classes, nclusters)
+	local correctTr = 0
+	for i = 1,limitDataTr do
+		local temp = trainData.data[i]
+		--temp = temp - temp:mean() -- remove mean from input data
+		--temp = temp / temp:std()
+		for j=1,#classes do
+			for k=1,nclusters do
+				--dist[j][k] = SMRmatch(temp:reshape((#temp)[1]), clusteredclasses[j][k], 0.75)
+				dist[j][k] = torch.dist(temp, clusteredClasses[j][k])
+			end
+		end
+		max, idx = torch.min(torch.min(dist,2),1)
+		--print(idx[1][1])
+		if ( trainData.labels[i] == idx[1][1] ) then 
+			correctTr = correctTr+1 
+		end
+		--xlua.progress(i, limitDataTr)
+	end
+	print('Final correct percentage on trainData: '.. correctTr/limitDataTr*100)
+	
+	local limitDataTe = torch.ceil(testData:size()*fracDataSet)
+	if limitDataTe%2 ~= 0 then limitDataTe = limitDataTe-1 end
+	-- test on testData: 
+	local correctTe = 0
+	for i = 1,limitDataTe do
+		local temp = testData.data[i]
+		--temp = temp - temp:mean() -- remove mean from input data
+		--temp = temp / temp:std()
+		for j=1,#classes do
+			for k=1,nclusters do
+				dist[j][k] = torch.dist(temp, clusteredClasses[j][k])
+			end
+		end
+		max, idx = torch.min(torch.min(dist,2),1)
+		--print(idx[1][1])
+		if ( testData.labels[i] == idx[1][1] ) then 
+			correctTe = correctTe+1 
+		end
+		--xlua.progress(i, limitDataTe)
+	end
+	
+	print('Final correct percentage on testData: '.. correctTe/limitDataTe*100)
+	
+	return correctTr/limitDataTr*100,correctTe/limitDataTe*100
+end
+
+if true then
+	trainNet = false
+	if trainNet then
+		model = nn.Sequential()
+		model:add(nn.Tanh())
+		--model:add(nn.Reshape(cl_nk1))
+		model:add(nn.SpatialLinear(cl_nk1,#classes))
+		-- final stage: log probabilities
+		model:add(nn.LogSoftMax())
+
+		-- training criterion: a simple Mean-Square Error
+		loss = nn.ClassNLLCriterion()
+	else
+		-- MLP classifier:
+		model = nn.Sequential()
+		-- a 2-layer perceptron
+		model:add(nn.Tanh())
+		model:add(nn.Reshape(cl_nk1))
+		model:add(nn.Linear(cl_nk1,cl_nk2))
+		model:add(nn.Tanh())
+		model:add(nn.Linear(cl_nk2,#classes))
+		-- final stage: log probabilities
+		model:add(nn.LogSoftMax())
+		
+		-- Loss: NLL
+		loss = nn.ClassNLLCriterion()
+	end
+
+	-- verbose
+	print('==>  model:')
+	print(model)
+
+	----------------------------------------------------------------------
+	-- load/get dataset
+	print '==> load modules'
+
+	train = require 'train'
+	test  = require 'test'
+
+	----------------------------------------------------------------------
+	print '==> training!'
+
+	while true do
+		train(data.trainData)
+		test(data.testData)
+	end
+	
+	-- Save model for demos:
+	if opt.save then
+	
+		-- replace classifier (2nd module) by SpatialClassifier
+		sclassifier = nn.SpatialClassifier(model)
+		tnet:add(sclassifier)	
+		
+		print('==>  <trainer> saving bare network to '..opt.save)
+		os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
+		torch.save(opt.save..'demo.net', tnet)
+	end
+
+else
+	----------------------------------------------------------------------
+	-- DISTANCE CL Classifier:
+
+	-- train clusters on each trainData category separately:
+	results = {}--torch.Tensor(20,2)
+	nclusters = 32 -- number of clusters per class
+	i=1
+	for fracDataset = 0.1, 1, 0.1 do
+		clusteredClasses = trainCLClassifier(fracDataset,nclusters)
+		-- test on train and test sets:
+		ctr, cte = testCLnet(fracDataset, clusteredClasses, nclusters)
+		table.insert(results, {ctr, cte})
+		--results[i]=torch.Tensor({ctr, cte})
+		i = i+1
+	end
+
+	require 'csv'
+	csv.save('multinet_results.txt', results)
+	
+	--------
+
+	-- image of features:
+	imaFeats = torch.Tensor(128,128)--trainData.data:size(1), trainData.data:size(2))
+	j=1
+	for i = 1, 256 do --trainData:size() do
+		if trainData.labels[i] == 1 then
+			imaFeats[j] = trainData.data[j]:clone():reshape(128)
+			j = j+1
+		end
+		--xlua.progress(i, trainData:size())
+	end
+	image.display{image=imaFeats, zoom=4}--, symmetric=true}
+
+end
 

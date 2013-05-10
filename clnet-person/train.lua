@@ -125,6 +125,7 @@ function train(trainData)
       -- optimize on current mini-batch
       optim.sgd(eval_E, w, optimState)
    end
+   xlua.progress(trainData:size(), trainData:size())
 
    -- time taken
    time = sys.clock() - time
