@@ -78,11 +78,15 @@ local normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):
 
 -- Normalize all channels locally:
 for c=1,1 do-- in ipairs(channels) do
+   print '       Normalising the training dataset'
    for i = 1,trSize do
       trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
+      xlua.progress(i,trSize)
    end
+   print '       Normalising the testing dataset'
    for i = 1,teSize do
       testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
+      xlua.progress(i,teSize)
    end
 end
 
@@ -99,11 +103,11 @@ for i,channel in ipairs(channels) do
    local testMean = testData.data[{ {},i }]:mean()
    local testStd = testData.data[{ {},i }]:std()
 
-   print('training data, '..channel..'-channel, mean: ' .. trainMean)
-   print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
+   print('       training data, '..channel..'-channel, mean:               ' .. trainMean)
+   print('       training data, '..channel..'-channel, standard deviation: ' .. trainStd)
 
-   print('test data, '..channel..'-channel, mean: ' .. testMean)
-   print('test data, '..channel..'-channel, standard deviation: ' .. testStd)
+   print('       test data, '..channel..'-channel, mean:               ' .. testMean)
+   print('       test data, '..channel..'-channel, standard deviation: ' .. testStd)
 end
 
 ----------------------------------------------------------------------
