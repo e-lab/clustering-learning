@@ -24,61 +24,107 @@ if not opt then
    -h, --height             (default 46) height of dataset images
    -w, --width              (default 46) width of dataset images
        --maxNbPhysicalSigns (default 75) max number of physical signs to pick from each category
+       --checkTestDataset                check correctness of testing dataset
 ]]
 end
 
 -- Parameters ----------------------------------------------------------------
 ds = eex.datasetsPath()
-path = ds .. 'GTSRB/Final_Training/Images/'
+path = ds .. 'GTSRB/'
+trPath = path .. 'Final_Training/Images/'
+tePath = path .. 'Final_Test/Images/'
 height = opt.height
 width = opt.width
+teSize = #ls(tePath .. '*.png')
 
 -- Main program -------------------------------------------------------------
-print '==> creating a new dataset from raw files:'
+print '==> Loading human readable labels'
+humanReadableDataFile = io.open(path .. 'Categories-name.txt', 'rb')
+for i = 1,3 do line = humanReadableDataFile:read() end -- skipping the header
+humanLabels = {}
+while line ~= nil do
+   labels = sys.split(line,'- ')
+   table.insert(humanLabels,labels[2])
+   line = humanReadableDataFile:read()
+end
+
+
+print '==> creating a new training dataset from raw files:'
 totNbSign = 0
 nbSign = {}
-for i = 1, #ls(path) do
-   nbSign[i] = #ls(path..ls(path)[i]..'/*.png')/30
+for i = 1, #ls(trPath) do
+   nbSign[i] = #ls(trPath..ls(trPath)[i]..'/*.png')/30
    nbSign[i] = (nbSign[i] < opt.maxNbPhysicalSigns) and nbSign[i] or opt.maxNbPhysicalSigns
    totNbSign = totNbSign + nbSign[i]
 end
-dsSize = totNbSign * (opt.lastFrame - opt.firstFrame + 1)
+trSize = totNbSign * (opt.lastFrame - opt.firstFrame + 1)
 
-dataset = {
-   data = torch.Tensor(dsSize,3,height,width),
-   labels = torch.Tensor(dsSize),
-   size = function() return dsSize end
+trainData = {
+   data = torch.Tensor(trSize,3,height,width),
+   labels = torch.Tensor(trSize),
+   size = function() return trSize end
 }
 
 -- Load, crop and resize image
 idx = 0
-for i = 1, #ls(path) do -- loop over different signs type
+for i = 1, #ls(trPath) do -- loop over different signs type
    for j = 1, nbSign[i] do -- loop over different sample of same sign type
       for k = opt.firstFrame, opt.lastFrame do -- loop over different frames of the same physical sign
-         img = image.load(string.format('%s%s/%05d_%05d.png',path,ls(path)[i],j-1,k-1))
+         img = image.load(string.format('%s%s/%05d_%05d.png',trPath,ls(trPath)[i],j-1,k-1))
          w,h = (#img)[3],(#img)[2]
          min = (w < h) and w or h
          idx = idx + 1
          img  = image.crop(img,math.floor((w-min)/2),math.floor((h-min)/2),w-math.ceil((w-min)/2),h-math.ceil((h-min)/2))
-         image.scale(img,dataset.data[idx])
-         dataset.labels[idx] = i-1
-         xlua.progress(idx,dsSize)
+         image.scale(img,trainData.data[idx])
+         trainData.labels[idx] = i-1
+         xlua.progress(idx,trSize)
       end
    end
 end
 
+print '==> creating a new testing dataset from raw files:'
 
--- Play the dataset, if requested
+testData = {
+   data = torch.Tensor(teSize,3,height,width),
+   labels = torch.Tensor(teSize),
+   size = function() return teSize end
+}
+
+fileName = ls(tePath .. '../*.csv')
+testDataFile = io.open(fileName[1], 'rb')
+line = testDataFile:read() -- skipping the header
+
+for i = 1, teSize do
+   --img = image.load(ls(tePath .. '*.png')[i])
+   img = image.load(string.format('%s%05d.png',tePath,i-1))
+   w,h = (#img)[3],(#img)[2]
+   min = (w < h) and w or h
+   img  = image.crop(img,math.floor((w-min)/2),math.floor((h-min)/2),w-math.ceil((w-min)/2),h-math.ceil((h-min)/2))
+   image.scale(img,testData.data[i])
+   testData.labels[i] = sys.split(testDataFile:read(),';')[8]
+   xlua.progress(i,teSize)
+end
+
+-- Verifying testing dataset
+if opt.checkTestDataset then
+   for i = 1, teSize do
+      win = image.display{image=testData.data[i],zoom=10,win=win}
+      io.write(humanLabels[testData.labels[i]+1])
+      io.read()
+   end
+end
+
+
+-- Play the whole coarse dataset, if requested
 if opt.playDataset then
    print 'Visualising the dataset'
-   for sign = 1, #ls(path) do
-
-      -- Showing a couple of images
-      for i = 1,#ls(path .. ls(path)[sign] .. '/*.png'),1 do
-         img = image.load(ls(path .. ls(path)[sign] .. '/*.png')[i])
+   for sign = 1, #ls(trPath) do
+      for i = 1,#ls(trPath .. ls(trPath)[sign] .. '/*.png'),1 do
+         img = image.load(ls(trPath .. ls(trPath)[sign] .. '/*.png')[i])
          win = image.display{image=img,zoom=10,win=win}
          --io.read()
       end
-
    end
 end
+
+
