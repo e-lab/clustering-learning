@@ -27,6 +27,7 @@ if not opt then
        --checkTestDataset                   check correctness of testing dataset
        --teSize             (default 12630) enter the testing dataset size [1,12630]
 ]]
+opt.visualize = true
 end
 
 -- Parameters ----------------------------------------------------------------
@@ -82,6 +83,8 @@ for i = 1, #ls(trPath) do -- loop over different signs type
       end
    end
 end
+-- display some examples:
+image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train Data'}
 
 print '==> creating a new testing dataset from raw files:'
 
@@ -104,6 +107,8 @@ for i = 1, teSize do
    testData.labels[i] = sys.split(testDataFile:read(),';')[8]
    xlua.progress(i,teSize)
 end
+-- display some examples:
+image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
 -- Verifying testing dataset
 if opt.checkTestDataset then
@@ -126,3 +131,20 @@ if opt.playDataset then
    end
 end
 
+-- Displaying the dataset architecture ---------------------------------------
+print('Training Data:')
+print(trainData)
+print()
+
+print('Test Data:')
+print(testData)
+print()
+
+-- Preprocessing -------------------------------------------------------------
+dofile 'preprocessing.lua'
+
+-- Exports -------------------------------------------------------------------
+return {
+   trainData = trainData,
+   testData = testData
+}
