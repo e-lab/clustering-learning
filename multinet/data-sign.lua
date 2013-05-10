@@ -96,7 +96,6 @@ testDataFile = io.open(fileName[1], 'rb')
 line = testDataFile:read() -- skipping the header
 
 for i = 1, teSize do
-   --img = image.load(ls(tePath .. '*.png')[i])
    img = image.load(string.format('%s%05d.png',tePath,i-1))
    w,h = (#img)[3],(#img)[2]
    min = (w < h) and w or h
@@ -115,7 +114,6 @@ if opt.checkTestDataset then
    end
 end
 
-
 -- Play the whole coarse dataset, if requested
 if opt.playDataset then
    print 'Visualising the dataset'
@@ -127,5 +125,4 @@ if opt.playDataset then
       end
    end
 end
-
 
