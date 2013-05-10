@@ -19,11 +19,11 @@ if not opt then
    print '==> Processing options'
    opt = lapp [[
        --playDataset                     visualise the whole signs dataset
-       --firstFrame         (default 21)
-       --lastFrame          (default 30)
-   -h, --height             (default 46)
-   -w, --width              (default 46)
-       --maxNbPhysicalSigns (default 75)
+       --firstFrame         (default 21) choose 1st valid frame to load [1, 30]
+       --lastFrame          (default 30) choose last valid frame to load [1, 30]
+   -h, --height             (default 46) height of dataset images
+   -w, --width              (default 46) width of dataset images
+       --maxNbPhysicalSigns (default 75) max number of physical signs to pick from each category
 ]]
 end
 
