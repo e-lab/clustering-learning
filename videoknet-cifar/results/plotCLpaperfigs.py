@@ -27,7 +27,7 @@ xlabel('epoch [#]');ylabel('Accuracy [%]')
 legend(('CL net', 'CNN'))
 title('2-layer networks')
 show(block=False)
-
+savefig('fig-CIFAR10-clnet.eps')
 
 
 # load all needed data: SVHN
