@@ -343,16 +343,18 @@ if not data then data  = require 'data-person' end
 print "==> processing dataset with videoknet:"
 -- train:
 local a = #tnet:forward(trainData.data[1])
-trainData2 = torch.Tensor(trainData:size(), a[1], a[2], a[3])
+trainData2 = {}
+trainData2.data = torch.Tensor(trainData:size(), a[1], a[2], a[3])
 for i = 1,trainData:size() do
-	trainData2[i] = tnet:forward(trainData.data[i])
+	trainData2.data[i] = tnet:forward(trainData.data[i])
 	xlua.progress(i, trainData:size())
 end
 -- test:
 local a = #tnet:forward(testData.data[1])
-testData2 = torch.Tensor(testData:size(), a[1], a[2], a[3])
+testData2 = {}
+testData2.data = torch.Tensor(testData:size(), a[1], a[2], a[3])
 for i = 1,testData:size() do
-	testData2[i] = tnet:forward(testData.data[i])
+	testData2.data[i] = tnet:forward(testData.data[i])
 	xlua.progress(i, testData:size())
 end
 
@@ -369,9 +371,8 @@ print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainDa
 -- Color bypass
 if opt.colorbypass then
 	totalpool = ss1*ss2
-	colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 
-	
-	cl_nk1 = (#trainDataF.data)[1]
+	trainData, testData = colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 	
+	cl_nk1 = (#trainData.data)[2] -- resize output of the concatenated vector
 end
 
 ----------------------------------------------------------------------
@@ -462,32 +463,19 @@ function testCLnet(fracDataSet, clusteredClasses, nclusters)
 end
 
 if true then
-	trainNet = false
-	if trainNet then
-		model = nn.Sequential()
-		model:add(nn.Tanh())
-		--model:add(nn.Reshape(cl_nk1))
-		model:add(nn.SpatialLinear(cl_nk1,#classes))
-		-- final stage: log probabilities
-		model:add(nn.LogSoftMax())
+	-- MLP classifier:
+	model = nn.Sequential()
+	-- a 2-layer perceptron
+	model:add(nn.Tanh())
+	model:add(nn.Reshape(cl_nk1))
+	model:add(nn.Linear(cl_nk1,cl_nk2))
+	model:add(nn.Tanh())
+	model:add(nn.Linear(cl_nk2,#classes))
+	-- final stage: log probabilities
+	model:add(nn.LogSoftMax())
 
-		-- training criterion: a simple Mean-Square Error
-		loss = nn.ClassNLLCriterion()
-	else
-		-- MLP classifier:
-		model = nn.Sequential()
-		-- a 2-layer perceptron
-		model:add(nn.Tanh())
-		model:add(nn.Reshape(cl_nk1))
-		model:add(nn.Linear(cl_nk1,cl_nk2))
-		model:add(nn.Tanh())
-		model:add(nn.Linear(cl_nk2,#classes))
-		-- final stage: log probabilities
-		model:add(nn.LogSoftMax())
-		
-		-- Loss: NLL
-		loss = nn.ClassNLLCriterion()
-	end
+	-- Loss: NLL
+	loss = nn.ClassNLLCriterion()
 
 	-- verbose
 	print('==>  model:')
@@ -504,8 +492,8 @@ if true then
 	print '==> training!'
 
 	while true do
-		train(data.trainData)
-		test(data.testData)
+		train(trainData)
+		test(testData)
 	end
 	
 	-- Save model for demos:

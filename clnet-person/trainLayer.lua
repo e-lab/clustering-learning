@@ -250,14 +250,13 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 
 	-- process dataset throught net:
 	trainDataF = {
-		data = torch.Tensor(trsize, ((#trainData.data[1])[1]+cdatasize)),
+		data = torch.Tensor(trsize, (#trainData2.data[1])[1]+cdatasize,1,1),
 		color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
 		labels = trainData.labels:clone(),
 		size = function() return trsize end
-  
 	}
 	testDataF = {
-		data = torch.Tensor(tesize, ((#trainData.data[1])[1]+cdatasize)),
+		data = torch.Tensor(tesize, (#testData2.data[1])[1]+cdatasize,1,1),
 		color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
 		labels = testData.labels:clone(),
 		size = function() return tesize end
@@ -273,21 +272,17 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 		xlua.progress(t, testData:size())
 	end
 
-
+	print '==> Color bypass: concatenating dataset into final vector:'
 	for t = 1,trsize do
-		trainDataF.data[t] = torch.cat(trainData.data[t]:reshape((#trainData.data[1])[1]), trainDataF.color[t])
-		xlua.progress(t, trainData:size())
+		trainDataF.data[t] = torch.cat(trainData2.data[t]:reshape((#trainData2.data[1])[1]), trainDataF.color[t]):reshape((#trainData2.data[1])[1]+cdatasize ,1,1)
+		xlua.progress(t, trsize)
 	end
 	for t = 1,tesize do
-		testDataF.data[t] = torch.cat(testData.data[t]:reshape((#trainData.data[1])[1]), testDataF.color[t])
-		xlua.progress(t, testData:size())
+		testDataF.data[t] = torch.cat(testData2.data[t]:reshape((#trainData2.data[1])[1]), testDataF.color[t]):reshape((#testData2.data[1])[1]+cdatasize ,1,1)
+		xlua.progress(t, tesize)
 	end
 
-	-- relocate pointers to new dataset:
-	--trainData1 = trainData -- save original dataset
-	--testData1 = testData
-	trainData = trainDataF -- relocate new dataset
-	testData = testDataF
+	return trainDataF, testDataF
 
 end
 

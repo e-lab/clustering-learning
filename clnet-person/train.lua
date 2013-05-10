@@ -95,7 +95,7 @@ function train(trainData)
       -- create mini batch
       local idx = 1
       for i = t,t+opt.batchSize-1 do
-         x[idx] = trainData.data[shuffle[i]]
+      	x[idx] = trainData.data[shuffle[i]]
          yt[idx] = trainData.labels[shuffle[i]]
          idx = idx + 1
       end
