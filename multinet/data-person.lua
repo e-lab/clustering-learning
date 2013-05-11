@@ -21,7 +21,6 @@ if not opt then
    cmd:text('INRIA Person Dataset Preprocessing')
    cmd:text()
    cmd:text('Options:')
-   --   cmd:option('-size', 'small', 'how many samples do we load: small | full | extra')
    cmd:option('-visualize', true, 'visualize input data and weights during training')
    cmd:text()
    opt = cmd:parse(arg or {})
@@ -46,19 +45,6 @@ if paths.filep('../../datasets/INRIAPerson/train.t7')
 
 else
 
-   print '==> creating a new dataset from raw files:'
-
-   -- video dataset to get background from:
-   local dspath = '../../datasets/driving1.mov'
-   local source = ffmpeg.Video{path=dspath, width = 160, height = 120, encoding='jpg', 
-   fps=24, loaddump=false, load=false}
-
-   local rawFrame = source:forward()
-   -- input video params:
-   --local ivch = rawFrame:size(1) -- channels
-   ivhe = rawFrame:size(2) -- height
-   ivwi = rawFrame:size(3) -- width
-
    local ivch = 3 -- color channels in images
    local desImaX = 46 -- desired cropped dataset image size
    local desImaY = 46
@@ -69,7 +55,6 @@ else
    local cropTeY = 35
 
    local labelPerson = 1 -- label for person and background:
-   local labelBg = 2
 
    local trainDir = '../../datasets/INRIAPerson/96X160H96/Train/pos/'
    local trainImaNumber = #ls(trainDir)
@@ -78,8 +63,10 @@ else
 
    -- dataset size:
    local dataMultiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
-   trSize = dataMultiplier * trainImaNumber
-   teSize = dataMultiplier * testImaNumber
+   trSize = dataMultiplier * trainImaNumber / 2
+   teSize = dataMultiplier * testImaNumber / 2
+
+   print '==> creating a new training dataset from raw files:'
 
    trainData = {
       data = torch.Tensor(trSize, ivch,desImaX,desImaY),
@@ -88,22 +75,18 @@ else
    }
 
    -- load person data:
+   local idx = 0
    for i = 1, trainImaNumber, 2 do
+      idx = idx + 1
       img = image.loadPNG(trainDir..ls(trainDir)[i],ivch)
-      trainData.data[i] = image.crop(img, cropTrX-desImaX/2, cropTrY-desImaY/2, 
-      cropTrX+desImaX/2, cropTrY+desImaY/2):clone()
-      trainData.labels[i] = labelPerson
-
-      -- load background data:
-      img = source:forward()
-      local x = math.random(1, ivwi-desImaX+1)
-      local y = math.random(15, ivhe-desImaY+1-30) -- added # to get samples more or less from horizon
-      trainData.data[i+1] = img[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
-      trainData.labels[i+1] = labelBg
+      trainData.data[idx] = image.crop(img, cropTrX-desImaX/2, cropTrY-desImaY/2, cropTrX+desImaX/2, cropTrY+desImaY/2):clone()
+      trainData.labels[idx] = labelPerson
+      xlua.progress(idx,trSize)
    end
    -- display some examples:
    image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train Data'}
 
+   print '==> creating a new testing dataset from raw files:'
 
    testData = {
       data = torch.Tensor(teSize, ivch,desImaX,desImaY),
@@ -112,25 +95,17 @@ else
    }
 
    -- load person data:
+   idx = 0
    for i = 1, testImaNumber, 2 do
+      idx = idx + 1
       img = image.loadPNG(testDir..ls(testDir)[i],ivch)
-      testData.data[i] = image.crop(img, cropTeX-desImaX/2, cropTeY-desImaY/2, 
-      cropTeX+desImaX/2, cropTeY+desImaY/2):clone()
-      testData.labels[i] = labelPerson
-
-      -- load background data:
-      img = source:forward()
-      local x = math.random(1,ivwi-desImaX+1)
-      local y = math.random(15,ivhe-desImaY+1-30) -- added # to get samples more or less from horizon
-      testData.data[i+1] = img[{ {},{y,y+desImaY-1},{x,x+desImaX-1} }]:clone()
-      testData.labels[i+1] = labelBg
+      testData.data[idx] = image.crop(img, cropTeX-desImaX/2, cropTeY-desImaY/2, cropTeX+desImaX/2, cropTeY+desImaY/2):clone()
+      testData.labels[idx] = labelPerson
+      xlua.progress(idx,teSize)
    end
    -- display some examples:
    image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
-   --save created dataset:
-   torch.save('../../datasets/INRIAPerson/train.t7',trainData)
-   torch.save('../../datasets/INRIAPerson/test.t7',testData)
 end
 
 -- Displaying the dataset architecture ---------------------------------------
@@ -145,8 +120,9 @@ print()
 -- Preprocessing -------------------------------------------------------------
 dofile 'preprocessing.lua'
 
-trainData.size = function() return trSize end
-testData.size = function() return teSize end
+--[[ Save created dataset ------------------------------------------------------
+torch.save('../../datasets/INRIAPerson/train.t7',trainData)
+torch.save('../../datasets/INRIAPerson/test.t7',testData)]]
 
 -- Exports -------------------------------------------------------------------
 return {
