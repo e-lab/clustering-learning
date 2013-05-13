@@ -24,21 +24,17 @@ Eugenio Culurciello\thanks{More information on Eugenio Culurciello's laboratory 
 Purdue University\\
 \texttt{euge@purdue.edu} \\
 \And
-Jordan Bates \\
+Aysegul Dundar \\
 Purdue University\\
-\texttt{jtbates@purdue.edu}
+\texttt{adundar@purdue.edu}
 \AND
 Jonghoon Jin \\
 Purdue University\\
 \texttt{jhjin@purdue.edu}
-\AND
-Aysegul Dundar \\
-Purdue University\\
-\texttt{adundar@purdue.edu}
 \And
-Clement Farabet \\
-New York University \\
-\texttt{cfarabet@nyu.edu}
+Jordan Bates \\
+Purdue University\\
+\texttt{jtbates@purdue.edu}
 }
 
 %\date{\today}
@@ -47,6 +43,8 @@ New York University \\
 
 \begin{abstract}
 We present the clustering learning technique applied to learning the connection matrix between layers of multi-layer feedforward deep neural networks. We show that networks and connections trained with clustering learning can obtain similar levels of performance as supervised deep network trained to .... 
+We obtain accuracy of ... on dataset ...
+This work can be applied to improve the efficiency of connections and combination of feateures between the layers of deep neural networks.
 \end{abstract}
 
 
@@ -54,9 +52,12 @@ We present the clustering learning technique applied to learning the connection 
 
 Most scientists and engineers are fascinated by the design of an artificial vision system that can reproduce some of the human visual system capabilities in detecting, categorizing, tracking objects in view. The availability of a real-time synthetic vision system with such capabilities would find use in a large variety of applications, such as: autonomous cars, co-robots helpers, smart appliances, cellular-phones, to name a few.
  
-In the recent years the fusion of bio-inspired and neuromorphic vision models with machine learning has dominated the development of artificial vision systems for the categorization of multiple objects in static frames.
-Bio-inspired deep networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks \cite{lecun_gradient-based_1998,hadsell_dimensionality_2006,gregor_structured_2011,riesenhuber_hierarchical_1999,serre_feedforward_2007,serre_neuromorphic_2010}. Most deep network architectures are composed of multiple layers (2, 3 typically), where each layer is composed of: linear two-dimensional filtering, non-linearity, pooling of data, output data normalization \cite{jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. 
-Recent machine learning research has focused on the task of training such deep networks from the abundant digital data available in the form of image frames and videos. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representations usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{karpathy_lessons_2011, torralba_unbiased_2011, hou_meta-theory_2012}, the recent focus is on learning these features purely from unlabeled input data \cite{olshausen_emergence_1996, hyvarinen_independent_2000, hinton_fast_2006, vincent_extracting_2008, coates_analysis_2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of learning models. Traditional work in deep learning for vision has mostly focused on improving the learning algorithms, and rarely it has shown potential for overcoming some of the limitation of these systems, such as reliance on large sets of labeled data, and real-time operation for embedded systems.
+The most promising approach in recent years, is the fusion of bio-inspired and neuromorphic vision models with machine learning \cite{lecun_gradient-based_1998,hadsell_dimensionality_2006,gregor_structured_2011,riesenhuber_hierarchical_1999,serre_feedforward_2007,serre_neuromorphic_2010,jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. This field, named Deep Learning, has provided state-of-the-art results in the categorization of multiple objects in static frames \cite{Hinton, G. E., Srivastava, N., Krizhevsky, A., Sutskever, I. and Salakhutdinov, R. R. (2012)
+Improving neural networks by preventing co-adaptation of feature detectors
+http://arxiv.org/abs/1207.0580}.
+
+Deep Learning networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks, where each network layer is composed of: linear two-dimensional filtering, non-linearity, pooling of data, output data normalization \cite{jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. 
+Deep Networks training is performed by means of the abundant image frames and videos one can find on the internet and large labeled datasets. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representations usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{karpathy_lessons_2011, torralba_unbiased_2011, hou_meta-theory_2012}, the recent focus is on learning these features purely from unlabeled input data \cite{olshausen_emergence_1996, hyvarinen_independent_2000, hinton_fast_2006, vincent_extracting_2008, coates_analysis_2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of learning models. Traditional work in unsupervised deep learning has focused on learning layer feateures, and rarely on the connections between layers.
 
 Recent techniques based on unsupervised clustering algorithms are especially promising because they use simple learning methods that quickly converge \cite{coates_analysis_2011}. 
 These algorithms are easy to setup and train and are especially suited for robotics research, because less complex knowledge of machine learning is needed, environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks. %reword this sentence?
@@ -93,12 +94,21 @@ Our learning technique groups feature maps from layer $N$ into "receptive fields
 In order to learn the filters for layer $N+1$ convolutional module, we perform clustering (Clustering Learning) only within the RF (and not all $N1$ maps). 
 We then obtain both a set of connections from layer $N$ to layer $N+1$ and the filters used by layer $N+1$ convolutional module.
 
-The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{hebbia}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. Our idea above implements a real-valued approximation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule.
+The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{hebbian}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. Our idea above implements a real-valued approximation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule.
 
 We call this connection matric algorithm 'CL-connex'.
 
 About other literature:
-There is not much other work in learning connections [cite: adam coates, yi-lan boreau] 
+There is not much other work in learning connections [cite: adam coates, yi-lan boureau] 
+
+Learning Feature Representations with K-means, Adam Coates and Andrew Y. Ng. In Neural Networks: Tricks of the Trade, Reloaded, Springer LNCS, 2012.
+
+Y-Lan Boureau, Nicolas Le Roux, Francis Bach, Jean Ponce, and Yann LeCun: 
+Ask the locals: multi-way local pooling for image recognition, 
+Proc. International Conference on Computer Vision (ICCV'11), 2011 
+
+The paper \cite{coates} groups feateures on each layer by similarity, but does not explicitely use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feateure is averaged with a large number of other feaetures, thus reducing the signal-to-noise ratio of important feateures.
+The paper \cite{boureau} presents the interesting idea of learning pooling strategies that include feateure maps with similarity in local feateure space. This paper uses simple clustering procedures to cluster data in order to improve pooling in the feateure space. In this respect this paper present similar ideas to CL-connex, but is not apploed to deep neural networks.
 
 
 \section{Methods}
