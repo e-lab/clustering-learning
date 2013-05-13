@@ -27,7 +27,7 @@ if not opt then
        --checkTestDataset                   check correctness of testing dataset
        --teSize             (default 12630) enter the testing dataset size [1,12630]
 ]]
-opt.visualize = true
+   opt.visualize = true
 end
 
 -- Parameters ----------------------------------------------------------------
