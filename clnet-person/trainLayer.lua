@@ -242,6 +242,13 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 	print "==> Color bypass: creating final test dataset:"
 	local trsize = trainData:size()
 	local tesize = testData:size()
+	
+	local reshapedim 
+	if opt.numlayers == 3 then
+		reshapedim = (#trainData2.data[1])[1]
+	else
+		reshapedim = (#trainData2.data[1])[1]*(#trainData2.data[1])[2]*(#trainData2.data[1])[3]
+	end
 
 	-- color bypass: downsamples color info and pass it to final classifier:
 	colornet = nn.Sequential()
@@ -250,14 +257,14 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 
 	-- process dataset throught net:
 	trainDataF = {
-		data = torch.Tensor(trsize, (#trainData2.data[1])[1]+cdatasize,1,1),
-		color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
+		data = torch.Tensor(trsize, reshapedim+cdatasize,1,1),
+		color = torch.Tensor(trsize, cdatasize),  -- add bypass color info
 		labels = trainData.labels:clone(),
 		size = function() return trsize end
 	}
 	testDataF = {
-		data = torch.Tensor(tesize, (#testData2.data[1])[1]+cdatasize,1,1),
-		color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
+		data = torch.Tensor(tesize, reshapedim+cdatasize,1,1),
+		color = torch.Tensor(trsize, cdatasize),  -- add bypass color info
 		labels = testData.labels:clone(),
 		size = function() return tesize end
 	}
@@ -274,13 +281,18 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 
 	print '==> Color bypass: concatenating dataset into final vector:'
 	for t = 1,trsize do
-		trainDataF.data[t] = torch.cat(trainData2.data[t]:reshape((#trainData2.data[1])[1]), trainDataF.color[t]):reshape((#trainData2.data[1])[1]+cdatasize ,1,1)
+		trainDataF.data[t] = torch.cat(trainData2.data[t]:reshape(reshapedim), 
+				trainDataF.color[t]):reshape(reshapedim+cdatasize,1,1)
 		xlua.progress(t, trsize)
 	end
 	for t = 1,tesize do
-		testDataF.data[t] = torch.cat(testData2.data[t]:reshape((#trainData2.data[1])[1]), testDataF.color[t]):reshape((#testData2.data[1])[1]+cdatasize ,1,1)
+		testDataF.data[t] = torch.cat(testData2.data[t]:reshape(reshapedim), 
+				testDataF.color[t]):reshape(reshapedim+cdatasize,1,1)
 		xlua.progress(t, tesize)
 	end
+	-- remove extra memory used
+	trainDataF.color = nil 
+	testDataF.color = nil
 
 	return trainDataF, testDataF
 
