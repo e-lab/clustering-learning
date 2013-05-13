@@ -47,7 +47,6 @@ torch.setdefaulttensortype('torch.DoubleTensor')
 -- Global functions ----------------------------------------------------------
 -- Parse XML
 function parseXML(tracklet_labels)
-   print '==> parsing the XML file'
    parse = xml.parse(tracklet_labels)
    tracklet = parse.boost_serialization.tracklets
 
@@ -156,181 +155,130 @@ backgroundData = {
    size = function() return #backgroundData.labels end
 }
 
+print '==> loading KITTI tracklets and parsing the XML files'
+iter = 0
+tot = 13
+
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0001/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0002/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0002/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
-
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0005/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0009/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0011/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0013/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0013/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
-
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0017/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0017/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
-
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0018/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0018/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
-
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0048/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0048/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
-
-
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0057/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0057/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
-
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0059/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0059/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0084/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0084/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
 
+xlua.progress(iter,tot)
 dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0091/image_02/data/'--/0000000000.png' -- Right images
-print '==> load KITTI tracklets'
 tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0091/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
+iter = iter + 1
+xlua.progress(iter,tot)
 
 
 print '==> split dataset into train/test datasets'
 
+local nTrainData  = floor(opt.ratio*carData:size())
+local nTestData = floor((carData:size()-nTrainData))
+local shuffleCar = torch.randperm(carData:size())
 
-local nTrainData  = floor(opt.ratio*carData:size()/2)*2  -- we want it to be dividable by 2
-local nTestData = floor((carData:size()-nTrainData)/2)*2
-
--- define tables for training/testing dataset
+-- Training dataset
 trainData = {
    data   = zeros(nTrainData, 3, opt.width/opt.down, opt.width/opt.down),
    labels = zeros(nTrainData),
-   size   = function() return trainData.labels:size() end
+   size   = function() return nTrainData  end
 }
+for i=1 , nTrainData  do
+   trainData.data[i]  = carData.data[shuffleCar[i]]
+end
 -- display some examples:
 image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train Data'}
 
+-- Testing dataset
 testData  = {
-   data   = zeros(nTestData,3, opt.width/opt.down, opt.width/opt.down),
+   data   = zeros(nTestData, 3, opt.width/opt.down, opt.width/opt.down),
    labels = zeros(nTestData),
-   size   = function() return testData.labels:size() end
+   size   = function() return nTestData end
 }
+for i=1 , nTestData  do
+   testData.data[i] = carData.data[shuffleCar[i+nTrainData]]
+end
 -- display some examples:
 image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
-
-local shuffleCar = torch.randperm(carData:size())
-local shufflebg = torch.randperm(backgroundData:size())
-
-
--- split data to train/test sets with ratio of (1-ratio : ratio)
-for i=1 , nTrainData/2  do
-   trainData.data[2*i-1]   = carData.data[shuffleCar[i]]
-   trainData.labels[2*i-1] = 1
-   trainData.data[2*i]   = backgroundData.data[shufflebg[i]]
-   trainData.labels[2*i] = 2
-end
-
-
-for i=1 , nTestData/2  do
-   testData.data[2*i-1]   = carData.data[shuffleCar[i+nTrainData/2]]
-   testData.labels[2*i-1] = 1
-   testData.data[2*i]   = backgroundData.data[shufflebg[i+nTrainData/2]]
-   testData.labels[2*i] = 2
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---[[ load or generate new dataset:
-
-if (paths.filep('train.t7')
-   and paths.filep('test.t7')) then
-
-   print '==> loading previously generated dataset:'
-   trainData = torch.load('train.t7')
-   testData = torch.load('test.t7')
-
-else
-
-   dofile 'createKITTIdataset.lua'
-
-end
-
-trsize = trainData.data:size(1)
-tesize = testData.data:size(1)
-print('trsize', trsize)
-
-
-print('Training Data:')
-print(trainData)
-print()
-
-print('Test Data:')
-print(testData)
-print()]]
 

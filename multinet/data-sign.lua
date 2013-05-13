@@ -50,7 +50,6 @@ while line ~= nil do
    line = humanReadableDataFile:read()
 end
 
-
 print '==> creating a new training dataset from raw files:'
 totNbSign = 0
 nbSign = {}
