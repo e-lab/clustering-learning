@@ -74,10 +74,10 @@ The paper presents the following key innovations: (1) use of clustering learning
 \section{Main idea and contribution}
 \label{sec-main}
 
-In this paper we created and tested a model of unsupervised clustering algorithms in deep neural networks. We extend the results obtained in previous work [http://arxiv.org/abs/1301.2820], aimed at learning filters in multi-layer networks, to also learn the connection matrix between layers. 
+In this paper we created and tested a model of unsupervised clustering algorithms in deep neural networks. We extend the results obtained in previous work \cite{culurciello2013clustering}, aimed at learning filters in multi-layer networks, to also learn the connection matrix between layers. 
 
-The connections between layers in a deep neural network are a very important parameter. It has been shown that in many cases random filters perform only slightly worse than fully trained network layers [cite: On Random Weights and Unsupervised Feature Learning, Saxe et all] suggesting that filters (used in the convolutional filtering stage of each layer in a deep network) might not play a dominant role in determining the performance of a deep network.
-Rather, the connections between layers and the combination of features are mainly responsible for the recent success of supervised deep convolutional networks [cite: hinton krizevsky 2012 et al]. In these networks the connection between layers is learned from the data using global gradient-descent techniques at large scales.
+The connections between layers in a deep neural network are a very important parameter. It has been shown that in many cases random filters perform only slightly worse than fully trained network layers \cite{saxe2011random} suggesting that filters (used in the convolutional filtering stage of each layer in a deep network) might not play a dominant role in determining the performance of a deep network.
+Rather, the connections between layers and the combination of features are mainly responsible for the recent success of supervised deep convolutional networks \cite{krizhevsky_imagenet_2012}. In these networks the connection between layers is learned from the data using global gradient-descent techniques at large scales.
  
 In unsupervised deep networks, one cannot rely on back-propagation techniques to learn the connections between layers. This is because unsupervised networks do not used labeled data, and thus an error signal cannot be computed.
 In order to use unlabeled data to train large deep networks, we will need a technique that can derive how to group features from one layer into features of the next layers, and at the same time learn the filters needed by the next layer.
@@ -94,21 +94,13 @@ Our learning technique groups feature maps from layer $N$ into "receptive fields
 In order to learn the filters for layer $N+1$ convolutional module, we perform clustering (Clustering Learning) only within the RF (and not all $N1$ maps). 
 We then obtain both a set of connections from layer $N$ to layer $N+1$ and the filters used by layer $N+1$ convolutional module.
 
-The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{hebbian}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. Our idea above implements a real-valued approximation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule.
+The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. Our idea above implements a real-valued approximation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule.
 
 We call this connection matric algorithm 'CL-connex'.
 
-About other literature:
-There is not much other work in learning connections [cite: adam coates, yi-lan boureau] 
-
-Learning Feature Representations with K-means, Adam Coates and Andrew Y. Ng. In Neural Networks: Tricks of the Trade, Reloaded, Springer LNCS, 2012.
-
-Y-Lan Boureau, Nicolas Le Roux, Francis Bach, Jean Ponce, and Yann LeCun: 
-Ask the locals: multi-way local pooling for image recognition, 
-Proc. International Conference on Computer Vision (ICCV'11), 2011 
-
-The paper \cite{coates} groups feateures on each layer by similarity, but does not explicitely use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feateure is averaged with a large number of other feaetures, thus reducing the signal-to-noise ratio of important feateures.
-The paper \cite{boureau} presents the interesting idea of learning pooling strategies that include feateure maps with similarity in local feateure space. This paper uses simple clustering procedures to cluster data in order to improve pooling in the feateure space. In this respect this paper present similar ideas to CL-connex, but is not apploed to deep neural networks.
+In the literature, we found two paper 
+The paper \cite{coates2012learning} groups feateures on each layer by similarity, but does not explicitely use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feateure is averaged with a large number of other feaetures, thus reducing the signal-to-noise ratio of important feateures.
+The paper \cite{boureau_2011} presents the interesting idea of learning pooling strategies that include feateure maps with similarity in local feateure space. This paper uses simple clustering procedures to cluster data in order to improve pooling in the feateure space. In this respect this paper present similar ideas to CL-connex, but is not applied to deep neural networks.
 
 
 \section{Methods}
