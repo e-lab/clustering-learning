@@ -17,7 +17,7 @@
 
 \begin{document}
 
-\title{Learning connections between layers in deep networks}
+\title{Unsupervised learning of the connections  \\ between layers of deep neural networks}
 
 \author{
 Eugenio Culurciello\thanks{More information on Eugenio Culurciello's laboratory and research can be found here: http://engineering.purdue.edu/elab/. Real time robotic vision systems: http://www.neuflow.org/} \\
@@ -42,32 +42,28 @@ Purdue University\\
 \maketitle
 
 \begin{abstract}
-We present the clustering learning technique applied to learning the connection matrix between layers of multi-layer feedforward deep neural networks. We show that networks and connections trained with clustering learning can obtain similar levels of performance as supervised deep network trained to .... 
-We obtain accuracy of ... on dataset ...
+We present the unsupervised clustering learning technique applied to learning the connection matrix between layers of a feedforward deep neural networks. Traditional deep neural networks  use random connection tables between layers to keep the number of  connection small and tune to different image features. Fully-connected layers also used when efficiency is not an issue. These kind of connection matrices performs very well in deep networks because the supervised training refines their values. 
+On the other hand, unsupervised learning requires a data-driven method that will connect the most relevant features to the next layer. In this paper we present a clustering learning algorithm to learn simultaneously the connection and filters of deep networks. We tested our technique on CIFAR, SVHN and Pedestrian datasets and improve the accuracy by ?? compared to ... We show that networks and connections trained with clustering learning can obtain similar levels of performance as supervised deep networks when the number of layers and the filters are the same. 
 This work can be applied to improve the efficiency of connections and combination of feateures between the layers of deep neural networks.
 \end{abstract}
 
 
 \section{Introduction}
 
-Most scientists and engineers are fascinated by the design of an artificial vision system that can reproduce some of the human visual system capabilities in detecting, categorizing, tracking objects in view. The availability of a real-time synthetic vision system with such capabilities would find use in a large variety of applications, such as: autonomous cars, co-robots helpers, smart appliances, cellular-phones, to name a few.
- 
-The most promising approach in recent years, is the fusion of bio-inspired and neuromorphic vision models with machine learning \cite{lecun_gradient-based_1998,hadsell_dimensionality_2006,gregor_structured_2011,riesenhuber_hierarchical_1999,serre_feedforward_2007,serre_neuromorphic_2010,jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. This field, named Deep Learning, has provided state-of-the-art results in the categorization of multiple objects in static frames \cite{Hinton, G. E., Srivastava, N., Krizhevsky, A., Sutskever, I. and Salakhutdinov, R. R. (2012)
-Improving neural networks by preventing co-adaptation of feature detectors
-http://arxiv.org/abs/1207.0580}.
+Most scientists and engineers are fascinated by the design of an artificial vision system that can reproduce some of the human visual system capabilities in detecting, categorizing, tracking objects in view. The availability of a real-time synthetic vision system with such capabilities would find use in a large variety of applications, such as: autonomous cars, co-robots helpers, smart appliances, cellular-phones, to name a few. The most promising approach in recent years, is the fusion of bio-inspired and neuromorphic vision models with machine learning \cite{lecun_gradient-based_1998,hadsell_dimensionality_2006,gregor_structured_2011,riesenhuber_hierarchical_1999,serre_feedforward_2007,serre_neuromorphic_2010,jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. This field, named Deep Learning, has provided state-of-the-art results in the categorization of multiple objects in static frames \cite{krizhevsky_imagenet_2012}.
 
 Deep Learning networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks, where each network layer is composed of: linear two-dimensional filtering, non-linearity, pooling of data, output data normalization \cite{jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. 
-Deep Networks training is performed by means of the abundant image frames and videos one can find on the internet and large labeled datasets. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representations usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{karpathy_lessons_2011, torralba_unbiased_2011, hou_meta-theory_2012}, the recent focus is on learning these features purely from unlabeled input data \cite{olshausen_emergence_1996, hyvarinen_independent_2000, hinton_fast_2006, vincent_extracting_2008, coates_analysis_2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of learning models. Traditional work in unsupervised deep learning has focused on learning layer feateures, and rarely on the connections between layers.
+Deep Networks training is performed by means of the abundant image frames and videos one can find on the internet and large labeled datasets. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representations usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{karpathy_lessons_2011, torralba_unbiased_2011, hou_meta-theory_2012}, the recent focus is on learning these features purely from unlabeled input data \cite{olshausen_emergence_1996, hyvarinen_independent_2000, hinton_fast_2006, vincent_extracting_2008, coates_analysis_2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of learning models. Traditional work in unsupervised deep learning has focused on learning layer features, and rarely on the connections between layers.
 
 Recent techniques based on unsupervised clustering algorithms are especially promising because they use simple learning methods that quickly converge \cite{coates_analysis_2011}. 
-These algorithms are easy to setup and train and are especially suited for robotics research, because less complex knowledge of machine learning is needed, environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks. %reword this sentence?
+These algorithms are easy to setup and train and are especially suited for robotics research, because environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks in minutes.
 In addition, real-time operation with efficient networks can be obtained with only a few minutes of training and setup, leading to quick and direct experimentation in robotic experiments.
 
 In this paper we present unsupervised clustering algorithms applied to learning the connectivity matrix between layers and filters of deep neural networks for general-purpose vision systems. 
 %The main goal of the paper is not to present state-of-art results on a specific dataset. Rather we want to present ways to quickly process video sequences to extract a large portion of information without the need of supervision and heavy learning techniques.
 %The goal is also to show that compact video-based unsupervised networks can support at least ten frames-per-second operation on commercial hardware, such as recent laptop computers.
 
-The paper presents the following key innovations: (1) use of clustering learning for learning both filters and connections of deep networks with fully unsupervised techniques (Section \ref{}), (2) the ability of trained network to perform as well as supervised networks trained on still frames, (3) ability to run in real-time?. 
+The paper presents the following key innovations: (1) use of clustering learning for learning both filters and connections of deep networks with fully unsupervised techniques (Section \ref{sec-main}), (2) the ability to self-organize connections and filters purely with a data-driven approach from video streams (Section \ref{sec-methods} and  \ref{sec-net-arch}), (3) the ability of trained network to perform as well as supervised networks trained on still frames (Section \ref{sec-results}), (4) the ability to run in real-time due to a optimized lean network with 32 filters or less in the first, most computationally expensive network layer (Section \ref{sec-net-arch}). 
 
 
 
@@ -98,9 +94,11 @@ The main driving force for this idea is a bio-inspired model of learning in the 
 
 We call this connection matric algorithm 'CL-connex'.
 
-In the literature, we found two paper 
-The paper \cite{coates2012learning} groups feateures on each layer by similarity, but does not explicitely use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feateure is averaged with a large number of other feaetures, thus reducing the signal-to-noise ratio of important feateures.
+In the literature, we found two deep learning papers that are related. 
+The paper \cite{coates2012learning} groups feateures on each layer by similarity, but does not explicitely use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feateure is averaged with a large number of other feaetures, thus reducing the signal-to-noise ratio of important feateures. The main difference between paper \cite{coates2012learning} and our work is that we focus on learning smaller networks, with much fewer number of filters (32 vs. 4096) in the first and successive layers. 
 The paper \cite{boureau_2011} presents the interesting idea of learning pooling strategies that include feateure maps with similarity in local feateure space. This paper uses simple clustering procedures to cluster data in order to improve pooling in the feateure space. In this respect this paper present similar ideas to CL-connex, but is not applied to deep neural networks.
+
+Several papers in the neural physiology and computational neuroscience literature report similar ideas for learning the receptive fields of complex cells \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}. None of these paper reports results close to the state-of-the-art in publicly available datasets of natural images.
 
 
 \section{Methods}
@@ -152,12 +150,14 @@ For the INRIA person dataset, we used a 3-layer network of size 32, 64, 128 filt
 
 We experimented with SLAC connections \cite{coates2012emergence}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers. Unfortunately SLAC did not give us any advantege because of the small number of feateures used, so we removed it from our workflow.
 
+We used max pooling layers because they performed better than average and gaussian-masked averages with L-2 modules. Also max pooling is a bio-inspired approach to reducing the dimnsionality of the data at each layer \cite{lampl2004intracellular}.
+
 The final classifier was fixed to 128 hidden units and 10 output classes for CIFAR and SVHN, 2 classes for the INRIA datasets.
 
 
 
 \subsection{Learning}
-We use k-means clustering algorithm (we refer to this step as \textit{Clustering Learning algorithm}) to learn a set of 32 filters in the first layer, and 64 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels.
+We use k-means clustering algorithm (we refer to this step as \textit{Clustering Learning algorithm}) to learn a set of 32 filters in the first layer, and 64 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels. More information have been published in paper \cite {culurciello2013clustering}.
 
 
 
