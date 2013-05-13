@@ -238,22 +238,18 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 	-- E. Culurciello, May 2013
 	
 	-- cnpoolsize = pooling amount of deep net
+	-- train/testDataIN  = input datasets
 	
 	print "==> Color bypass: creating final test dataset:"
 	local trsize = trainData:size()
 	local tesize = testData:size()
 	
-	local reshapedim 
-	if opt.numlayers == 3 then
-		reshapedim = (#trainData2.data[1])[1]
-	else
-		reshapedim = (#trainData2.data[1])[1]*(#trainData2.data[1])[2]*(#trainData2.data[1])[3]
-	end
+	local reshapedim = (#trainData2.data[1])[1]*(#trainData2.data[1])[2]*(#trainData2.data[1])[3]
 
 	-- color bypass: downsamples color info and pass it to final classifier:
 	colornet = nn.Sequential()
 	colornet:add(nn.SpatialDownSampling(cnpoolsize,cnpoolsize,cnpoolsize,cnpoolsize))
-	cdatasize = 3*(torch.floor(ivhe/cnpoolsize))^2 -- size of the color data
+	local cdatasize = 3*(torch.floor(ivhe/cnpoolsize))^2 -- size of the color data
 
 	-- process dataset throught net:
 	trainDataF = {
@@ -268,7 +264,7 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 		labels = testData.labels:clone(),
 		size = function() return tesize end
 	}
-
+	
 	print '==> Color bypass: process color info of dataset throught colornet:'
 	for t = 1,trsize do
 		trainDataF.color[t] = colornet:forward(trainData.data[t][{{1,3}}])
@@ -280,6 +276,8 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 	end
 
 	print '==> Color bypass: concatenating dataset into final vector:'
+	print('trainData2.data size = '.. reshapedim)
+	print('trainDataF.color size = '.. cdatasize)
 	for t = 1,trsize do
 		trainDataF.data[t] = torch.cat(trainData2.data[t]:reshape(reshapedim), 
 				trainDataF.color[t]):reshape(reshapedim+cdatasize,1,1)
@@ -290,12 +288,8 @@ function colorBypass(cnpoolsize, trainDataIN , testDataIN)
 				testDataF.color[t]):reshape(reshapedim+cdatasize,1,1)
 		xlua.progress(t, tesize)
 	end
-	-- remove extra memory used
-	trainDataF.color = nil 
-	testDataF.color = nil
 
 	return trainDataF, testDataF
-
 end
 
 

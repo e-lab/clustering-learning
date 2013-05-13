@@ -51,7 +51,7 @@ opt.colorbypass = true
 opt.initstd = 0.1
 opt.niter = 15
 opt.kmbatchsize = 1000 -- kmeans batchsize
-opt.numlayers = 1 -- number of layers in network
+opt.numlayers = 3 -- number of layers in network
 
 dname,fname = sys.fpath()
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens',
@@ -76,6 +76,14 @@ opt.threads = tonumber(opt.threads)
 if opt.threads > 1 then
    torch.setnumthreads(opt.threads)
    print('<trainer> using ' .. opt.threads .. ' threads')
+end
+
+-- type:
+if opt.type == 'cuda' then
+   print('==> switching to CUDA')
+   require 'cunn'
+   cutorch.setDevice(opt.devid)
+   print('==> using GPU #' .. cutorch.getDevice())
 end
 
 
@@ -288,7 +296,6 @@ ovwi3 = (ovwi2-is3+1) -- output video feature width
 	vnet3 = nn.Sequential()
 	vnet3:add(nn.SpatialConvolutionMap(cTable3, is3, is3)) -- connex table based on similarity of features
 
-
 	-- setup net/ load kernels into network:
 	vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
 	kernels3_ = kernels3:clone():div(nk3*2) -- divide kernels so output of SpatialConv std ~0.5
@@ -375,8 +382,8 @@ print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainDa
 ----------------------------------------------------------------------
 -- Color bypass
 if opt.colorbypass then
-	totalpool = ss1
-	if opt.numlayers >=2 then totalpool = totalpool*ss2 end -- in case we use 1,2 layers only!
+	totalpool = ss1 -- only 1 layer used!
+	if opt.numlayers >= 2 then totalpool = totalpool*ss2 end -- in case we use 2,3 layers!
 	trainData, testData = colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 	
 end
 
