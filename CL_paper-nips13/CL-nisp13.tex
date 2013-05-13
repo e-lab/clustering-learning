@@ -83,11 +83,11 @@ In unsupervised deep networks, one cannot rely on back-propagation techniques to
 In order to use unlabeled data to train large deep networks, we will need a technique that can derive how to group features from one layer into features of the next layers, and at the same time learn the filters needed by the next layer.
 This is the main contribution of this paper, and what makes it unique. A figure that qualitatively explains the main contribution of the paper is Fig. \ref{fig-learnlayers}.
 
-\begin{wrapfigure}{r}{.7\textwidth}
-\includegraphics[width=3.5in]{fig-learnlayers.pdf}
+\begin{figure}
+\includegraphics[width=5in]{fig-learnlayers.pdf}
 \caption{Learn layers}
 \label{fig-learnlayers}
-\end{wrapfigure}
+\end{figure}
 
 In the figure we show two layers of a deep network: layer $N$ and layer $N+1$. The maps on the left of the figure, are the $N1$ output feature maps of the $N$-the layer in response to an input image. The maps on the right of the figure, are the $N2$ outputs of the first convolutional module of layer $N+1$. 
 Our learning technique groups feature maps from layer $N$ into "receptive fields" (RF). These receptive fields are the input of one or multiple maps in layer $N+1$. We form these RF by grouping a small number "fanin" of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF. The idea behind this step is to group features that occur often together in the data. These RF are then representative of the connections between features of one layer and the next layer, and are completely obtained in a data-driven approach.
