@@ -20,6 +20,13 @@ local random = math.random
 local floor = math.floor
 local zeros = torch.zeros
 
+-- Title ---------------------------------------------------------------------
+print [[
+********************************************************************************
+>>>>>>>>>>>>>>>>>>>>>>> Loading KITTI (car) dataset <<<<<<<<<<<<<<<<<<<<<<<<<<<
+********************************************************************************
+]]
+
 -- Parsing the command line --------------------------------------------------
 if not opt then
    print '==> processing options'
@@ -29,15 +36,22 @@ if not opt then
    cmd:option('-seed',        1,      'initial random seed')
    cmd:option('-threads',     8,      'threads')
    cmd:option('-savedataset', true,  'save dataset')
-   cmd:option('-width',       46*3,   'width of extracted patch')
-   cmd:option('-height',      46*3,   'height of extracted patch')
-   cmd:option('-down',        3,      'downsample of the extracted patch')
+   cmd:option('-width',       46,   'width of extracted patch')
+   cmd:option('-height',      46,   'height of extracted patch')
    cmd:option('-ratio',       0.8,    'ratio of train to test dataset split')
    cmd:option('-samplepercar',6,      'number of the patch to extract from per car (bounding box)')
 
    cmd:text()
    opt = cmd:parse(arg or {}) -- pass parameters to training files:
 end
+
+opt = opt or {}
+opt.seed = opt.seed or 1
+opt.threads = opt.threads or 3
+opt.height = opt.height or 46
+opt.width  = opt.width  or 46
+opt.ratio = opt.ratio or .8
+opt.samplepercar = opt.samplepercar or 6
 
 -- Parameters ----------------------------------------------------------------
 torch.manualSeed(opt.seed)
@@ -101,13 +115,13 @@ function extractPatches(dspath, tracklet)
       for i, detect in ipairs(detections) do
          for j=1, opt.samplepercar do
             if (detect.objectType == 'Car') then
-               if(detect.x1+opt.width<=detect.x2) and (detect.y1+opt.height<=detect.y2) then
-                  x = random(detect.x1+opt.width/2,detect.x2-opt.width/2)
-                  y = random(detect.y1+opt.height/2,detect.y2-opt.height/2)
+               if(detect.x1+opt.width*3<=detect.x2) and (detect.y1+opt.height*3<=detect.y2) then
+                  x = random(detect.x1+opt.width*3/2,detect.x2-opt.width*3/2)
+                  y = random(detect.y1+opt.height*3/2,detect.y2-opt.height*3/2)
 
-                  randompatch = rawFrame[{{},{y-opt.height/2,y+opt.height/2-1},{x-opt.width/2,x+opt.width/2-1}}]
-                  sizepatch = nn.SpatialReSampling{owidth=opt.width/opt.down,
-                  oheight=opt.height/opt.down}:forward(randompatch)
+                  randompatch = rawFrame[{{},{y-opt.height*3/2,y+opt.height*3/2-1},{x-opt.width*3/2,x+opt.width*3/2-1}}]
+                  sizepatch = nn.SpatialReSampling{owidth=opt.width,
+                  oheight=opt.height}:forward(randompatch)
                   table.insert(carData.data, sizepatch)
                   table.insert(carData.labels, 1)  -- car
 
@@ -119,21 +133,21 @@ function extractPatches(dspath, tracklet)
 
 
       for i=1,ncar+4 do
-         x = random(opt.width/2+1, iwidth-opt.width/2-1)
-         y = random(opt.height/2+1, iheight-opt.height/2-1)
+         x = random(opt.width*3/2+1, iwidth-opt.width*3/2-1)
+         y = random(opt.height*3/2+1, iheight-opt.height*3/2-1)
          i = 0
-         while (InCar(x-opt.width/2,x+opt.width/2,y-opt.height/2,y+opt.height/2)) do
-            x = random(opt.width/2+1, iwidth-opt.width/2-1)
-            y = random(opt.height/2+1, iheight-opt.height/2-1)
+         while (InCar(x-opt.width*3/2,x+opt.width*3/2,y-opt.height*3/2,y+opt.height*3/2)) do
+            x = random(opt.width*3/2+1, iwidth-opt.width*3/2-1)
+            y = random(opt.height*3/2+1, iheight-opt.height*3/2-1)
             i = i+1
             if (i==50) then
                break
             end
          end
          if (i~=50) then
-            randompatch = rawFrame[{{},{y-opt.height/2,y+opt.height/2-1},{x-opt.width/2,x+opt.width/2-1}}]
-            sizepatch = nn.SpatialReSampling{owidth=opt.width/opt.down,
-            oheight=opt.height/opt.down}:forward(randompatch)
+            randompatch = rawFrame[{{},{y-opt.height*3/2,y+opt.height*3/2-1},{x-opt.width*3/2,x+opt.width*3/2-1}}]
+            sizepatch = nn.SpatialReSampling{owidth=opt.width,
+            oheight=opt.height}:forward(randompatch)
             table.insert(backgroundData.data, sizepatch)
             table.insert(backgroundData.labels, 0)  -- bg
          end
@@ -260,7 +274,7 @@ local shuffleCar = torch.randperm(carData:size())
 
 -- Training dataset
 trainData = {
-   data   = zeros(trSize, 3, opt.width/opt.down, opt.width/opt.down),
+   data   = zeros(trSize, 3, opt.width, opt.width),
    labels = zeros(trSize),
    size   = function() return trSize  end
 }
@@ -272,7 +286,7 @@ image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train 
 
 -- Testing dataset
 testData  = {
-   data   = zeros(teSize, 3, opt.width/opt.down, opt.width/opt.down),
+   data   = zeros(teSize, 3, opt.width, opt.width),
    labels = zeros(teSize),
    size   = function() return teSize end
 }
