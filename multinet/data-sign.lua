@@ -14,6 +14,13 @@ require 'xlua'
 -- Exporting functions to the global namespace -------------------------------
 ls = eex.ls
 
+-- Title ---------------------------------------------------------------------
+print [[
+********************************************************************************
+>>>>>>>>>>>>>>>>>>>>>>> Loading GTSRB (sign) dataset <<<<<<<<<<<<<<<<<<<<<<<<<<<
+********************************************************************************
+]]
+
 -- Parsing the command line --------------------------------------------------
 if not opt then
    print '==> Processing options'
@@ -26,17 +33,23 @@ if not opt then
        --maxNbPhysicalSigns (default 75)    max number of physical signs to pick from each category
        --checkTestDataset                   check correctness of testing dataset
        --teSize             (default 12630) enter the testing dataset size [1,12630]
+       --visualize                          show some samples
 ]]
-   opt.visualize = true
 end
+
+opt = opt or {}
+opt.firstFrame = opt.firstFrame or 21
+opt.lastFrame  = opt.lastFrame  or 30
+opt.maxNbPhysicalSigns = opt.maxNbPhysicalSigns or 1 --75
+opt.teSize = opt.teSize or 200 --12630
 
 -- Parameters ----------------------------------------------------------------
 ds = eex.datasetsPath()
 path = ds .. 'GTSRB/'
 trPath = path .. 'Final_Training/Images/'
 tePath = path .. 'Final_Test/Images/'
-height = opt.height
-width = opt.width
+height = opt.height or 46
+width = opt.width or 46
 teSize = opt.teSize
 
 -- Main program -------------------------------------------------------------
