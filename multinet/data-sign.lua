@@ -55,11 +55,11 @@ teSize = opt.teSize
 -- Main program -------------------------------------------------------------
 print '==> Loading human readable labels'
 local humanReadableDataFile = io.open(path .. 'Categories-name.txt', 'rb')
-local line = {}
+local line
 for i = 1,3 do line = humanReadableDataFile:read() end -- skipping the header
 local humanLabels = {}
 while line ~= nil do
-   labels = sys.split(line,'- ')
+   local labels = sys.split(line,'- ')
    table.insert(humanLabels,labels[2])
    line = humanReadableDataFile:read()
 end

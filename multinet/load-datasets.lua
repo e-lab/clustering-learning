@@ -55,4 +55,4 @@ end
 trainData = totalTrainData
 testData  = totalTestData
 
-print '==> Dataset loaded successfully! :)'
+print '==> Datasets loaded successfully! :)'
