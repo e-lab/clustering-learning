@@ -254,17 +254,17 @@ xlua.progress(iter,tot)
 
 print '==> split dataset into train/test datasets'
 
-local nTrainData  = floor(opt.ratio*carData:size())
-local nTestData = floor((carData:size()-nTrainData))
+trSize  = floor(opt.ratio*carData:size())
+teSize = floor((carData:size()-trSize))
 local shuffleCar = torch.randperm(carData:size())
 
 -- Training dataset
 trainData = {
-   data   = zeros(nTrainData, 3, opt.width/opt.down, opt.width/opt.down),
-   labels = zeros(nTrainData),
-   size   = function() return nTrainData  end
+   data   = zeros(trSize, 3, opt.width/opt.down, opt.width/opt.down),
+   labels = zeros(trSize),
+   size   = function() return trSize  end
 }
-for i=1 , nTrainData  do
+for i=1 , trSize  do
    trainData.data[i]  = carData.data[shuffleCar[i]]
 end
 -- display some examples:
@@ -272,13 +272,30 @@ image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train 
 
 -- Testing dataset
 testData  = {
-   data   = zeros(nTestData, 3, opt.width/opt.down, opt.width/opt.down),
-   labels = zeros(nTestData),
-   size   = function() return nTestData end
+   data   = zeros(teSize, 3, opt.width/opt.down, opt.width/opt.down),
+   labels = zeros(teSize),
+   size   = function() return teSize end
 }
-for i=1 , nTestData  do
-   testData.data[i] = carData.data[shuffleCar[i+nTrainData]]
+for i=1 , teSize  do
+   testData.data[i] = carData.data[shuffleCar[i+trSize]]
 end
 -- display some examples:
 image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
+-- Displaying the dataset architecture ---------------------------------------
+print('Training Data:')
+print(trainData)
+print()
+
+print('Test Data:')
+print(testData)
+print()
+
+-- Preprocessing -------------------------------------------------------------
+dofile 'preprocessing.lua'
+
+-- Exports -------------------------------------------------------------------
+return {
+   trainData = trainData,
+   testData = testData
+}
