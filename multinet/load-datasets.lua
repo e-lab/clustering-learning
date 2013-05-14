@@ -17,30 +17,37 @@ function cat(a,b)
 end
 
 -- Main program -------------------------------------------------------------
-totalTrainData = {}
-totalTestData = {}
+-- Temporary dataset container
+local totalTrainData = {}
+local totalTestData = {}
 
-datasets = {
+-- Datasets' name
+local datasets = {
    'data-person',
    'data-sign',
    'data-kitti'
 }
 
-classes = {
+-- Number of classes per dataset
+local classes = {
    1,
    43,
    1
 }
 
-totNbClasses = {0}
+-- Computing cumulative number of classes
+local totNbClasses = {0}
 for i,c in ipairs(classes) do
    totNbClasses[i+1] = totNbClasses[i] + c
 end
 
+-- Cleaning the screen before executing (a lot of text out will follow)
 os.execute('clear')
 
+-- Concatenating all datasets contained in <dataset> table
 for i,d in ipairs(datasets) do
-   data = require(d)
+
+   local data = require(d)
 
    totalTrainData.data = cat(totalTrainData.data,data.trainData.data)
    totalTrainData.labels = cat(totalTrainData.labels,data.trainData.labels + 1 + totNbClasses[i])
@@ -52,7 +59,9 @@ for i,d in ipairs(datasets) do
 
 end
 
+-- Exporting main dataset to the global namespace
 trainData = totalTrainData
 testData  = totalTestData
 
+-- Done :)
 print '==> Datasets loaded successfully! :)'
