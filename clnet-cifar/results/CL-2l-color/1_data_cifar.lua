@@ -29,7 +29,7 @@ print '==> downloading dataset'
 
 tar = 'http://data.neuflow.org/data/cifar10.t7.tgz'
 
-if not paths.dirp('../datasets/cifar-10-batches-t7') then
+if not paths.dirp('../../datasets/cifar-10-batches-t7') then
    os.execute('wget ' .. tar)
    os.execute('tar xvf ' .. paths.basename(tar))
 end
@@ -37,9 +37,9 @@ end
 ----------------------------------------------------------------------
 print '==> loading dataset'
 
--- dataset size:
+-- dataset size: -- will be resized below by opt.smalldata!!!!! be cautious!
 trsize = 50000
-tesize = 2000
+tesize = 10000
 
 trainData = {
    data = torch.Tensor(trsize, 3*32*32),
@@ -47,13 +47,13 @@ trainData = {
    size = function() return trsize end
 }
 for i = 0,4 do
-   subset = torch.load('../datasets/cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
+   subset = torch.load('../../datasets/cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
    trainData.data[{ {i*10000+1, (i+1)*10000} }] = subset.data:t()
    trainData.labels[{ {i*10000+1, (i+1)*10000} }] = subset.labels
 end
 trainData.labels = trainData.labels + 1
 
-subset = torch.load('../datasets/cifar-10-batches-t7/test_batch.t7', 'ascii')
+subset = torch.load('../../datasets/cifar-10-batches-t7/test_batch.t7', 'ascii')
 testData = {
    data = subset.data:t():double(),
    labels = subset.labels[1]:double(),
@@ -61,9 +61,14 @@ testData = {
 }
 testData.labels = testData.labels + 1
 
--- resize dataset (if using small version)
-trsize = 50000  -- repeated here for smaller size train/test
-tesize = 2000
+-- dataset size:
+if opt.smalldata then
+	trsize = 10000
+	tesize = 2000
+else
+	trsize = 50000
+	tesize = 10000
+end
 
 trainData.data = trainData.data[{ {1,trsize} }]
 trainData.labels = trainData.labels[{ {1,trsize} }]
@@ -74,6 +79,9 @@ testData.labels = testData.labels[{ {1,tesize} }]
 -- reshape data                                                                                     
 trainData.data = trainData.data:reshape(trsize,3,32,32)
 testData.data = testData.data:reshape(tesize,3,32,32)
+
+trainData.data = trainData.data:float()
+testData.data = testData.data:float()
 
 print('Training Data:')
 print(trainData)
@@ -126,8 +134,8 @@ channels = {'y','u','v'}
 -- the trainable parameters. At test time, test data will be normalized
 -- using these values.
 print '==> preprocessing data: normalize each feature (channel) globally'
-mean = {}
-std = {}
+local mean = {}
+local std = {}
 for i,channel in ipairs(channels) do
    -- normalize each channel globally:
    mean[i] = trainData.data[{ {},i,{},{} }]:mean()
@@ -150,15 +158,15 @@ end
 --print '==> preprocessing data: normalize all three channels locally'
 
 -- Define the normalization neighborhood:
---neighborhood = image.gaussian1D(7)
+neighborhood = image.gaussian1D(7)
 
 -- Define our local normalization operator (It is an actual nn module, 
 -- which could be inserted into a trainable model):
---normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
+normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 
 -- Normalize all channels locally:
 --for c in ipairs(channels) do
---c = 1
+----c = 1
 --   for i = 1,trsize do
 --      trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
 --   end
@@ -202,11 +210,11 @@ print '==> verify statistics'
 -- normalized.
 
 for i,channel in ipairs(channels) do
-   trainMean = trainData.data[{ {},i }]:mean()
-   trainStd = trainData.data[{ {},i }]:std()
+   local trainMean = trainData.data[{ {},i }]:mean()
+   local trainStd = trainData.data[{ {},i }]:std()
 
-   testMean = testData.data[{ {},i }]:mean()
-   testStd = testData.data[{ {},i }]:std()
+   local testMean = testData.data[{ {},i }]:mean()
+   local testStd = testData.data[{ {},i }]:std()
 
    print('training data, '..channel..'-channel, mean: ' .. trainMean)
    print('training data, '..channel..'-channel, standard deviation: ' .. trainStd)
@@ -222,9 +230,9 @@ print '==> visualizing data'
 -- help(image.display), for more info about options.
 
 if opt.visualize then
-   first256Samples_y = trainData.data[{ {1,256},1 }]
-   first256Samples_u = trainData.data[{ {1,256},2 }]
-   first256Samples_v = trainData.data[{ {1,256},3 }]
+   local first256Samples_y = trainData.data[{ {1,256},1 }]
+   local first256Samples_u = trainData.data[{ {1,256},2 }]
+   local first256Samples_v = trainData.data[{ {1,256},3 }]
    image.display{image=first256Samples_y, nrow=16, legend='Some training examples: ' ..channels[1].. ' channel'}
    image.display{image=first256Samples_u, nrow=16, legend='Some training examples: ' ..channels[2].. ' channel'}
    image.display{image=first256Samples_v, nrow=16, legend='Some training examples: ' ..channels[3].. ' channel'}

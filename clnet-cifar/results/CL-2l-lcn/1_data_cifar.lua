@@ -37,9 +37,9 @@ end
 ----------------------------------------------------------------------
 print '==> loading dataset'
 
--- dataset size: -- will be resized below by opt.smalldata!!!!! be cautious!
+-- dataset size:
 trsize = 50000
-tesize = 10000
+tesize = 2000
 
 trainData = {
    data = torch.Tensor(trsize, 3*32*32),
@@ -61,14 +61,9 @@ testData = {
 }
 testData.labels = testData.labels + 1
 
--- dataset size:
-if opt.smalldata then
-	trsize = 10000
-	tesize = 2000
-else
-	trsize = 50000
-	tesize = 10000
-end
+-- resize dataset (if using small version)
+trsize = 50000  -- repeated here for smaller size train/test
+tesize = 2000
 
 trainData.data = trainData.data[{ {1,trsize} }]
 trainData.labels = trainData.labels[{ {1,trsize} }]
@@ -165,15 +160,15 @@ neighborhood = image.gaussian1D(7)
 normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 
 -- Normalize all channels locally:
---for c in ipairs(channels) do
-----c = 1
---   for i = 1,trsize do
---      trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
---   end
---   for i = 1,tesize do
---      testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
---   end
---end
+for c in ipairs(channels) do
+--c = 1
+   for i = 1,trsize do
+      trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
+   end
+   for i = 1,tesize do
+      testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
+   end
+end
 
 
 

@@ -53,7 +53,6 @@ nk = opt.nkernels
 
 opt.niter = 15
 opt.slacmodel = false
-opt.smalldata = false -- toggle if you want ALL dataset (false) or a small set (false)
 
 ----------------------------------------------------------------------
 -- loading and processing dataset:
