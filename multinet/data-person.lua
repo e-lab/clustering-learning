@@ -5,12 +5,16 @@
 -- April 2013 & May 2013
 ----------------------------------------------------------------------
 
-require 'torch'   -- torch
+-- Requires ------------------------------------------------------------------
 require 'image'   -- to visualize the dataset
 require 'nn'      -- provides a normalization operator
 require 'unsup'
 require 'sys'
 require 'ffmpeg'
+require 'eex'
+
+-- Exporting functions to the global namespace -------------------------------
+ls = eex.ls
 
 -- Title ---------------------------------------------------------------------
 print [[
@@ -19,8 +23,7 @@ print [[
 ********************************************************************************
 ]]
 
-------------------------------------------------------------------------------
--- parse command line arguments
+-- Parsing the command line --------------------------------------------------
 if not opt then
    print '==> processing options'
    cmd = torch.CmdLine()
@@ -33,13 +36,7 @@ if not opt then
    opt = cmd:parse(arg or {})
 end
 
-----------------------------------------------------------------------
-
-function ls(path) return sys.split(sys.ls(path),'\n') end -- alf ls() nice function!
-
--- Main program -------------------------------------------------------------
--- load or generate new dataset:
-
+-- Parameters ----------------------------------------------------------------
 local ivch = 3 -- color channels in images
 local desImaX = 46 -- desired cropped dataset image size
 local desImaY = 46
@@ -61,6 +58,7 @@ local dataMultiplier = 1 -- optional: take multiple samples per image: +/- 2 pix
 trSize = dataMultiplier * trainImaNumber / 2
 teSize = dataMultiplier * testImaNumber / 2
 
+-- Main program -------------------------------------------------------------
 print '==> creating a new training dataset from raw files:'
 
 trainData = {
