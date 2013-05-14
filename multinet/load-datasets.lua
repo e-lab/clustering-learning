@@ -54,3 +54,5 @@ end
 
 trainData = totalTrainData
 testData  = totalTestData
+
+print '==> Dataset loaded successfully! :)'
