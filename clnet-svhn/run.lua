@@ -45,7 +45,7 @@ end
 
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
-torch.setdefaulttensortype('torch.DoubleTensor')
+torch.setdefaulttensortype('torch.FloatTensor')
 
 is = opt.inputsize
 nk = opt.nkernels
@@ -61,9 +61,6 @@ dofile '1_data_svhn.lua'
 ivch = trainData.data[1]:size(1) -- channels
 ivhe = trainData.data[1]:size(2) -- height
 ivwi = trainData.data[1]:size(3) -- width
-
-trainData.data = trainData.data:double()
-testData.data = testData.data:double()
 
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
@@ -264,7 +261,7 @@ if opt.classify then
    model:add(nn.Linear(nhiddens,outsize))
    
    print "==> test network output:"
-   print(model:forward(trainData.data[1]:double()))
+   print(model:forward(trainData.data[1]))
    
    dofile '3_loss.lua' 
    dofile '4_train.lua'

@@ -32,7 +32,7 @@ opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
 torch.manualSeed(params.seed)
 torch.setnumthreads(params.threads)
-torch.setdefaulttensortype('torch.DoubleTensor')
+torch.setdefaulttensortype('torch.FloatTensor')
 
 is = params.inputsize
 
@@ -83,7 +83,7 @@ model:add(nn.Linear(nstates[3], noutputs))
 
 
 print "==> test network output:"
-print(model:forward(trainData.data[1]:double()))
+print(model:forward(trainData.data[1]))
 
 dofile '3_loss.lua' 
 dofile '4_train.lua'
