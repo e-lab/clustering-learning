@@ -41,17 +41,16 @@ opt = lapp[[
 	--seed				(default 1)					use fixed seed for randomized initialization
 ]]
 
+opt.initstd = 0.1
+opt.niter = 15
+opt.kmbatchsize = 1000 -- kmeans batchsize
 
 opt.plot = false -- because otherwise it would be a string...
 opt.quicktest = false	--(default 0)			true = small test, false = full code running
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
 opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
 opt.colorbypass = true
-
-opt.initstd = 0.1
-opt.niter = 15
-opt.kmbatchsize = 1000 -- kmeans batchsize
-
+opt.numlayers = 1 -- number of layers in network
 
 dname,fname = sys.fpath()
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens',
@@ -78,6 +77,13 @@ if opt.threads > 1 then
    print('<trainer> using ' .. opt.threads .. ' threads')
 end
 
+-- type:
+if opt.type == 'cuda' then
+   print('==> switching to CUDA')
+   require 'cunn'
+   cutorch.setDevice(opt.devid)
+   print('==> using GPU #' .. cutorch.getDevice())
+end
 
 ----------------------------------------------------------------------
 -- define network to train
@@ -221,86 +227,87 @@ print('1st layer conv out. std: '..stdc1..' and mean: '..meac1)
 print('1st layer output. std: '..stdo..' and mean: '..meao)
 
 
-
-----------------------------------------------------------------------
-print '==> generating filters for layer 2:'
-nlayer = 2
-ovhe2 = (ovhe-is2+1)/ss2 -- output video feature height
-ovwi2 = (ovwi-is2+1)/ss2 -- output video feature width
-
-
--- OUTPUT Co-occurence CONNEX MODEL:
-print '==> Computing connection tables based on co-occurence of features: [nk1*feat_group*(fanin+fanin*2)]'
-cTable2, kernels2 = createCoCnx(nlayer, videoData2, nk1, feat_group, fanin, opt.nsamples/10, nnf2, is2, false)
-nk2 = cTable2:max()
-nk = nk2
-if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is2), 
-		padding=2, symmetric=true, nrow = 64, zoom=2, legend = 'Layer 2 filters'} end
+if opt.numlayers >=2 then
+	----------------------------------------------------------------------
+	print '==> generating filters for layer 2:'
+	nlayer = 2
+	ovhe2 = (ovhe-is2+1)/ss2 -- output video feature height
+	ovwi2 = (ovwi-is2+1)/ss2 -- output video feature width
 
 
-----------------------------------------------------------------------
--- 2nd layer
-
-vnet2 = nn.Sequential()
-vnet2:add(nn.SpatialConvolutionMap(cTable2, is2, is2)) -- connex table based on similarity of features
-vnet2:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
-vnet2:add(nn.Threshold())
-
--- setup net/ load kernels into network:
-vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels2_ = kernels2:clone():div(nk2/3) -- divide kernels so output of SpatialConv std is ~0.5
-vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
-
-----------------------------------------------------------------------
-print '==> process video throught 2nd layer:'
-videoData3, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet2, videoData2, nk2, ovhe2, ovwi2)
-videoData2 = nil -- free space!
-
---report some statistics:
-print('2nd layer conv out. std: '..stdc1..' and mean: '..meac1)
-print('2nd layer output. std: '..stdo..' and mean: '..meao)
+	-- OUTPUT Co-occurence CONNEX MODEL:
+	print '==> Computing connection tables based on co-occurence of features: [nk1*feat_group*(fanin+fanin*2)]'
+	cTable2, kernels2 = createCoCnx(nlayer, videoData2, nk1, feat_group, fanin, opt.nsamples/10, nnf2, is2, false)
+	nk2 = cTable2:max()
+	nk = nk2
+	if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is2), 
+			padding=2, symmetric=true, nrow = 64, zoom=2, legend = 'Layer 2 filters'} end
 
 
-----------------------------------------------------------------------
-print '==> generating filters for layer 3:'
-nlayer = 3
-nnf3 = 1  -- just one frames goes into layer 3
-feat_group = 8 
-cvstepsize = 1
-ovhe3 = (ovhe2-is3+1) -- output video feature height
-ovwi3 = (ovwi2-is3+1) -- output video feature width
+	----------------------------------------------------------------------
+	-- 2nd layer
+
+	vnet2 = nn.Sequential()
+	vnet2:add(nn.SpatialConvolutionMap(cTable2, is2, is2)) -- connex table based on similarity of features
+	vnet2:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
+	vnet2:add(nn.Threshold())
+
+	-- setup net/ load kernels into network:
+	vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
+	kernels2_ = kernels2:clone():div(nk2/3) -- divide kernels so output of SpatialConv std is ~0.5
+	vnet2.modules[1].weight = kernels2_  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
+
+	----------------------------------------------------------------------
+	print '==> process video throught 2nd layer:'
+	videoData3, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet2, videoData2, nk2, ovhe2, ovwi2)
+	videoData2 = nil -- free space!
+
+	--report some statistics:
+	print('2nd layer conv out. std: '..stdc1..' and mean: '..meac1)
+	print('2nd layer output. std: '..stdo..' and mean: '..meao)
+end  -- opt.numlayer >=2 
+
+if opt.numlayers >=3 then
+	----------------------------------------------------------------------
+	print '==> generating filters for layer 3:'
+	nlayer = 3
+	nnf3 = 1  -- just one frames goes into layer 3
+	feat_group = 8 
+	cvstepsize = 1
+	ovhe3 = (ovhe2-is3+1) -- output video feature height
+	ovwi3 = (ovwi2-is3+1) -- output video feature width
 
 
--- OUTPUT Co-occurence CONNEX MODEL:
-print '==> Computing connection tables based on co-occurence of features'
-cTable3, kernels3 = createCoCnx(nlayer, videoData3, nk2, feat_group, fanin, opt.nsamples/10, nnf3, is3, false)
-nk3 = cTable3:max()
---nk = nk3
-if opt.display then image.display{image=kernels3, padding=2, padding=2, symmetric=true, 
-		nrow = 64, zoom=2, legend = 'Layer 3 filters'} end
+	-- OUTPUT Co-occurence CONNEX MODEL:
+	print '==> Computing connection tables based on co-occurence of features'
+	cTable3, kernels3 = createCoCnx(nlayer, videoData3, nk2, feat_group, fanin, opt.nsamples/10, nnf3, is3, false)
+	nk3 = cTable3:max()
+	--nk = nk3
+	if opt.display then image.display{image=kernels3, padding=2, padding=2, symmetric=true, 
+			nrow = 64, zoom=2, legend = 'Layer 3 filters'} end
 
-   
-----------------------------------------------------------------------
--- 3rd layer   
+	
+	----------------------------------------------------------------------
+	-- 3rd layer   
 
-vnet3 = nn.Sequential()
-vnet3:add(nn.SpatialConvolutionMap(cTable3, is3, is3)) -- connex table based on similarity of features
+	vnet3 = nn.Sequential()
+	vnet3:add(nn.SpatialConvolutionMap(cTable3, is3, is3)) -- connex table based on similarity of features
 
 
--- setup net/ load kernels into network:
-vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels3_ = kernels3:clone():div(nk3*2) -- divide kernels so output of SpatialConv std ~0.5
-vnet3.modules[1].weight = kernels3_
+	-- setup net/ load kernels into network:
+	vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
+	kernels3_ = kernels3:clone():div(nk3*2) -- divide kernels so output of SpatialConv std ~0.5
+	vnet3.modules[1].weight = kernels3_
 
-----------------------------------------------------------------------
-print '==> process video throught 3rd layer:'
-videoData4, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet3, videoData3, nk3, ovhe3, ovwi3) -- just a few samples
-videoData3 = nil -- free space!
+	----------------------------------------------------------------------
+	print '==> process video throught 3rd layer:'
+	videoData4, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet3, videoData3, nk3, ovhe3, ovwi3) -- just a few samples
+	videoData3 = nil -- free space!
 
---report some statistics:
-print('3rd layer conv out. std: '..stdc1..' and mean: '..meac1)
-print('3rd layer output. std: '..stdo..' and mean: '..meao)
-   
+	--report some statistics:
+	print('3rd layer conv out. std: '..stdc1..' and mean: '..meac1)
+	print('3rd layer output. std: '..stdo..' and mean: '..meao)
+end  -- opt.numlayer >=3    
    
 ---------------------------------------------------------------------- 
 
@@ -324,12 +331,17 @@ print("==>  time to CL train network = " .. (time*1000) .. 'ms')
 ----------------------------------------------------------------------  
 -- prepare full network [tnet] with all layers:
 tnet = vnet:clone()
-for i=1,vnet2:size() do
-   tnet:add(vnet2.modules[i]:clone())
+if opt.numlayers >=2 then
+	for i=1,vnet2:size() do
+		tnet:add(vnet2.modules[i]:clone())
+	end
 end
-for i=1,vnet3:size() do
-   tnet:add(vnet3.modules[i]:clone())
+if opt.numlayers >=3 then
+	for i=1,vnet3:size() do
+		tnet:add(vnet3.modules[i]:clone())
+	end
 end
+
 
 
 ----------------------------------------------------------------------
@@ -342,17 +354,16 @@ if not data then data  = require 'data-person' end
 
 print "==> processing dataset with videoknet:"
 -- train:
-local a = #tnet:forward(trainData.data[1])
+tfa = #tnet:forward(trainData.data[1])
 trainData2 = {}
-trainData2.data = torch.Tensor(trainData:size(), a[1], a[2], a[3])
+trainData2.data = torch.Tensor(trainData:size(), tfa[1], tfa[2], tfa[3])
 for i = 1,trainData:size() do
 	trainData2.data[i] = tnet:forward(trainData.data[i])
 	xlua.progress(i, trainData:size())
 end
 -- test:
-local a = #tnet:forward(testData.data[1])
 testData2 = {}
-testData2.data = torch.Tensor(testData:size(), a[1], a[2], a[3])
+testData2.data = torch.Tensor(testData:size(), tfa[1], tfa[2], tfa[3])
 for i = 1,testData:size() do
 	testData2.data[i] = tnet:forward(testData.data[i])
 	xlua.progress(i, testData:size())
@@ -369,10 +380,18 @@ print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainDa
 
 ----------------------------------------------------------------------
 -- Color bypass
+--if opt.colorbypass then
+--	totalpool = ss1*ss2
+--	trainData, testData = colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 	
+--	cl_nk1 = (#trainData.data)[2] -- resize output of the concatenated vector
+--end
+--
+--
 if opt.colorbypass then
-	totalpool = ss1*ss2
-	trainData, testData = colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 	
-	cl_nk1 = (#trainData.data)[2] -- resize output of the concatenated vector
+	totalpool = ss1 -- only 1 layer used!
+	if opt.numlayers >= 2 then totalpool = totalpool*ss2 end -- in case we use 2,3 layers!
+	trainData, testData = colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2
+	cl_nk1 = (#trainData.data)[2] * (#trainData.data)[3] * (#trainData.data)[4] 
 end
 
 ----------------------------------------------------------------------

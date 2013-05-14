@@ -51,15 +51,14 @@ else
    -- video dataset to get background from:
    local dspath = '../../datasets/driving1.mov'
    local source = ffmpeg.Video{path=dspath, width = 160, height = 120, encoding='jpg', 
-   fps=24, loaddump=false, load=false}
+   		fps=24, loaddump=false, load=false}
 
    local rawFrame = source:forward()
    -- input video params:
-   --local ivch = rawFrame:size(1) -- channels
+   ivch = rawFrame:size(1) -- channels
    ivhe = rawFrame:size(2) -- height
    ivwi = rawFrame:size(3) -- width
 
-   local ivch = 3 -- color channels in images
    local desImaX = 46 -- desired cropped dataset image size
    local desImaY = 46
 
@@ -73,22 +72,19 @@ else
 
    local trainDir = '../../datasets/INRIAPerson/96X160H96/Train/pos/'
    local trainImaNumber = #ls(trainDir)
+   trSize = trainImaNumber
    local testDir = '../../datasets/INRIAPerson/70X134H96/Test/pos/'
    local testImaNumber = #ls(testDir)
-
-   -- dataset size:
-   local dataMultiplier = 1 -- optional: take multiple samples per image: +/- 2 pix H, V = 4 total
-   trSize = dataMultiplier * trainImaNumber
-   teSize = dataMultiplier * testImaNumber
+   teSize = testImaNumber
 
    trainData = {
-      data = torch.Tensor(trSize, ivch,desImaX,desImaY),
+      data = torch.Tensor(trSize, ivch, desImaX, desImaY),
       labels = torch.Tensor(trSize),
       size = function() return trSize end
    }
 
    -- load person data:
-   for i = 1, trainImaNumber, 2 do
+   for i = 1, trainImaNumber,2 do -- we only take every second example because the others are mirror images
       img = image.loadPNG(trainDir..ls(trainDir)[i],ivch)
       trainData.data[i] = image.crop(img, cropTrX-desImaX/2, cropTrY-desImaY/2, 
       cropTrX+desImaX/2, cropTrY+desImaY/2):clone()
@@ -112,7 +108,7 @@ else
    }
 
    -- load person data:
-   for i = 1, testImaNumber, 2 do
+   for i = 1, testImaNumber,2 do -- we only take every second example because the others are mirror images
       img = image.loadPNG(testDir..ls(testDir)[i],ivch)
       testData.data[i] = image.crop(img, cropTeX-desImaX/2, cropTeY-desImaY/2, 
       cropTeX+desImaX/2, cropTeY+desImaY/2):clone()
