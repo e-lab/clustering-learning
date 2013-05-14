@@ -355,16 +355,16 @@ if not data then data  = require 'data-person' end
 
 print "==> processing dataset with videoknet:"
 -- train:
-a = #tnet:forward(trainData.data[1])
+tfa = #tnet:forward(trainData.data[1])
 trainData2 = {}
-trainData2.data = torch.Tensor(trainData:size(), a[1], a[2], a[3])
+trainData2.data = torch.Tensor(trainData:size(), tfa[1], tfa[2], tfa[3])
 for i = 1,trainData:size() do
 	trainData2.data[i] = tnet:forward(trainData.data[i])
 	xlua.progress(i, trainData:size())
 end
 -- test:
 testData2 = {}
-testData2.data = torch.Tensor(testData:size(), a[1], a[2], a[3])
+testData2.data = torch.Tensor(testData:size(), tfa[1], tfa[2], tfa[3])
 for i = 1,testData:size() do
 	testData2.data[i] = tnet:forward(testData.data[i])
 	xlua.progress(i, testData:size())
@@ -396,7 +396,7 @@ dofile('clclassifier.lua')
 -- test with MLP classifier:
 if true then
 	if opt.numlayers < 3 then
-		cl_nk1 =  a[1]*a[2]*a[3]-- recalculate if less layers are used!
+		cl_nk1 =  tfa[1]*tfa[2]*tfa[3]-- recalculate if less layers are used!
 	end
 	
 	-- MLP classifier:
