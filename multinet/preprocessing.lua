@@ -111,7 +111,7 @@ for i,channel in ipairs(channels) do
 end
 
 ----------------------------------------------------------------------
-print '==> visualizing data:'
+print '==> visualizing data:\n'
 
 -- Visualization is quite easy, using image.display(). Check out:
 -- help(image.display), for more info about options.
