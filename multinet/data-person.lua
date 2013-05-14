@@ -48,9 +48,11 @@ local cropTeY = 35
 
 local labelPerson = 0 -- label for person and background:
 
-local trainDir = '../../datasets/INRIAPerson/96X160H96/Train/pos/'
+local ds = eex.datasetsPath()
+local path = ds .. 'INRIAPerson/'
+local trainDir = path .. '96X160H96/Train/pos/'
 local trainImaNumber = #ls(trainDir)
-local testDir = '../../datasets/INRIAPerson/70X134H96/Test/pos/'
+local testDir = path .. '70X134H96/Test/pos/'
 local testImaNumber = #ls(testDir)
 
 -- dataset size:
@@ -112,8 +114,8 @@ print()
 dofile 'preprocessing.lua'
 
 --[[ Save created dataset ------------------------------------------------------
-torch.save('../../datasets/INRIAPerson/train.t7',trainData)
-torch.save('../../datasets/INRIAPerson/test.t7',testData)]]
+torch.save(path .. 'train.t7',trainData)
+torch.save(path .. 'test.t7',testData)]]
 
 -- Exports -------------------------------------------------------------------
 return {
