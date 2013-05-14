@@ -50,7 +50,7 @@ opt.quicktest = false	--(default 0)			true = small test, false = full code runni
 opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
 opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
 opt.colorbypass = true
-opt.numlayers = 1 -- number of layers in network
+opt.numlayers = 3 -- number of layers in network
 
 dname,fname = sys.fpath()
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens',
