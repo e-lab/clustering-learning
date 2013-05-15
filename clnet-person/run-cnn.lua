@@ -129,6 +129,21 @@ model:add(nn.Linear(cl_nk2,#classes))
 -- final stage: log probabilities
 model:add(nn.LogSoftMax())
 
+
+
+-- Save model for demos: -- see run.lua
+--if opt.save then
+--
+--   -- replace classifier (2nd module) by SpatialClassifier
+--   sclassifier = nn.SpatialClassifier(model)
+--   tnet:add(sclassifier)	
+--   
+--   print('==>  <trainer> saving bare network to '..opt.save)
+--   os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
+--   torch.save(opt.save..'demo.net', tnet)
+--end
+
+
 -- Save model
 if opt.save then
    print('==>  <trainer> saving bare network to '..opt.save)
