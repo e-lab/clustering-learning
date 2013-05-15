@@ -11,12 +11,13 @@
 --   > verbose: prints a progress bar...
 --
 --   < returns the k means (centroids)
---
 
 function topokmeans(x, k, centroids, std, niter, topo, callback, verbose)
    -- args
    --batchsize = batchsize or 1000
    std = std or 0.1 -- should be:  x:std(2):std()
+   
+   if verbose then print('Topographic k-means running:') end
 
    -- dims
    local nsamples = (#x)[1]
@@ -34,7 +35,7 @@ function topokmeans(x, k, centroids, std, niter, topo, callback, verbose)
       if verbose then xlua.progress(i,niter) end
 
       -- init some variables
-      local counts = torch.ones(k)
+      local counts = torch.zeros(k)
 
       -- process
       for i = 1,nsamples do
@@ -49,50 +50,53 @@ function topokmeans(x, k, centroids, std, niter, topo, callback, verbose)
       	local centToAve = 1 -- number of centroids to average with current sample 
       	for j = 1, centToAve do
       		local a = dsorted[j]
-      		centroids[a] = (centroids[a]*counts[a] + x[i]) / ( counts[a] + 1)
-      		counts[a] = counts[a] + 1
-      		
-      		-- also average topographically to neighbors:
-      		if (topo == 'topo+' or topo == 'topo#') then
-					local sqk = torch.sqrt(k)
+      		if x[i]:sum() > 0 then
+      			centroids[a] = (centroids[a]*counts[a] + x[i]) / ( counts[a] +1)
+      			counts[a] = counts[a] + 1
+				
+					-- also average topographically to neighbors:
+					if (topo == 'topo+' or topo == 'topo#') then
+						local sqk = torch.sqrt(k)
 
-					-- h+
-					local b = torch.floor((a-1)/sqk)*sqk + ((a-1)+1)%sqk+1
-					centroids[b] = (centroids[b]*counts[b] + x[i]) / ( counts[b] + 1)
-					counts[b] = (counts[b] + 1)
-					-- h-
-					local c = torch.floor((a-1)/sqk)*sqk + ((a-1)-1)%sqk+1
-					centroids[c] = (centroids[c]*counts[c] + x[i]) / ( counts[c] + 1)
-					counts[c] = counts[c] + 1
-					-- v+
-					local d = ((a-1)+sqk)%k+1
-					centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] + 1)
-					counts[d] = counts[d] + 1
-					-- v-
-					local e = ((a-1)-sqk)%k+1
-					centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] + 1)
-					counts[e] = counts[e] + 1
+						-- h+
+						local b = torch.floor((a-1)/sqk)*sqk + ((a-1)+1)%sqk+1
+						centroids[b] = (centroids[b]*counts[b] + x[i]) / ( counts[b] +1)
+						counts[b] = (counts[b] + 1)
+						-- h-
+						local c = torch.floor((a-1)/sqk)*sqk + ((a-1)-1)%sqk+1
+						centroids[c] = (centroids[c]*counts[c] + x[i]) / ( counts[c] +1)
+						counts[c] = counts[c] + 1
+						-- v+
+						local d = ((a-1)+sqk)%k+1
+						centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] +1)
+						counts[d] = counts[d] + 1
+						-- v-
+						local e = ((a-1)-sqk)%k+1
+						centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] +1)
+						counts[e] = counts[e] + 1
 					
-					if topo == 'topo#' then					
-						-- v+-
-						local d = ((a-1)+sqk-1)%k+1
-						centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] + 1)
-						counts[d] = counts[d] + 1
-						-- v-+
-						local e = ((a-1)-sqk+1)%k+1
-						centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] + 1)
-						counts[e] = counts[e] + 1 
-						-- v++
-						local d = ((a-1)+sqk+1)%k+1
-						centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] + 1)
-						counts[d] = counts[d] + 1
-						-- v--
-						local e = ((a-1)-sqk-1)%k+1
-						centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] + 1)
-						counts[e] = counts[e] + 1      		
-      			end
-      		end
-      	end      	
+						if topo == 'topo#' then					
+							-- v+-
+							local d = ((a-1)+sqk-1)%k+1
+							centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] +1)
+							counts[d] = counts[d] + 1
+							-- v-+
+							local e = ((a-1)-sqk+1)%k+1
+							centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] +1)
+							counts[e] = counts[e] + 1 
+							-- v++
+							local d = ((a-1)+sqk+1)%k+1
+							centroids[d] = (centroids[d]*counts[d] + x[i]) / ( counts[d] +1)
+							counts[d] = counts[d] + 1
+							-- v--
+							local e = ((a-1)-sqk-1)%k+1
+							centroids[e] = (centroids[e]*counts[e] + x[i]) / ( counts[e] +1)
+							counts[e] = counts[e] + 1      		
+						end
+					end
+				end      	
+			end
+			if callback and i%1000 == 0 then callback(centroids) end -- plot more frequently if desired
       end
 
 -- test matrix:
@@ -107,11 +111,8 @@ function topokmeans(x, k, centroids, std, niter, topo, callback, verbose)
       
       -- normalize
       for i = 1,k do
-         --if counts[i] ~= 0 then
-            --centroids[i] = summation[i]:div(counts[i])
-         --end
          centroids[i] = centroids[i] - centroids[i]:mean()
-         centroids[i] = centroids[i]/centroids[i]:std()
+         centroids[i] = centroids[i]/(centroids[i]:std())
       end
 
       -- total counts

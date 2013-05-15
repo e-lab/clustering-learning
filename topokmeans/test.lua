@@ -1,10 +1,9 @@
 
--- topo test Spring 2013
-
 ----------------------------------------------------------------------
--- E. Culurciello Fall 2012
--- Run k-means on Berkeley image and generate layers filters
--- simulate the Online Learner (OL) network as a robotic vision template
+-- E. Culurciello May 2013
+-- Run k-means on Berkeley image and generate TOPOGRAPHIC layers filters
+-- topographic clustering learning technique
+-- with custom k-mean code: topo-kmeans.lua
 ----------------------------------------------------------------------
 
 require 'image'
@@ -23,7 +22,7 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 8, 'threads')
 cmd:option('-inputsize', 9, 'size of each input patches') -- OL: 7x7
 cmd:option('-nkernels1', 256, 'number of kernels 1st layer') -- OL: 16
-cmd:option('-niter1', 15, 'nb of k-means iterations')
+cmd:option('-niter1', 1, 'nb of k-means iterations') -- ned fewer now because we 
 cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
 cmd:option('-nsamples', 10*1000, 'nb of random training samples')
 cmd:option('-initstd1', 0.1, 'standard deviation to generate random initial templates')
@@ -43,6 +42,8 @@ nk1 = opt.nkernels1
 
 normkernel = image.gaussian1D(7)
 
+print 'TOPOGRAPHIC Clustering Learning test on the Berkely background dataset!'
+
 ----------------------------------------------------------------------
 -- loading and processing dataset:
 dofile '1_data.lua'
@@ -52,13 +53,11 @@ if not paths.filep(filename) then
    os.execute('wget ' .. opt.datafile .. '; '.. 'tar xvf ' .. filename)
 end
 dataset = getdata(filename, opt.inputsize)
---dataset:conv()
 
 trsize = 256--dataset:size()
 
 trainData = {
    data = torch.Tensor(trsize, 3, dataset[1][3]:size(1), dataset[1][3]:size(2)),
---   labels = trainData.labels:clone(),
    size = function() return trsize end
 }
 for t = 1,trsize do
