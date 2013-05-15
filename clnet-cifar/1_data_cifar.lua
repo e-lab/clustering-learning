@@ -55,8 +55,8 @@ trainData.labels = trainData.labels + 1
 
 subset = torch.load('../../datasets/cifar-10-batches-t7/test_batch.t7', 'ascii')
 testData = {
-   data = subset.data:t():double(),
-   labels = subset.labels[1]:double(),
+   data = subset.data:t(),
+   labels = subset.labels[1],
    size = function() return tesize end
 }
 testData.labels = testData.labels + 1
@@ -81,7 +81,9 @@ trainData.data = trainData.data:reshape(trsize,3,32,32)
 testData.data = testData.data:reshape(tesize,3,32,32)
 
 trainData.data = trainData.data:float()
+trainData.labels = trainData.labels:float()
 testData.data = testData.data:float()
+testData.labels = testData.labels:float()
 
 print('Training Data:')
 print(trainData)
@@ -100,8 +102,8 @@ print '==> preprocessing data'
 -- where Type=='Float','Double','Byte','Int',... Shortcuts are provided
 -- for simplicity (float(),double(),cuda(),...):
 
-trainData.data = trainData.data:float()
-testData.data = testData.data:float()
+--trainData.data = trainData.data:float()
+--testData.data = testData.data:float()
 
 -- We now preprocess the data. Preprocessing is crucial
 -- when applying pretty much any kind of machine learning algorithm.

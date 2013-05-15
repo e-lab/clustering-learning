@@ -100,7 +100,6 @@ if opt.slacmodel then
 else 
    -- AND/OR model or FULL CONNECT MODEL:
    -- get twice the kernels, then pick best ones:
-   print('here!')
    kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, 2*nk1, nnf1, is)
    -- sort kernels:
    _, j = torch.sort(counts,true)
