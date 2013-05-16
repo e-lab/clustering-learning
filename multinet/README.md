@@ -72,9 +72,6 @@ For the **50 km/h speed limit** we have instead: 75 × 30 = 2 250.
 41. 12 - Roundabout
 42. 8 - End of no passing zone
 43. 8 - End of no passing zone for vehicles over 3.5t
- 
-
-
 
 ### KITTI (car)
 
