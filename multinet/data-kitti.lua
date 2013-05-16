@@ -57,6 +57,8 @@ opt.samplepercar = opt.samplepercar or 6
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
 torch.setdefaulttensortype('torch.DoubleTensor')
+local ds = eex.datasetsPath()
+local path = ds .. 'KITTI_dataset/city/'
 
 -- Global functions ----------------------------------------------------------
 -- Parse XML
@@ -174,92 +176,92 @@ iter = 0
 tot = 13
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0001/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0001/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0001/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0002/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0002/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0002/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0002/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0005/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0005/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0005/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0009/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0009/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0009/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0011/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0011/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0011/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0013/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0013/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0013/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0013/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0017/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0017/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0017/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0017/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0018/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0018/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0018/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0018/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0048/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0048/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0048/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0048/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0057/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0057/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0057/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0057/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0059/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0059/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0059/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0059/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0084/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0084/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0084/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0084/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
 
 xlua.progress(iter,tot)
-dspath = '../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0091/image_02/data/'--/0000000000.png' -- Right images
-tracklet_labels = xml.load('../../elabshare/datasets/KITTI_dataset/city/2011_09_26_drive_0091/tracklet_labels.xml')
+dspath = path .. '2011_09_26_drive_0091/image_02/data/'--/0000000000.png' -- Right images
+tracklet_labels = xml.load(path .. '2011_09_26_drive_0091/tracklet_labels.xml')
 tracklet = parseXML(tracklet_labels)
 extractPatches(dspath, tracklet)
 iter = iter + 1
