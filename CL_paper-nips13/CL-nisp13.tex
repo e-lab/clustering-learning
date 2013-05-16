@@ -69,9 +69,9 @@ The paper presents the following key innovations: (1) use of clustering learning
 \label{sec-main}
 
 The connections between layers in a deep neural network are a very important parameter. It has been shown that in many cases random filters perform only slightly worse than fully trained network layers \cite{saxe2011random} suggesting that filters, used in the convolutional module of each layer, might not play a dominant role in determining the network performance.
-Rather, the connections between layers and the combination of features are mainly responsible for the recent success of supervised deep convolutional networks \cite{krizhevsky_imagenet_2012}. In these networks the connection between layers is learned from the data using global gradient-descent techniques at large scale.
+Rather, the connections between layers and the combination of features are mainly responsible for the recent success of supervised deep convolutional networks \cite{krizhevsky_imagenet_2012}. In these networks the connection between layers is learned from the data using global gradient-descent techniques at large scale. Because training will intimately select the strength of connections, developers of deep networks have traditionally used fully connected layers, custom table connections \cite{lecun_gradient-based_1998}, or random connections \cite{lecun_convolutional_2010}. The reason for using custom connection matrices is to reduce the number of computations, and avoid over fitting problems.
  
-In unsupervised deep networks, one cannot rely on back-propagation techniques to learn the connections between layers. This is because unsupervised networks do not used labeled data, and thus an error signal cannot be computed.
+In unsupervised deep networks, one cannot rely on back-propagation techniques to learn the connections between layers. This is because unsupervised networks do not used labeled data, and thus an error signal cannot be computed. Fully connected layers can be used \cite{culurciello2013clustering,coates_analysis_2011} at the expense of more computational time and also reduced performance. The lower performance is attributable to the averaging effect that a fully connected layer has in unsupervised network, where the strengths of connection is not adapted to the training data.
 In order to use unlabeled data to train large deep networks, we will need a technique that can derive how to group features from one layer into features of the next layers, and at the same time learn the filters needed by the next layer.
 This is the main contribution of this paper, and what makes it unique. A figure that qualitatively explains the main contribution of the paper is Fig. \ref{fig-learnlayers}.
 
@@ -84,14 +84,14 @@ This is the main contribution of this paper, and what makes it unique. A figure 
 
 
 In the figure we show two layers of a deep network: layer $N$ and layer $N+1$. The maps on the left of the figure, are the $N1$ output feature maps of the $N$-the layer in response to an input image. The maps on the right of the figure, are the $N2$ outputs of the first convolutional module of layer $N+1$. 
-Our learning technique groups feature maps from layer $N$ into "receptive fields" (RF). These receptive fields are the input of one or multiple maps in layer $N+1$. We form these RF by grouping a small number "fanin" of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF. In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps. The idea behind this step is to group features that occur often together in the data. These RF are then representative of the connections between features of one layer and the next layer, and are completely obtained in a data-driven approach.
+Our learning technique groups feature maps from layer $N$ into "receptive fields" (RF). These receptive fields are the input of one or multiple maps in layer $N+1$. We form these RF by grouping a small number of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF. In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps. The idea behind this step is to group features that occur often together in the data. These RF are then representative of the connections between features of one layer and the next layer, and are completely obtained in a data-driven approach.
 In order to learn the filters for layer $N+1$ convolutional module, we perform clustering (Clustering Learning) only within the RF (and not all $N1$ maps). In Fig. \ref{fig-learnlayers}, we learn $N2$ filters per group for a total of $N2 \cdot G$ maps in layer $N+1$.
 
-The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. The main contribution of this paper is a real-valued implementation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule. We call this connection matric algorithm 'CL-connex'.
+The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. The main contribution of this paper is a real-valued implementation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule. We call this connection matrix algorithm 'CL-connex'.
 
 In the literature, we found two deep learning papers that are related. 
 The paper \cite{coates2012learning} groups features on each layer by similarity, but does not explicitly use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feature is averaged with a large number of other features, thus reducing the signal-to-noise ratio of important features. The main difference between paper \cite{coates2012learning} and our work is that we focus on learning smaller networks, with much fewer number of filters (32 vs. 4096) in the first and successive layers. 
-The paper \cite{boureau_2011} presents the interesting idea of learning pooling strategies that include feateure maps with similarity in local feature space. This paper uses simple clustering procedures to cluster data in order to improve pooling in the feateure space. In this respect this paper present similar ideas to CL-connex, but is not applied to deep neural networks.
+The paper \cite{boureau_2011} presents the interesting idea of learning pooling strategies that include feateure maps with similarity in local feature space. This paper uses simple clustering procedures to cluster data in order to improve pooling in the feature space. In this respect this paper present similar ideas to CL-connex, but is not applied to deep neural networks.
 
 Several papers in the neural physiology and computational neuroscience literature report similar ideas for learning the receptive fields of complex cells \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}. None of these paper reports results close to the state-of-the-art in publicly available datasets of natural images.
 
@@ -110,9 +110,17 @@ We tested and obtained results using the CIFAR10 \cite{krizhevsky_learning_2009}
 We also use the INRIA Person Dataset \cite{INRIAperson} to train a person detector. This datasets consists of a training set of of 2416 with size of 96 by 160 pixels, and a test set with 1126 images of 70 by 134 pixels. From this dataset we extracted a 46 by 46 pixels window centered on the torso of each person. We used backgrounds from a youTube video file as background category.
 We trained a 3-layer CL network with CL-connex between layer 1-2 and 2-3.
 
-Even if other groups showed slight improvements using the YUV color space \cite{jarrett_what_2009}, we did not use it because they were reporting $\sim 2-4\%$ loss in accuracy. Rather, we kept the images in their original RGB format. In our experiment we fed all RGB planes to the deep network. We also subsampled the RGB data as much as the deep network. We then concatenated teh subsampled RGB data with the ouput of the deep network into a final vector. This final vector was then passed to a 2-layer MLP classifier.
+TO FIX: ADD INFO PER DATASET!
 
-Also we did not use whitening of data (such as ZCA whitening) even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first, it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second, whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique to whiten the input data removing its mean bias and adapting the input dynamic range.
+We did not use the YUV color space in CIFAR10 and SVHN because they were reporting $\sim 2-4\%$ loss in accuracy. This is contrary to what has been reported by others \cite{jarrett_what_2009}. We kept the images of CIFAR10 and SVHN in their original RGB format. The YUV format was used in the INRIA person dataset.
+
+In our experiment we fed all RGB planes to the deep network. We also subsampled the RGB data as much as the deep network. We then concatenated the subsampled RGB data with the output of the deep network into a final vector. This final vector was then passed to a 2-layer MLP classifier. 
+
+TO FIX:
+
+Local contrast normalization was not used in the CIFAR10 dataset because it gave a loss of performance of almost 10\%. Instead whitening was uses, as commented in section \ref{sec-disc}.
+
+%Also we did not use whitening of data (such as ZCA whitening) even if other groups have shown clear advantages of using it.  We did not use whitening because of two main reasons: first, it is not applicable for general-purpose vision system where an a-priori dataset cannot be obtained. Second, whitening computation is very expensive (similar to the first layer of a convolutional neural network) and we instead replaced it with local contrast normalization, which is a bio-inspired technique to whiten the input data removing its mean bias and adapting the input dynamic range.
 
 
 
@@ -135,7 +143,7 @@ The layers in the clustering learning network used the following sequence of ope
 \begin{enumerate}
 \item Spatial Convolution module: performing convolutions on images with the learned CL filters: $yc_i=b_j+\sum_i{k_{ij}\ast x_i}$, where $\ast$ is the 2D discrete convolution operator and $b_j$ is a trainable bias parameter.
 \item Spatial Max Pooling module: $yp_i = max_{n \times n}(yc_{ij})$ with $n =  2$ in this work.
-\item Threshold nonlinearity: $ynl_i = 0$ if $yp_i < 0$, $yp_i$ if $yp_i >= 0$
+\item Threshold nonlinearity: $ynl_i = 0$ if $yp_i <= 0$, $ynl_i = yp_i$ if $yp_i > 0$
 %\item Spatial Subtractive or Contrastive Normalization: to zero the data mean, reset std to unity. The subtractive normalization operation for a given site $ynl_{ijk}$ computes: $v_{ijk} = ynl_{ijk} - \sum_{ipq} w_{pq} \cdot ynl_{i,j+p,k+q}$, where $w_{pq}$ is a normalized truncated Gaussian weighting window (typically of size 9x9). The divisive normalization computes $y_{ijk} = v_{ijk}/max(mean(\sigma_{jk}),\sigma_{jk})$ where $\sigma_{jk} = (\sum_{ipq} w_{pq} \cdot v^2_{i,j+p,k+q})^{1/2}$. The local contrast normalization layer is inspired by visual neuroscience models.
 \end{enumerate}
 
@@ -227,9 +235,15 @@ Table \ref{table2} reports the execution time of some of the tested networks rep
 
 
 \section{Discussion}
+\label{sec-disc}
 
 We presented results on clustering learning algorithms for general-purpose vision system. These algorithms can be used to train multi-layer feed-forward neural networks from videos in minutes. We show results on ...
 
+AYSE: here you need to discuss the tradeoff of whitening vs LCN vs else or nothing.
+
+EUGE first draft:
+
+In this paper we use data whitening to be able to report state-of-the-art accuracy, as done in recent work\cite{coates_analysis_2011,coates_analysis_2011,coates2012emergence,coates2012learning}. Another technique that approximate whitening used in deep network is local contrast normalization (LCN). LCN can be done on an input stream one image at a time, and does not require a history of previous frames or a dataset. On the other hand whitening requires a fixed dataset to be able to push each dimension to the largest signal-to-noise ratio. Also whitening requires computing a covariance matrix the size of convolutional patches square for all patches used in the clustering learning algorithm and also on the entire dataset. This step could be performed in parallel to inference on a set of past input frames to compute the whitening matrices, and thus adapt to environment changes. But LCN is more efficient because it does not require training on a dataset. For this reason we recommend the use of LCN in real-time applications and whitening to fixed-dataset applications that might not need to perform in real-time.
 
 
 %\section{TODO}
