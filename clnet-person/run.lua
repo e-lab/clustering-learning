@@ -1,11 +1,8 @@
 ----------------------------------------------------------------------
--- Test of clustering learning on INRIA pedestrian, etc datasets
--- April 2013
+-- Clustering learning on INRIA pedestrian
 --
--- Author: Eugenio Culurciello, Feb 2013 for Clustering Learning
+-- Author: Eugenio Culurciello, April 2013
 -- 
-----------------------------------------------------------------------
--- TODO: 
 ----------------------------------------------------------------------
 
 require 'pl'
@@ -17,6 +14,14 @@ require 'trainLayer' -- functions for Clustering Learning on video
 require 'online-kmeans' -- allow you to re-train k-means kernels
 --require 'unsup' -- standard kmeans
 --require 'topo-kmeans' -- new topographic disc kmeans (gives about same results...)
+
+
+-- Title ---------------------------------------------------------------------
+print [[
+********************************************************************************
+>>>>>>>>>>>>>>>>>> Clustering learning on INRIA pedestrian <<<<<<<<<<<<<<<<<<<<<
+********************************************************************************
+]]
 
 ----------------------------------------------------------------------
 print '==> processing options'
@@ -35,22 +40,27 @@ opt = lapp[[
    -o,--save               (default results)    save directory
    -n,--network				(default false)		path to existing [trained] network
 	-s,--save					(default scratch/) 	file name to save network [after each epoch]
-	--display			(default false) 			display training/testing samples while training
-	--plot 				(default false)			plot error/accuracy live (if false, still logged in a file)
-	--log					(default true)				log the whole session to a file
-	--seed				(default 1)					use fixed seed for randomized initialization
+	
+	--initstd               (dafault 0.1)        initial std for k-means
+	--niter                 (default 15)         iterations for k-means
+	--kmbatchsize           (default 1000)       batch size for k-means
+	--numlayers             (default 3)          number of layers in network	
+	
+	--display			display training/testing samples while training
+	--plot 				plot error/accuracy live (if false, still logged in a file)
+	--log					log the whole session to a file
+	--seed				use fixed seed for randomized initialization
+	--quicktest       true = small test, false = full code running
+	--videodata       true = load video file, otherwise ??? data
+	--cnnmodel        true = convnet model with tanh and normalization, otherwise without
 ]]
 
-opt.initstd = 0.1
-opt.niter = 15
-opt.kmbatchsize = 1000 -- kmeans batchsize
+if opt.quicktest then opt.nsamples = 300 else opt.nsamples = 10000 end  -- patch samples to use
 
-opt.plot = false -- because otherwise it would be a string...
-opt.quicktest = false	--(default 0)			true = small test, false = full code running
-opt.cnnmodel = true --(default 1)			true = convnet model with tanh and normalization, otherwise without
-opt.videodata = false --	(default 1) 		true = load video file, otherwise ??? data
+-- set trues:
+opt.cnnmodel = true 		
 opt.colorbypass = true
-opt.numlayers = 3 -- number of layers in network
+
 
 dname,fname = sys.fpath()
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens',
@@ -186,7 +196,6 @@ print '==> generating CL unsupervised network:'
 print '==> generating filters for layer 1:'
 nlayer = 1
 nnf1 = 1 -- number of frames from input video to use
-if opt.quicktest then opt.nsamples = 300 else opt.nsamples = 10000 end  -- patch samples to use
 ovhe = (ivhe-is1+1)/ss1 -- output video feature height
 ovwi = (ivwi-is1+1)/ss1 -- output video feature width
 
@@ -380,13 +389,6 @@ print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainDa
 
 ----------------------------------------------------------------------
 -- Color bypass
---if opt.colorbypass then
---	totalpool = ss1*ss2
---	trainData, testData = colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2 	
---	cl_nk1 = (#trainData.data)[2] -- resize output of the concatenated vector
---end
---
---
 if opt.colorbypass then
 	totalpool = ss1 -- only 1 layer used!
 	if opt.numlayers >= 2 then totalpool = totalpool*ss2 end -- in case we use 2,3 layers!

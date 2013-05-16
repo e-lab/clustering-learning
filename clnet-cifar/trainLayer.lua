@@ -40,10 +40,10 @@ function trainLayer(nlayer, invdata, nsamples, kernels, nk, nnf, is, verbose)
    end
    
    -- show a few patches:
-   if verbose then
-      f256S = data[{{1,256}}]:reshape(256,ivch,nnf*is,is)
-      image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches of input data before clustering'}
-   end
+--   if verbose then
+--      f256S = data[{{1,256}}]:reshape(256,ivch,nnf*is,is)
+--      image.display{image=f256S, nrow=16, nrow=16, padding=2, zoom=2, legend='Patches of input data before clustering'}
+--   end
    
    ----------------------------------------------------------------------
    if verbose then print '==> running k-means to learn filter' end
@@ -52,17 +52,18 @@ function trainLayer(nlayer, invdata, nsamples, kernels, nk, nnf, is, verbose)
    function cb (kernels)
       if verbose then
          win = image.display{image=kernels:reshape(nk,ivch, nnf*is, is), padding=2, symmetric=true, 
-         zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
+         zoom=4, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
       end
    end                    
    
    --local kernels = torch.Tensor(nk, ivch, nnf, is, is)
    --local counts = torch.Tensor(nk, ivch, 1)
-   --kernels = kmec(data, nk, opt.initstd, opt.niter, opt.batchsize, cb, true) -- Euge kmeans (not good init yet)
-   --kernels = unsup.kmeans(data, nk, opt.initstd, opt.niter, opt.batchsize, cb, true)
-   kernels, counts = okmeans(data, nk, nil, opt.initstd, opt.niter, opt.batchsize, cb, verbose)
+   --kernels = kmec(data, nk, opt.initstd, opt.niter, opt.kmbatchsize, cb, true) -- Euge kmeans (not good init yet)
+   --kernels = unsup.kmeans(data, nk, opt.initstd, opt.niter, opt.kmbatchsize, cb, true)
+   kernels, counts = okmeans(data, nk, nil, opt.initstd, opt.niter, opt.kmbatchsize, cb, verbose)
+   --kernels, counts = topokmeans(data, nk, nil, opt.initstd, opt.niter, nil, cb, verbose)
 --   for i = 1, ivch do
---      kernelss, countss = okmeans(data[{{},{i}}]:reshape(nsamples,nnf*is*is), nk, nil, opt.initstd, opt.niter, opt.batchsize, cb, verbose) -- online version to upadte filters
+--      kernelss, countss = okmeans(data[{{},{i}}]:reshape(nsamples,nnf*is*is), nk, nil, opt.initstd, opt.niter, opt.kmbatchsize, cb, verbose) -- online version to upadte filters
 --      kernels[{{},{i}}] = kernelss:reshape(nk,1,nnf, is, is)
 --      counts[{{},{i}}] = countss:reshape(nk,1,1)
 --   end
@@ -81,7 +82,7 @@ function trainLayer(nlayer, invdata, nsamples, kernels, nk, nnf, is, verbose)
    -- print final filters:
    if verbose then
       win = image.display{image=kernels:reshape(nk, ivch, nnf*is, is), padding=2, symmetric=true, 
-         zoom=2, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
+         zoom=4, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
       print '==> verify filters statistics'
       print('filters max mean: ' .. kernels:mean(2):abs():max())
       print('filters max standard deviation: ' .. kernels:std(2):abs():max())
@@ -106,11 +107,21 @@ end
 
 
 function processLayer(lv, network, data_in, nkernels, oheight, owidth, verbose)
-   data_out = torch.Tensor(data_in:size(1), nkernels, oheight, owidth)
-   for i = nnf1, data_in:size(1) do -- just get a few frames to begin with
+   local data_out = torch.Tensor(data_in:size(1), nkernels, oheight, owidth)
+   local stdc1=0
+   local meac1=0
+   local stdo=0
+   local meao=0
+   for i = nnf1, data_in:size(1) do
       if ( nnf1>1 and lv == 1 ) then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
       else procFrames = data_in[i] end
       data_out[i] = network:forward(procFrames)
+      --stats: 
+      stdc1 = stdc1 + network.modules[1].output:std()
+      meac1 = meac1 + network.modules[1].output:mean()
+      stdo = stdo + network.output:std()
+      meao = meao + network.output:mean()      
+      
       xlua.progress(i, data_in:size(1))
       -- do a live display of the input video and output feature maps 
       if verbose then
@@ -118,12 +129,13 @@ function processLayer(lv, network, data_in, nkernels, oheight, owidth, verbose)
       end
    end
    -- data_out = nil --free memory if needed
-   return data_out
+   return data_out, stdc1/data_in:size(1), meac1/data_in:size(1), 
+   						stdo/data_in:size(1), meao/data_in:size(1)
 end
 
 
 
-function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_ker, verbose)
+function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, verbose)
    -- create a covariance/co-occurence connection table based on some test data
    -- input data has multiple planes, compute similarity between these planes
    -- group planes that are similar
@@ -132,11 +144,10 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    -- train filter for next layer based on groups of connTable!!!
    -- uses co-occurence of features on muliple maps: sum maps, run clustering on them
 
-   -- nkp = features previous layer, fpgroup = features per group
+   -- nkp = #  features previous layer, fpgroup = features per group
    -- fanin = desired connex fanin - this should be also learned from data...   
    -- nnf = number frames, is = kernel size
    -- verbose = true ==> show images, text messages
-   -- prev_ker= previous layer kernels
    
    assert(nkp == vdata:size(2), 'Error: nkp and input video features are not the same number!') -- number features
    
@@ -145,20 +156,21 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    local vd2 = torch.zeros(vdata:size(1),2*fanin,vdata:size(3),vdata:size(4)) --temp data storage
    
    local covMat = torch.zeros(nkp,nkp) --covariance matrix
-   local connTable = {} -- table of connections
+   local connTable = {}--torch.Tensor( fanin*(1+2)*fpgroup ,2) -- table of connections
    local kerTable = {} -- table of kernels/filters
       
-   -- compute covariance matrix:
+   if verbose then print 'createCoCnx: compute covariance matrix:' end
    for k=1,nf do
       for i=1,nkp do
          for j=i,nkp do
-            covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i]:clone():abs(), vdata[k][j]:clone():abs()) -- dist metric
+         	--torch.cmul(vdata[k][i], vdata[k][j]):sum()  -- instead fo torch.dist one can use mult
+            covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i], vdata[k][j]) -- dist metric
             covMat[j][i] = covMat[i][j] -- replicate on lower part of matrix, since symmetric
          end
       end
    end   
    
-   -- connect cells in fanin groups:
+   if verbose then print 'createCoCnx: connect cells in fanin groups:' end
    for i=1,nkp do
       max, inx = torch.sort(covMat[i]) --want smaller values first (dist)
       
@@ -167,7 +179,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
          for k=1,fanin do -- the first value connects to itself!
             table.insert(connTable, torch.Tensor({inx[k],i}))
             -- group all feature maps that co-occur / are similar
-            vd1[{{},{k}}] = vdata[{{},{inx[k]}}]
+            if j == 1 then vd1[{{},{k}}] = vdata[{{},{inx[k]}}] end
          end
       end
 
@@ -183,7 +195,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
          for k=1,2*fanin do -- the first value connects to itself!
             table.insert(connTable, torch.Tensor({inx[k],i+nkp}))
             -- group all feature maps that co-occur / are similar
-            vd2[{{},{k}}] = vdata[{{},{inx[k]}}]
+            if  j == 1 then vd2[{{},{k}}] = vdata[{{},{inx[k]}}] end
          end
       end
       kerp = trainLayer(nlayer, vd2, samples, nil, fpgroup, nnf, is, verbose)
@@ -196,7 +208,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
       if verbose then xlua.progress(i, nkp) end
    end
  
-   -- turn tables into tensors:
+   if verbose then print 'createCoCnx: turn tables into tensors:' end
    local connTableTensor = torch.Tensor(#connTable,2)
    local kerTensor = torch.zeros(#kerTable,is,is)
    for i, value in ipairs(connTable) do
@@ -206,7 +218,7 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
       kerTensor[i] = value
    end
    
-   --renormalize all kernels:
+   if verbose then print 'createCoCnx: renormalize all kernels:' end
    for i=1,kerTensor:size(1) do
       kerTensor[i] = kerTensor[i]:add(-kerTensor[i]:mean()):div(kerTensor[i]:std())
    end
@@ -220,30 +232,65 @@ end
 -- image.display{image=videoData2[6], padding=2, zoom=1,  nrow=8}
 
 
+function colorBypass(cnpoolsize, trainDataIN , testDataIN)
+	-- Color Bypass function to concatenate final network output 
+	-- with a subsampled version of the input
+	-- E. Culurciello, May 2013
+	
+	-- cnpoolsize = pooling amount of deep net
+	-- train/testDataIN  = input datasets
+	
+	print "==> Color bypass: creating final test dataset:"
+	local trsize = trainData:size()
+	local tesize = testData:size()
+	
+	local reshapedim = (#trainData2.data[1])[1]*(#trainData2.data[1])[2]*(#trainData2.data[1])[3]
 
+	-- color bypass: downsamples color info and pass it to final classifier:
+	colornet = nn.Sequential()
+	colornet:add(nn.SpatialDownSampling(cnpoolsize,cnpoolsize,cnpoolsize,cnpoolsize))
+	local cdatasize = 3*(torch.floor(ivhe/cnpoolsize))^2 -- size of the color data
 
---function createConnexTable(nkP, nkN, level)
---   -- computes a connection matrix LeNet5-style:
---   -- each higher layer neurons are connected to 1,2,4,8,16... in lower level 
---   -- nkP = lower layer features #
---   -- nkN = higher layer feature #
---   -- level = fanin level:
---   -- level 1,2,3,4.. means each nkN gets fanin of 2,4,8,16..
---   -- fanin units are randomized (might not be best option!!!)
---   table_size = 0
---   indexL = 1
---   indexH = 0
---   for i=1,level do
---      table_size = table_size + 2^i*nkN
---   end
---   connTable = torch.Tensor(table_size,2)
---   for i=1,level do
---      indexH = indexH + nn.tables.random(nkP,nkN,2^i):size(1)
---      connTable[{{indexL,indexH}}]=nn.tables.random(nkP,nkN,2^i)
---      indexL = indexL + nn.tables.random(nkP,nkN,2^i):size(1)
---   end
---   return connTable
---end
+	-- process dataset throught net:
+	trainDataF = {
+		data = torch.Tensor(trsize, reshapedim+cdatasize,1,1),
+		color = torch.Tensor(trsize, cdatasize),  -- add bypass color info
+		labels = trainData.labels:clone(),
+		size = function() return trsize end
+	}
+	testDataF = {
+		data = torch.Tensor(tesize, reshapedim+cdatasize,1,1),
+		color = torch.Tensor(trsize, cdatasize),  -- add bypass color info
+		labels = testData.labels:clone(),
+		size = function() return tesize end
+	}
+	
+	print '==> Color bypass: process color info of dataset throught colornet:'
+	for t = 1,trsize do
+		trainDataF.color[t] = colornet:forward(trainData.data[t][{{1,3}}])
+		xlua.progress(t, trainData:size())
+	end
+	for t = 1,tesize do
+		testDataF.color[t] = colornet:forward(testData.data[t][{{1,3}}])
+		xlua.progress(t, testData:size())
+	end
+
+	print '==> Color bypass: concatenating dataset into final vector:'
+	print('trainData2.data size = '.. reshapedim)
+	print('trainDataF.color size = '.. cdatasize)
+	for t = 1,trsize do
+		trainDataF.data[t] = torch.cat(trainData2.data[t]:reshape(reshapedim), 
+				trainDataF.color[t]):reshape(reshapedim+cdatasize,1,1)
+		xlua.progress(t, trsize)
+	end
+	for t = 1,tesize do
+		testDataF.data[t] = torch.cat(testData2.data[t]:reshape(reshapedim), 
+				testDataF.color[t]):reshape(reshapedim+cdatasize,1,1)
+		xlua.progress(t, tesize)
+	end
+
+	return trainDataF, testDataF
+end
 
 
 

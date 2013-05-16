@@ -1,59 +1,122 @@
 ----------------------------------------------------------------------
--- Run k-means on CIFAR10 dataset - 1st layer generation/load and test
-----------------------------------------------------------------------
+-- Clustering learning on CIFAR10 dataset 
+-- May 2013
+--
 -- bypass route color version: pass color info to final classifier AND net input!
+--
+-- Author: Eugenio Culurciello, May 2013
+----------------------------------------------------------------------
 
+require 'pl'
 require 'image'
 require 'nnx'
---require 'unsup'
---require 'eex'
+require 'optim'
+require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
+require 'online-kmeans' -- allow you to re-train k-means kernels
+--require 'unsup' -- standard kmeans
+--require 'topo-kmeans' -- new topographic disc kmeans (gives about same results...)
 --require 'slac'
-require 'online-kmeans'
 
-cmd = torch.CmdLine()
-cmd:text('Options')
-cmd:option('-display', true, 'display kernels')
-cmd:option('-seed', 1, 'initial random seed')
-cmd:option('-threads', 8, 'threads')
-cmd:option('-inputsize', 5, 'size of each input patches')
-cmd:option('-nkernels', 16, 'number of kernels to learn')
-cmd:option('-niter', 15, 'nb of k-means iterations')
-cmd:option('-batchsize', 1000, 'batch size for k-means\' inner loop')
-cmd:option('-nsamples', 10000, 'nb of random training samples')
-cmd:option('-initstd', 0.1, 'standard deviation to generate random initial templates')
-cmd:option('-statinterval', 5000, 'interval for reporting stats/displaying stuff')
-cmd:option('-savedataset', false, 'save modified dataset')
-cmd:option('-classify', true, 'run classification train/test')
--- loss:
-cmd:option('-loss', 'nll', 'type of loss function to minimize: nll | mse | margin')
--- training:
-cmd:option('-save', 'results', 'subdirectory to save/log experiments in')
-cmd:option('-plot', true, 'live plot')
-cmd:option('-optimization', 'SGD', 'optimization method: SGD | ASGD | CG | LBFGS')
-cmd:option('-learningRate', 1e-3, 'learning rate at t=0')
-cmd:option('-batchSize', 1, 'mini-batch size (1 = pure stochastic)')
-cmd:option('-weightDecay', 0, 'weight decay (SGD only)')
-cmd:option('-momentum', 0, 'momentum (SGD only)')
-cmd:option('-t0', 1, 'start averaging at t0 (ASGD only), in nb of epochs')
-cmd:option('-maxIter', 2, 'maximum nb of iterations for CG and LBFGS')
-cmd:text()
-opt = cmd:parse(arg or {}) -- pass parameters to training files:
 
---if not qt then
---   opt.display = false
---end
+-- Title ---------------------------------------------------------------------
+print [[
+********************************************************************************
+>>>>>>>>>>>>>>>>>> Clustering learning on CIFAR10 dataset <<<<<<<<<<<<<<<<<<<<<<
+********************************************************************************
+]]
 
-torch.manualSeed(opt.seed)
-torch.setnumthreads(opt.threads)
-torch.setdefaulttensortype('torch.FloatTensor')
+----------------------------------------------------------------------
+print '==> processing options'
 
-is = opt.inputsize
-nk = opt.nkernels
+opt = lapp[[
+   -r,--learningRate       (default 0.2)        learning rate
+   -d,--learningRateDecay  (default 1e-7)       learning rate decay (in # samples)
+   -w,--weightDecay        (default 1e-5)       L2 penalty on the weights
+   -m,--momentum           (default 0.5)        momentum
+   -d,--dropout            (default 0.5)        dropout amount
+   -b,--batchSize          (default 128)        batch size
+   -t,--threads            (default 8)          number of threads
+   -p,--type               (default float)      float or cuda
+   -i,--devid              (default 1)          device ID (if using CUDA)
+   -s,--size               (default extra)      dataset: small or full or extra
+   -o,--save               (default results)    save directory
+   -n,--network				(default false)		path to existing [trained] network
+	-s,--save					(default scratch/) 	file name to save network [after each epoch]
+	
+	--initstd               (default 0.1)        initial std for k-means
+	--niter                 (default 15)         iterations for k-means
+	--kmbatchsize           (default 1000)       batch size for k-means
+	--numlayers             (default 3)          number of layers in network	
+	
+	--display			display training/testing samples while training
+	--plot 				plot error/accuracy live (if false, still logged in a file)
+	--log					log the whole session to a file
+	--seed				use fixed seed for randomized initialization
+	--quicktest       true = small test, false = full code running
+	--videodata       true = load video file, otherwise ??? data
+	--cnnmodel        true = convnet model with tanh and normalization, otherwise without
+   --slacmodel       slac model for multi-layer
+]]
 
-opt.niter = 15
-opt.slacmodel = false
-opt.smalldata = false -- toggle if you want ALL dataset (false) or a small set (false)
+if opt.quicktest then opt.nsamples = 300 else opt.nsamples = 10000 end  -- patch samples to use
+
+-- set trues:
+opt.cnnmodel = true 		
+opt.colorbypass = true
+
+
+dname,fname = sys.fpath()
+parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens',
+							'--slacmodel','--cnnmodel'})
+opt.save = opt.save:gsub('PARAMS', parsed)
+
+if opt.type == 'float' then
+   torch.setdefaulttensortype('torch.FloatTensor')
+else
+   torch.setdefaulttensortype('torch.DoubleTensor')   
+end
+
+if opt.seed then
+   torch.manualSeed(opt.seed)
+end
+
+if opt.log then
+   xlua.log(sys.dirname(opt.save) .. '/session.txt')
+end
+
+opt.threads = tonumber(opt.threads)
+if opt.threads > 1 then
+   torch.setnumthreads(opt.threads)
+   print('<trainer> using ' .. opt.threads .. ' threads')
+end
+
+-- type:
+if opt.type == 'cuda' then
+   print('==> switching to CUDA')
+   require 'cunn'
+   cutorch.setDevice(opt.devid)
+   print('==> using GPU #' .. cutorch.getDevice())
+end
+
+----------------------------------------------------------------------
+-- define network to train
+--
+print('<trainer> creating new network')
+
+nnf1,nnf2,nnf3  = 1,1,1 		-- number of frames at each layer
+nk0,nk1,nk2,nk3 = 3,32,64,128 -- nb of features
+is0,is1,is2,is3 = 7,5,3,3 	-- size of kernels
+ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
+scales          = 1 				-- scales
+fanin 			 = 2 				-- createCoCnxTable creates also 2*fanin connections
+feat_group 		 = 32 			--features per group (32=best in CIFAR nk1=32, fanin=2)
+opt.hiddens 	 = 128 			-- nb of hidden features for top perceptron (0=linear classifier)
+cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
+classes 			 = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 
+                     'horse', 'ship', 'truck'} -- classes of objects to find
+
+normkernel = image.gaussian1D(7)
 
 ----------------------------------------------------------------------
 -- loading and processing dataset:
@@ -65,254 +128,124 @@ ivhe = trainData.data[1]:size(2) -- height
 ivwi = trainData.data[1]:size(3) -- width
 
 ----------------------------------------------------------------------
-----------------------------------------------------------------------
-----------------------------------------------------------------------
 print '==> generating CL unsupervised network:'
 
 -- compute network CL train time
-   time = sys.clock()
+time = sys.clock()
 
 ----------------------------------------------------------------------
 print '==> generating filters for layer 1:'
 nlayer = 1
-nnf1 = 1 -- number of frames from input video to use
-nk1 = 32
 nk = nk1
-is = 5
-poolsize = 2
-cvstepsize = 1
-normkernel = image.gaussian1D(7)
-ovhe = (ivhe-is+1)/poolsize/cvstepsize -- output video feature height
-ovwi = (ivwi-is+1)/poolsize/cvstepsize -- output video feature width
+ovhe = (ivhe-is1+1)/ss1 -- output video feature height
+ovwi = (ivwi-is1+1)/ss1 -- output video feature width
 
 
-if opt.slacmodel then
-   -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
-   nk11 = nk1*2
-   kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, nk11, nnf1, is, false)
-   -- sort the kernels by importance and use only top kernels:
-   -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
-   kernels1s, cTable1 = slac(kernels1u, nk11, nk1, 4, 4.5) -- SLAC algorithm to aggregate kernels
-   --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
+if opt.slacmodel then -- leanr nk1*N filters, then narrow down to nk1:
+   kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, 2*nk1, nnf1, is1, false)
+   kernels1s, cTable1 = slac(kernels1u, 2*nk1, nk1, 4, 4.5) -- SLAC algorithm to aggregate kernels
    nk1s=kernels1s:size(1)
-   if opt.display then image.display{image=kernels1s:reshape(kernels1s:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
-
+   if opt.display then image.display{image=kernels1s:reshape(kernels1s:size(1),ivch,is1,is1), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
 else 
    -- AND/OR model or FULL CONNECT MODEL:
    -- get twice the kernels, then pick best ones:
-   kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, 2*nk1, nnf1, is)
+   kernels1u, counts1 = trainLayer(nlayer, trainData.data, opt.nsamples, nil, 2*nk1, nnf1, is1, false)
    -- sort kernels:
    _, j = torch.sort(counts,true)
-   kernels1 = torch.Tensor(nk1,ivch, is,is)
+   kernels1 = torch.Tensor(nk1,ivch, is1,is1)
    for i=1,nk1 do
       kernels1[i] = kernels1u[j[i]]
    end
    if opt.display then
-      image.display{image=kernels1:reshape(kernels1:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
+      image.display{image=kernels1:reshape(kernels1:size(1),ivch,is1,is1), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
 end
-
 
    
 ----------------------------------------------------------------------
 -- 1st layer
   
-   -- Trainable Network
-   vnet = nn.Sequential()
-   if opt.slacmodel then 
-      vnet:add(nn.SpatialConvolution(ivch, nk1s, is, is, cvstepsize,cvstepsize))
-      vnet:add(nn.SpatialMaxMap(cTable1))
-   else
-      vnet:add(nn.SpatialConvolution(ivch, nk1, is, is, cvstepsize,cvstepsize))
-   end
-   --vnet:add(nn.Tanh())
-   --vnet:add(nn.HardShrink(0.1))
-   vnet:add(nn.Threshold())
-   --vnet:add(nn.HardTanh())
-   vnet:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
-   --vnet:add(nn.SpatialContrastiveNormalization(nk1, normkernel,1e-3))
+-- Trainable Network
+vnet = nn.Sequential()
+if opt.slacmodel then 
+   vnet:add(nn.SpatialConvolution(ivch, nk1s, is1, is1))
+   vnet:add(nn.SpatialMaxMap(cTable1))
+else
+   vnet:add(nn.SpatialConvolution(ivch, nk1, is1, is1))
+end
+vnet:add(nn.Threshold())
+vnet:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
 
 
 -- setup net/ load kernels into network:
 vnet.modules[1].bias = vnet.modules[1].bias*0 -- set bias to 0!!! not needed
 if opt.slacmodel then 
    kernels1_ = kernels1s:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
-   vnet.modules[1].weight = kernels1_:reshape(nk1s, ivch, is,is)
+   vnet.modules[1].weight = kernels1_:reshape(nk1s, ivch, i1s,is1)
 else 
    kernels1_ = kernels1:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
-   vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is,is)
+   vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is1,is1)
 end
 
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 1st layer:'
-trainData2 = processLayer(nlayer, vnet, trainData.data, nk1, ovhe, ovwi, false)
+trainData2, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet, trainData.data, nk1, ovhe, ovwi, false)
 testData2 = processLayer(nlayer, vnet, testData.data, nk1, ovhe, ovwi, false)
 
 --report some statistics:
-print('1st layer conv output std: '..vnet.modules[1].output:std()..' and mean: '..vnet.modules[1].output:mean())
-print('1st layer output std: '..vnet.output:std()..' and mean: '..vnet.output:mean())
-
-
--- show a few outputs:
-if opt.display then
-   f256S_y = trainData2[{ {1,256},1 }]
-   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=2, 
-            legend='Output 1st layer: first 256 examples, 1st feature'}
-end
+print('1st layer conv out. std: '..stdc1..' and mean: '..meac1)
+print('1st layer output. std: '..stdo..' and mean: '..meao)
 
 
 ----------------------------------------------------------------------
 print '==> generating filters for layer 2:'
 nlayer = 2
-nnf2 = 1 -- just one frames goes into layer 2
-is = 3
-fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
-feat_group = nk1 --features per group (32=best in CIFAR, nk1=32, fanin=2)
-nk2 = 64
 nk = nk2
-poolsize = 2
-cvstepsize = 1
-ovhe2 = (ovhe-is+1)/poolsize/cvstepsize -- output video feature height
-ovwi2 = (ovwi-is+1)/poolsize/cvstepsize -- output video feature width
+ovhe2 = (ovhe-is2+1)/ss2 -- output video feature height
+ovwi2 = (ovwi-is2+1)/ss2 -- output video feature width
 
 --if opt.slacmodel then
 --   -- SLAC MODEL: nk1*N filters to learn, then narrow down to nk1:
 --   nk22 = nk2*2
---   kernels2u, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk22, nnf2, is, false)
---   -- sort the kernels by importance and use only top kernels:
---   -- kernels1, connTable1 = slac(kernels1, startN, finalN,tau,Delta) -- SLAC algorithm to aggregate kernels
+--   kernels2u, counts2 = trainLayer(nlayer, trainData2, opt.nsamples, nil, nk22, nnf2, is2, false)
 --   kernels2s, cTable2 = slac(kernels2u, nk22, nk2, 4, 4.5) -- SLAC algorithm to aggregate kernels
---   --image.display{image=kernels1s:reshape(kernels1s:size(1),is,is), padding=2, symmetric=true, zoom=2} --slac kernels/groups
---   nk2s=kernels1s:size(1)
---   if opt.display then image.display{image=kernels1s:reshape(kernels1s:size(1),ivch,is,is), padding=2, symmetric=true, zoom=4, legend = 'Layer 1 filters'} end
-
 --else 
 
-   
+-- OUTPUT Co-occurence CONNEX MODEL:
+print '==> Computing connection tables based on co-occurence of features'
 -- NOTE: one param here: 50 or opt.nsamples is the nunmber of samples needed to train the k-means of each group
 -- this number 50 might not be ideal, needs to be explored!
-
-   -- OUTPUT Co-occurence CONNEX MODEL:
-   print '==> Computing connection tables based on co-occurence of features'
-   cTable2, kernels2 = createCoCnx(nlayer, trainData2[{{1,100}}], nk1, feat_group, fanin, 50, nnf2, is, kernels1, false)
-   nk2 = cTable2:max()
-   nk = nk2
-   if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'} end
+cTable2, kernels2 = createCoCnx(nlayer, trainData2[{{1,100}}], nk1, feat_group, fanin, opt.nsamples/10, nnf2, is2, false)
+nk2 = cTable2:max()
+nk = nk2
+if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is2), padding=2, 
+      symmetric=true, nrow = 32, zoom=4, legend = 'Layer 2 filters'} end
 
 
 ----------------------------------------------------------------------
 -- 2nd layer
-   vnet2 = nn.Sequential()
---   if opt.slacmodel then 
---      vnet2:add(nn.SpatialConvolution(nk1, nk2s, is, is, cvstepsize,cvstepsize)) -- slac 2nd layer
---      vnet2:add(nn.SpatialMaxMap(cTable2))
---   else
-      vnet2:add(nn.SpatialConvolutionMap(cTable2, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
---   end
-  
-   --vnet2:add(nn.Tanh())
-   --vnet2:add(nn.HardShrink(0.1))
-   vnet2:add(nn.Threshold())
-   --vnet2:add(nn.HardTanh())
-   vnet2:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
-   --vnet2:add(nn.SpatialContrastiveNormalization(nk2, normkernel,1e-3))
-   
+vnet2 = nn.Sequential()
+vnet2:add(nn.SpatialConvolutionMap(cTable2, is2, is2, cvstepsize,cvstepsize)) -- connex table based on similarity of features
+vnet2:add(nn.Threshold())
+vnet2:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
 
 -- setup net/ load kernels into network:
 vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
---if opt.slacmodel then 
---   kernels2_= kernels2s:clone():div(nk2/2)
---   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)
---else
-   kernels2_= kernels2:clone():div(15) -- divide kernels so output of SpatialConv std =~0.5
-   --vnet2.modules[1].weight = kernels2:reshape(nk2,nk1,is,is) --full connex filters
-   vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
---end
+kernels2_= kernels2:clone():div(15) -- divide kernels so output of SpatialConv std =~0.5
+vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is2,is2)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 2nd layer:'
 
-trainData3 = processLayer(nlayer, vnet2, trainData2, nk2, ovhe2, ovwi2, false)
+trainData3, stdc1, meac1, stdo, meao = processLayer(nlayer, vnet2, trainData2, nk2, ovhe2, ovwi2, false)
 testData3 = processLayer(nlayer, vnet2, testData2, nk2, ovhe2, ovwi2, false)
 
 --report some statistics:
-print('2nd layer conv output std: '..vnet2.modules[1].output:std()..' and mean: '..vnet2.modules[1].output:mean())
-print('2nd layer output std: '..vnet2.output:std()..' and mean: '..vnet2.output:mean())
-
-
--- show a few outputs:
-if opt.display then
-   f256S_y = trainData3[{ {1,256},1 }]
-   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
-            legend='Output 2nd layer: first 256 examples, 1st feature'}
-end
-
-
--- compute network creation time time 
-time = sys.clock() - time
-print("<net> time to CL train network = " .. (time*1000) .. 'ms')
-
-
+print('2nd layer conv out. std: '..stdc1..' and mean: '..meac1)
+print('2nd layer output. std: '..stdo..' and mean: '..meao)
 
 
 ----------------------------------------------------------------------
---print '==> generating filters for layer 3:'
---nlayer = 3
---nnf3 = 1 -- just one frames goes into layer 2
---is = 3
---fanin = 2 -- createCoCnxTable creates also 2*fanin connections 
---feat_group = 4 --features per group
---nk3 = 128
---nk = nk3
---poolsize = 2
---cvstepsize = 1
---ovhe3 = (ovhe2-is+1)/poolsize/cvstepsize -- output video feature height
---ovwi3 = (ovwi2-is+1)/poolsize/cvstepsize -- output video feature width
---
---
---   -- OUTPUT Co-occurence CONNEX MODEL:
---   print '==> Computing connection tables based on co-occurence of features'
---   cTable3, kernels3 = createCoCnx(nlayer, trainData3[{{1,100}}], nk2, feat_group, fanin, 50, nnf3, is, kernels2, false)
---   nk3 = cTable3:max()
---   nk = nk3
---   if opt.display then image.display{image=kernels3:reshape(kernels3:size(1),is,is), padding=2, symmetric=true, nrow = 32, zoom=4, legend = 'Layer 3 filters'} end
---
---
-------------------------------------------------------------------------
----- 2nd layer
---   vnet3 = nn.Sequential()
---   vnet3:add(nn.SpatialConvolutionMap(cTable3, is, is, cvstepsize,cvstepsize)) -- connex table based on similarity of features
---   vnet3:add(nn.Threshold())
---   vnet3:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
---   
---
----- setup net/ load kernels into network:
---vnet3.modules[1].bias = vnet3.modules[1].bias*0 -- set bias to 0!!! not needed
---kernels3_= kernels3:clone():div(5) -- divide kernels so output of SpatialConv std =~0.5
---vnet3.modules[1].weight = kernels3_:reshape(kernels3_:size(1),is,is)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
---
---
---
---
-------------------------------------------------------------------------
---print '==> process dataset throught 3rd layer:'
---
---trainData4 = processLayer(nlayer, vnet3, trainData3, nk3, ovhe3, ovwi3, false)
---testData4 = processLayer(nlayer, vnet3, testData3, nk3, ovhe3, ovwi3, false)
---
-----report some statistics:
---print('3rd layer conv output std: '..vnet3.modules[1].output:std()..' and mean: '..vnet3.modules[1].output:mean())
---print('3rd layer output std: '..vnet3.output:std()..' and mean: '..vnet3.output:mean())
---
---
----- show a few outputs:
---if opt.display then
---   f256S_y = trainData4[{ {1,256},1 }]
---   image.display{image=f256S_y, nrow=16, nrow=16, padding=2, zoom=4, 
---            legend='Output 3rd layer: first 256 examples, 1st feature'}
---end
-
-
 -- compute network creation time time 
 time = sys.clock() - time
 print("<net> time to CL train network = " .. (time*1000) .. 'ms')
@@ -320,107 +253,125 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 
 
 ----------------------------------------------------------------------
-print "==> creating final test dataset"
+-- process images in dataset with unsupervised network 'tnet':
+-- 
 
-l1netoutsize = ovhe2 -- 2 layers:
+print "==> processing dataset with videoknet:"
+-- train:
+trainData2 = {}
+trainData2.data = trainData3
+trainData2.labels = trainData.labels
+-- test:
+testData2 = {}
+testData2.data = testData3
+testData2.labels = testData.labels
 
-
-
--- color bypass: downsamples color info and pass it to final classifier:
-nlayer=1
-cnpoolsize=4
-colornet = nn.Sequential()
-colornet:add(nn.SpatialDownSampling(cnpoolsize,cnpoolsize,cnpoolsize,cnpoolsize))
-cdatasize = 3*(ivhe/cnpoolsize)^2 -- size of the color data
-
-
--- process dataset throught net:
-
-trainDataF = {
-   data = torch.Tensor(trsize, nk*(l1netoutsize)^2+cdatasize),
-   color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
-   labels = trainData.labels:clone(),
-   size = function() return trsize end
-  
-}
-
-testDataF = {
-   data = torch.Tensor(tesize, nk*(l1netoutsize)^2+cdatasize),
-   color = torch.Tensor(trsize, cdatasize),  -- ad bypass color info
-   labels = testData.labels:clone(),
-   size = function() return tesize end
-}
-
---trainDataF.data = trainData3
---testDataF.data = testData3
-
-print '==> process color info of dataset throught colornet:'
-for t = 1,trsize do
-   trainDataF.color[t] = colornet:forward(trainData.data[t][{{1,3}}])
-   xlua.progress(t, trainData:size())
+if not opt.colorbypass then -- then this is the final dataset!
+	trainData.data = trainData2
+	testData.data = testData2
 end
-for t = 1,tesize do
-   testDataF.color[t] = colornet:forward(testData.data[t][{{1,3}}])
-   xlua.progress(t, testData:size())
-end
-
-
-for t = 1,trsize do
-   trainDataF.data[t] = torch.cat(trainData3[t]:reshape(nk*(l1netoutsize)^2), trainDataF.color[t])
-   xlua.progress(t, trainData:size())
-end
-for t = 1,tesize do
-   testDataF.data[t] = torch.cat(testData3[t]:reshape(nk*(l1netoutsize)^2), testDataF.color[t])
-   xlua.progress(t, testData:size())
-end
-
-
---trainDataF.data = trainDataF.data:reshape(trsize, nk2, l1netoutsize, l1netoutsize)
---testDataF.data = testDataF.data:reshape(tesize, nk2, l1netoutsize, l1netoutsize)
-
--- relocate pointers to new dataset:
---trainData1 = trainData -- save original dataset
---testData1 = testData
-trainData = trainDataF -- relocate new dataset
-testData = testDataF
+--report some statistics:
+print('testData.data[1] std: '..testData.data[1]:std()..' and mean: '..testData.data[1]:mean())
+print('trainData.data[1] std: '..trainData.data[1]:std()..' and mean: '..trainData.data[1]:mean())
 
 
 ----------------------------------------------------------------------
+-- Color bypass
+if opt.colorbypass then
+	totalpool = ss1 -- only 1 layer used!
+	if opt.numlayers >= 2 then totalpool = totalpool*ss2 end -- in case we use 2,3 layers!
+	trainData, testData = colorBypass(totalpool, trainData2 , testData2) -- will operate on trainData2 , testData2
+	cl_nk1 = (#trainData.data)[2] * (#trainData.data)[3] * (#trainData.data)[4] 
+end
 
 
 ----------------------------------------------------------------------
--- classifier for train/test:
-if opt.classify then
-   ----------------------------------------------------------------------
-   print "==> creating classifier"
-   
---   opt.model = '2mlp-classifier'
---   dofile '2_model.lua' 
-   
-   nhiddens = 256
-   outsize = 10 -- in CIFAR, SVHN datasets
+-- Classifier
 
-   model = nn.Sequential()
-   model:add(nn.Reshape(nk*l1netoutsize^2+cdatasize))
-   model:add(nn.Linear(nk*l1netoutsize^2+cdatasize, nhiddens))
-   model:add(nn.Threshold())
-   model:add(nn.Linear(nhiddens,outsize))
-   
-   print "==> test network output:"
-   print(model:forward(trainData.data[1]))--:double()))
-   
-   dofile '3_loss.lua' 
-   dofile '4_train.lua'
-   dofile '5_test.lua'
-   
-   ----------------------------------------------------------------------
-   print "==> training classifier"
-   
-   while true do
-      train()
-      test()
-   end
-   
+-- functions for Clustering Learning classifier:
+dofile('clclassifier.lua')
+
+-- standard mlp:
+if true then
+	-- MLP classifier:
+	model = nn.Sequential()
+	-- a 2-layer perceptron
+	model:add(nn.Tanh())
+	model:add(nn.Reshape(cl_nk1))
+	model:add(nn.Linear(cl_nk1,cl_nk2))
+	model:add(nn.Tanh())
+	model:add(nn.Linear(cl_nk2,#classes))
+	-- final stage: log probabilities
+	model:add(nn.LogSoftMax())
+
+	-- Loss: NLL
+	loss = nn.ClassNLLCriterion()
+
+	-- verbose
+	print('==>  model:')
+	print(model)
+
+	----------------------------------------------------------------------
+	-- load/get dataset
+	print '==> load modules'
+
+	train = require 'train'
+	test  = require 'test'
+
+	----------------------------------------------------------------------
+	print '==> training!'
+
+	while true do
+		train(trainData)
+		test(testData)
+	end
+	
+	-- Save model for demos:
+	if opt.save then
+	
+		-- replace classifier (2nd module) by SpatialClassifier
+		sclassifier = nn.SpatialClassifier(model)
+		tnet:add(sclassifier)	
+		
+		print('==>  <trainer> saving bare network to '..opt.save)
+		os.execute('mkdir -p "' .. sys.dirname(opt.save) .. '"')
+		torch.save(opt.save..'demo.net', tnet)
+	end
+
+else
+	----------------------------------------------------------------------
+	-- DISTANCE CL Classifier:
+
+	-- train clusters on each trainData category separately:
+	results = {}--torch.Tensor(20,2)
+	nclusters = 32 -- number of clusters per class
+	i=1
+	for fracDataset = 0.1, 1, 0.1 do
+		clusteredClasses = trainCLClassifier(fracDataset,nclusters)
+		-- test on train and test sets:
+		ctr, cte = testCLnet(fracDataset, clusteredClasses, nclusters)
+		table.insert(results, {ctr, cte})
+		--results[i]=torch.Tensor({ctr, cte})
+		i = i+1
+	end
+
+	require 'csv'
+	csv.save('multinet_results.txt', results)
+	
+	--------
+
+	-- image of features:
+	imaFeats = torch.Tensor(128,128)--trainData.data:size(1), trainData.data:size(2))
+	j=1
+	for i = 1, 256 do --trainData:size() do
+		if trainData.labels[i] == 1 then
+			imaFeats[j] = trainData.data[j]:clone():reshape(128)
+			j = j+1
+		end
+		--xlua.progress(i, trainData:size())
+	end
+	image.display{image=imaFeats, zoom=4}--, symmetric=true}
+
 end
 
 
