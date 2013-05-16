@@ -14,6 +14,13 @@ require 'xlua'
 -- Exporting functions to the global namespace -------------------------------
 ls = eex.ls
 
+-- Title ---------------------------------------------------------------------
+print [[
+********************************************************************************
+>>>>>>>>>>>>>>>>>>>>>>> Loading GTSRB (sign) dataset <<<<<<<<<<<<<<<<<<<<<<<<<<<
+********************************************************************************
+]]
+
 -- Parsing the command line --------------------------------------------------
 if not opt then
    print '==> Processing options'
@@ -26,34 +33,40 @@ if not opt then
        --maxNbPhysicalSigns (default 75)    max number of physical signs to pick from each category
        --checkTestDataset                   check correctness of testing dataset
        --teSize             (default 12630) enter the testing dataset size [1,12630]
+       --visualize                          show some samples
 ]]
-opt.visualize = true
 end
 
+opt = opt or {}
+opt.firstFrame = opt.firstFrame or 21
+opt.lastFrame  = opt.lastFrame  or 30
+opt.maxNbPhysicalSigns = opt.maxNbPhysicalSigns or 1 --75
+opt.teSize = opt.teSize or 200 --12630
+
 -- Parameters ----------------------------------------------------------------
-ds = eex.datasetsPath()
-path = ds .. 'GTSRB/'
-trPath = path .. 'Final_Training/Images/'
-tePath = path .. 'Final_Test/Images/'
-height = opt.height
-width = opt.width
+local ds = eex.datasetsPath()
+local path = ds .. 'GTSRB/'
+local trPath = path .. 'Final_Training/Images/'
+local tePath = path .. 'Final_Test/Images/'
+local height = opt.height or 46
+local width = opt.width or 46
 teSize = opt.teSize
 
 -- Main program -------------------------------------------------------------
 print '==> Loading human readable labels'
-humanReadableDataFile = io.open(path .. 'Categories-name.txt', 'rb')
+local humanReadableDataFile = io.open(path .. 'Categories-name.txt', 'rb')
+local line
 for i = 1,3 do line = humanReadableDataFile:read() end -- skipping the header
-humanLabels = {}
+local humanLabels = {}
 while line ~= nil do
-   labels = sys.split(line,'- ')
+   local labels = sys.split(line,'- ')
    table.insert(humanLabels,labels[2])
    line = humanReadableDataFile:read()
 end
 
-
 print '==> creating a new training dataset from raw files:'
-totNbSign = 0
-nbSign = {}
+local totNbSign = 0
+local nbSign = {}
 for i = 1, #ls(trPath) do
    nbSign[i] = #ls(trPath..ls(trPath)[i]..'/*.png')/30
    nbSign[i] = (nbSign[i] < opt.maxNbPhysicalSigns) and nbSign[i] or opt.maxNbPhysicalSigns
@@ -68,13 +81,13 @@ trainData = {
 }
 
 -- Load, crop and resize image
-idx = 0
+local idx = 0
 for i = 1, #ls(trPath) do -- loop over different signs type
    for j = 1, nbSign[i] do -- loop over different sample of same sign type
       for k = opt.firstFrame, opt.lastFrame do -- loop over different frames of the same physical sign
-         img = image.load(string.format('%s%s/%05d_%05d.png',trPath,ls(trPath)[i],j-1,k-1))
-         w,h = (#img)[3],(#img)[2]
-         min = (w < h) and w or h
+         local img = image.load(string.format('%s%s/%05d_%05d.png',trPath,ls(trPath)[i],j-1,k-1))
+         local w,h = (#img)[3],(#img)[2]
+         local min = (w < h) and w or h
          idx = idx + 1
          img  = image.crop(img,math.floor((w-min)/2),math.floor((h-min)/2),w-math.ceil((w-min)/2),h-math.ceil((h-min)/2))
          image.scale(img,trainData.data[idx])
@@ -94,14 +107,14 @@ testData = {
    size = function() return teSize end
 }
 
-fileName = ls(tePath .. '../*.csv')
-testDataFile = io.open(fileName[1], 'rb')
-line = testDataFile:read() -- skipping the header
+local fileName = ls(tePath .. '../*.csv')
+local testDataFile = io.open(fileName[1], 'rb')
+local line = testDataFile:read() -- skipping the header
 
 for i = 1, teSize do
-   img = image.load(string.format('%s%05d.png',tePath,i-1))
-   w,h = (#img)[3],(#img)[2]
-   min = (w < h) and w or h
+   local img = image.load(string.format('%s%05d.png',tePath,i-1))
+   local w,h = (#img)[3],(#img)[2]
+   local min = (w < h) and w or h
    img  = image.crop(img,math.floor((w-min)/2),math.floor((h-min)/2),w-math.ceil((w-min)/2),h-math.ceil((h-min)/2))
    image.scale(img,testData.data[i])
    testData.labels[i] = sys.split(testDataFile:read(),';')[8]
