@@ -33,18 +33,31 @@ Testing dataset size: 12630
 \# category 6: 62
 
 \# category 7: 14
+
 \# category 8: 48
+
 \# category 9: 47
+
 \# category 10: 49
+
 \# category 11: 67
+
 \# category 12: 44
+
 \# category 13: 70
+
 \# category 14: 72
+
 \# category 15: 26
+
 \# category 16: 21
+
 \# category 17: 14
+
 \# category 18: 37
+
 \# category 19: 40
+
 \# category 20: 7
 \# category 21: 12
 \# category 22: 11
