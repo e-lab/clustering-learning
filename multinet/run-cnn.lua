@@ -81,15 +81,61 @@ end
 print('<trainer> creating new network')
 
 nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
-nk0,nk1,nk2,nk3 = 3,32,64,128       -- nb of features
+nk0,nk1,nk2,nk3 = 3,16,128,256      -- nb of features
 is0,is1,is2,is3 = 15,7,7,7          -- size of kernels
 ss1,ss2         = 2,2               -- size of subsamplers (strides)
 scales          = 1                 -- scales
-fanin           = 2                 -- createCoCnxTable creates also 2*fanin connections
+fanin           = 8                 -- createCoCnxTable creates also 2*fanin connections
 feat_group      = 32                --features per group (32=best in CIFAR, nk1=32, fanin=2)
-opt.hiddens     = 64                -- nb of hidden features for top perceptron (0=linear classifier)
+opt.hiddens     = 512               -- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2   = nk3, opt.hiddens  -- dimensions for top perceptron
-classes         = {'person', 'bg'}  -- classes of objects to find
+classes = {
+   'Person',
+   '20 km/h speed limit',
+   '30 km/h speed limit',
+   '50 km/h speed limit',
+   '60 km/h speed limit',
+   '70 km/h speed limit',
+   '80 km/h speed limit',
+   '80 km/h end of speed limit',
+   '100 km/h speed limit',
+   '120 km/h speed limih',
+   'No passing',
+   'No passing for vehicles over 3.5t',
+   'Priority',
+   'Priority road',
+   'Yield',
+   'Stop',
+   'Prohibited for all vehicles',
+   'Vehicles over 3.5t prohibited',
+   'Do not enter',
+   'General danger',
+   'Curve (left)',
+   'Curve (right)',
+   'Double curve. First curve is to the left',
+   'Rough road',
+   'Slippery when wet or dirty',
+   'Road narrows (right side)',
+   'Road work',
+   'Traffic signals ahead',
+   'Pedestrians',
+   'Watch for children',
+   'Bicycle crossing',
+   'Beware of ice/snow',
+   'Wild animal crossing',
+   'End of all restrictions',
+   'All traffic must turn right',
+   'All traffic must turn left',
+   'All traffic must continue straight ahead (i.e. no turns)',
+   'All traffic must continue straight ahead or turn right (i.e. no left turn)',
+   'All traffic must continue straight ahead or turn left (i.e. no right turn)',
+   'Pass by on right',
+   'Pass by on left',
+   'Roundabout',
+   'End of no passing zone',
+   'End of no passing zone for vehicles over 3.5t',
+   'Car'
+}
 
 ivch=3
 
@@ -101,10 +147,10 @@ print '==> generating CNN network:'
 time = sys.clock()
 
 model = nn.Sequential()
-model:add(nn.SpatialConvolution(ivch, nk1, is1, is1))
+model:add(nn.SpatialConvolution(ivch, nk1, is1, is1)) -- TODO SpatialConvolutionMM!!
 model:add(nn.Threshold())
 model:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
--- 2nd layer
+-- 2nd layer -- TODO fanin 8, random connections
 model:add(nn.SpatialConvolution(nk1,nk2, is2, is2)) -- connex table based on similarity of features
 model:add(nn.Threshold())
 model:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
@@ -146,8 +192,7 @@ loss = nn.ClassNLLCriterion()
 
 ----------------------------------------------------------------------
 -- load/get dataset
-print "==> loading dataset:"
-data  = require 'data-person'
+require 'load-datasets'
 
 print '==> load modules'
 train = require 'train'
@@ -157,6 +202,6 @@ test  = require 'test'
 print '==> training!'
 
 while true do
-   train(data.trainData)
-   test(data.testData)
+   train(trainData)
+   test(testData)
 end
