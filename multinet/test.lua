@@ -19,7 +19,7 @@ print '==> defining some tools'
 --local dropout = t.dropout
 
 -- classes
-local classes = {'person','bg'}
+--local classes = {'person','bg'}
 
 -- This matrix records the current confusion across classes
 local confusion = optim.ConfusionMatrix(classes)

@@ -27,7 +27,7 @@ require 'optim'   -- an optimization package, for online and batch methods
 print '==> defining some tools'
 
 -- classes
-local classes = {'person','bg'}
+--local classes = {'person','bg'}
 
 -- This matrix records the current confusion across classes
 local confusion = optim.ConfusionMatrix(classes)
