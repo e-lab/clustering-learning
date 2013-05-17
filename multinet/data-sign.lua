@@ -34,14 +34,15 @@ if not opt then
        --checkTestDataset                   check correctness of testing dataset
        --teSize             (default 12630) enter the testing dataset size [1,12630]
        --visualize                          show some samples
+       --stat                               show datasets statistics
 ]]
 end
 
 opt = opt or {}
 opt.firstFrame = opt.firstFrame or 21
 opt.lastFrame  = opt.lastFrame  or 30
-opt.maxNbPhysicalSigns = opt.maxNbPhysicalSigns or 1 --75
-opt.teSize = opt.teSize or 200 --12630
+opt.maxNbPhysicalSigns = opt.maxNbPhysicalSigns or 75 --1 --75
+opt.teSize = opt.teSize or 12630 --200 --12630
 
 -- Parameters ----------------------------------------------------------------
 local ds = eex.datasetsPath()
@@ -155,6 +156,17 @@ print()
 
 -- Preprocessing -------------------------------------------------------------
 dofile 'preprocessing.lua'
+
+-- Printing the category statistics ------------------------------------------
+if opt.stat then
+   print '==> showing class statistics'
+   gnuplot.figure(1)
+   gnuplot.hist(trainData.labels,43)
+   gnuplot.title('Training dataset category statistics')
+   gnuplot.figure(2)
+   gnuplot.hist(testData.labels,43)
+   gnuplot.title('Testing dataset category statistics')
+end
 
 -- Exports -------------------------------------------------------------------
 return {
