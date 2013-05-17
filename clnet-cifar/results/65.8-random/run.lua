@@ -111,7 +111,7 @@ ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
 scales          = 1 				-- scales
 fanin 			 = 3 				-- createCoCnxTable creates also 2*fanin connections
 feat_group 		 = 16 			--features per group (32=best in CIFAR nk1=32, fanin=2)
-opt.hiddens 	 = 256 			-- nb of hidden features for top perceptron (0=linear classifier)
+opt.hiddens 	 = 128 			-- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 
                      'horse', 'ship', 'truck'} -- classes of objects to find

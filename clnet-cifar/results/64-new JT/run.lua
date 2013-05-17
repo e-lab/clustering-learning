@@ -111,7 +111,7 @@ ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
 scales          = 1 				-- scales
 fanin 			 = 3 				-- createCoCnxTable creates also 2*fanin connections
 feat_group 		 = 16 			--features per group (32=best in CIFAR nk1=32, fanin=2)
-opt.hiddens 	 = 256 			-- nb of hidden features for top perceptron (0=linear classifier)
+opt.hiddens 	 = 128 			-- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 
                      'horse', 'ship', 'truck'} -- classes of objects to find
@@ -215,7 +215,7 @@ ovwi2 = (ovwi-is2+1)/ss2 -- output video feature width
 print '==> Computing connection tables based on co-occurence of features'
 -- NOTE: one param here: 50 or opt.nsamples is the nunmber of samples needed to train the k-means of each group
 -- this number 50 might not be ideal, needs to be explored!
-cTable2, kernels2 = createCoCnx(nlayer, trainData2, nk1, feat_group, fanin, opt.nsamples, nnf2, is2, false)
+cTable2, kernels2 = createCoCnx(nlayer, trainData2[{{1,100}}], nk1, feat_group, fanin, opt.nsamples/10, nnf2, is2, false)
 nk2 = cTable2:max()
 nk = nk2
 if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is2), padding=2, 
