@@ -161,7 +161,6 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    local covMat = torch.zeros(nkp,nkp) --covariance matrix
    local connTable = {} -- table of connections
    local kerTable = {} -- table of kernels/filters
-      
    
    -- connect cells in fanin groups:
    for i=1,nkp do 

@@ -112,29 +112,31 @@ function processLayer(lv, network, data_in, nkernels, oheight, owidth, verbose)
    local meac1=0
    local stdo=0
    local meao=0
-   data_out = network:forward(data_in)
-  -- for i = nnf1, data_in:size(1) do
---      if ( nnf1>1 and lv == 1 ) then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
---      else procFrames = data_in[i] end
---      data_out[i] = network:forward(procFrames)
---      --stats: 
---      stdc1 = stdc1 + network.modules[1].output:std()
---      meac1 = meac1 + network.modules[1].output:mean()
---      stdo = stdo + network.output:std()
---      meao = meao + network.output:mean()      
---      
---      xlua.progress(i, data_in:size(1))
---      -- do a live display of the input video and output feature maps 
---      if verbose then
---         winm = image.display{image=data_out[i], padding=2, zoom=1, win=winm, nrow=math.floor(math.sqrt(nkernels))}
---      end
---   end
+   --if  --data_out = network:forward(data_in)
+   for i = nnf1, data_in:size(1) do
+      if ( nnf1>1 and lv == 1 ) then procFrames = data_in[{{i-nnf1+1,i},{},{}}]:transpose(1,2) -- swap order of indices here for VolConvolution to work
+      else procFrames = data_in[i] end
+      data_out[i] = network:forward(procFrames)
+      --stats: 
+      stdc1 = stdc1 + network.modules[1].output:std()
+      meac1 = meac1 + network.modules[1].output:mean()
+      stdo = stdo + network.output:std()
+      meao = meao + network.output:mean()      
+      
+      xlua.progress(i, data_in:size(1))
+      -- do a live display of the input video and output feature maps 
+      if verbose then
+         winm = image.display{image=data_out[i], padding=2, zoom=1, win=winm, nrow=math.floor(math.sqrt(nkernels))}
+      end
+   end
    -- data_out = nil --free memory if needed
    return data_out, stdc1/data_in:size(1), meac1/data_in:size(1), 
    						stdo/data_in:size(1), meao/data_in:size(1)
 end
 
--- new JT version, May 2013:
+
+
+-- random conn version Ayse, JY, May 2013
 function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_ker, verbose)
    -- create a covariance/co-occurence connection table based on some test data
    -- input data has multiple planes, compute similarity between these planes
@@ -159,27 +161,16 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    local covMat = torch.zeros(nkp,nkp) --covariance matrix
    local connTable = {} -- table of connections
    local kerTable = {} -- table of kernels/filters
-      
-   -- compute covariance matrix:
-   for k=1,nf do
-      for i=1,nkp do
-         for j=i,nkp do
-            covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i]:clone():abs(), vdata[k][j]:clone():abs()) -- dist metric
-            covMat[j][i] = covMat[i][j]
-         end
-      end
-   end   
    
    -- connect cells in fanin groups:
-   for i=1,nkp do
-      max, inx = torch.sort(covMat[i]) --want smaller values first (dist)
-      
+   for i=1,nkp do 
       -- groups of fanin (connect top two max):
       for j=1,fpgroup do -- repeat to have multiple filter kernels from this group:
          for k=1,fanin do -- the first value connects to itself!
-            table.insert(connTable, torch.Tensor({inx[k],(i-1)*fpgroup+j}))
+            inx = math.random(1,nkp)
+            table.insert(connTable, torch.Tensor({inx,(i-1)*fpgroup+j}))
             -- group all feature maps that co-occur / are similar
-            vd1[{{},{k}}] = vdata[{{},{inx[k]}}]
+            vd1[{{},{k}}] = vdata[{{},{inx}}]
          end
       end
 
@@ -210,6 +201,89 @@ function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_
    
    return connTableTensor, kerTensor
 end
+
+
+
+
+-- new JT version, May 2013:
+--function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, prev_ker, verbose)
+--   -- create a covariance/co-occurence connection table based on some test data
+--   -- input data has multiple planes, compute similarity between these planes
+--   -- group planes that are similar
+--   -- we connect each group to one neuron in next layer
+--   -- nkp = features previous layer, fpgroup = feateures per group
+--   -- fanin = desired connex fanin - this should be also learned from data...
+--   
+--   -- train filter for next layer based on groups of connTable!!!
+--   -- uses co-occurence of features on muliple maps: sum maps, run clustering on them
+--   
+--   -- nnf = number frames, nk = number kernels, is = kernel size
+--   -- verbose = true ==> show images, text messages
+--   -- prev_ker= previous layer kernels
+--   
+--   assert(nkp == vdata:size(2), 'Error: nkp and input video features are not the same number!') -- number features
+--   
+--   local nf = vdata:size(1) --number frames
+--   local vd1 = torch.zeros(vdata:size(1),fanin,vdata:size(3),vdata:size(4)) --temp data storage
+--   local vd2 = torch.zeros(vdata:size(1),2*fanin,vdata:size(3),vdata:size(4)) --temp data storage
+--   
+--   local covMat = torch.zeros(nkp,nkp) --covariance matrix
+--   local connTable = {} -- table of connections
+--   local kerTable = {} -- table of kernels/filters
+--      
+--   -- compute covariance matrix:
+--   for k=1,nf do
+--      for i=1,nkp do
+--         for j=i,nkp do
+--            covMat[i][j] = covMat[i][j] + torch.dist(vdata[k][i]:clone():abs(), vdata[k][j]:clone():abs()) -- dist metric
+--            covMat[j][i] = covMat[i][j]
+--         end
+--      end
+--   end   
+--   
+--   -- connect cells in fanin groups:
+--   for i=1,nkp do
+--      max, inx = torch.sort(covMat[i]) --want smaller values first (dist)
+--      
+--      -- groups of fanin (connect top two max):
+--      for j=1,fpgroup do -- repeat to have multiple filter kernels from this group:
+--         for k=1,fanin do -- the first value connects to itself!
+--            table.insert(connTable, torch.Tensor({inx[k],(i-1)*fpgroup+j}))
+--            -- group all feature maps that co-occur / are similar
+--            vd1[{{},{k}}] = vdata[{{},{inx[k]}}]
+--         end
+--      end
+--
+--      kerp = trainLayer(nlayer, vd1, samples, nil, fpgroup, nnf, is, verbose)
+--      for j=1,fpgroup do
+--         for k=1,fanin do
+--            table.insert(kerTable, kerp:reshape(fpgroup, fanin,is*is)[j][k])
+--         end
+--      end
+--      
+--      if verbose then xlua.progress(i, nkp) end
+--   end
+-- 
+--   -- turn tables into tensors:
+--   local connTableTensor = torch.Tensor(#connTable,2)
+--   local kerTensor = torch.zeros(#kerTable,is,is)
+--   for i, value in ipairs(connTable) do
+--      connTableTensor[i] = value
+--   end
+--   for i, value in ipairs(kerTable) do
+--      kerTensor[i] = value
+--   end
+--   
+--   --renormalize all kernels:
+--   for i=1,kerTensor:size(1) do
+--      kerTensor[i] = kerTensor[i]:add(-kerTensor[i]:mean()):div(kerTensor[i]:std())
+--   end
+--   
+--   return connTableTensor, kerTensor
+--end
+
+
+
 
 -- EC older version:
 --function createCoCnx(nlayer, vdata, nkp, fpgroup, fanin, samples, nnf, is, verbose)

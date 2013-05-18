@@ -43,7 +43,8 @@ opt = lapp[[
    -o,--save               (default results)    save directory
    -n,--network				(default false)		path to existing [trained] network
 	-s,--save					(default scratch/) 	file name to save network [after each epoch]
-	
+
+	--seed				      (default 1)          use fixed seed for randomized initialization
 	--initstd               (default 0.1)        initial std for k-means
 	--niter                 (default 15)         iterations for k-means
 	--kmbatchsize           (default 1000)       batch size for k-means
@@ -52,7 +53,6 @@ opt = lapp[[
 	--display			display training/testing samples while training
 	--plot 				plot error/accuracy live (if false, still logged in a file)
 	--log					log the whole session to a file
-	--seed				use fixed seed for randomized initialization
 	--quicktest       true = small test, false = full code running
 	--videodata       true = load video file, otherwise ??? data
 	--cnnmodel        true = convnet model with tanh and normalization, otherwise without
@@ -62,6 +62,7 @@ opt = lapp[[
 if opt.quicktest then opt.nsamples = 300 else opt.nsamples = 10000 end  -- patch samples to use
 
 -- set trues:
+opt.plot = true 
 opt.cnnmodel = true 		
 opt.colorbypass = true
 
@@ -111,7 +112,7 @@ ss1,ss2   		 = 2,2 			-- size of subsamplers (strides)
 scales          = 1 				-- scales
 fanin 			 = 3 				-- createCoCnxTable creates also 2*fanin connections
 feat_group 		 = 16 			--features per group (32=best in CIFAR nk1=32, fanin=2)
-opt.hiddens 	 = 128 			-- nb of hidden features for top perceptron (0=linear classifier)
+opt.hiddens 	 = 256 			-- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2 	 = nk3, opt.hiddens -- dimensions for top perceptron
 classes 			 = {'airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 
                      'horse', 'ship', 'truck'} -- classes of objects to find
@@ -213,9 +214,7 @@ ovwi2 = (ovwi-is2+1)/ss2 -- output video feature width
 
 -- OUTPUT Co-occurence CONNEX MODEL:
 print '==> Computing connection tables based on co-occurence of features'
--- NOTE: one param here: 50 or opt.nsamples is the nunmber of samples needed to train the k-means of each group
--- this number 50 might not be ideal, needs to be explored!
-cTable2, kernels2 = createCoCnx(nlayer, trainData2, nk1, feat_group, fanin, opt.nsamples, nnf2, is2, false)
+cTable2, kernels2 = createCoCnx(nlayer, trainData2[{{1,1024}}], nk1, feat_group, fanin, opt.nsamples, nnf2, is2, false)
 nk2 = cTable2:max()
 nk = nk2
 if opt.display then image.display{image=kernels2:reshape(kernels2:size(1),is2,is2), padding=2, 
@@ -321,7 +320,7 @@ if true then
 	----------------------------------------------------------------------
 	print '==> training!'
 
-	while true do
+	for i=1,100 do
 		train(trainData)
 		test(testData)
 	end
