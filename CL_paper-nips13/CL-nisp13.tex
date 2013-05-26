@@ -146,7 +146,17 @@ We also subsampled the RGB data by 4x4 Subsampling module with a stride of 4 pix
 
 
 \subsection{Connections architecture}
-????
+We tested 4 different techniques of grouping feature maps to create the connection from layer 1 to layer 2 in our network.
+
+1) Grouping 2 features that are highly activated in the same pixel frequently. To find these groups we looked at the correlation of 32 feature maps from the layer 1. We created 32 groups, each has 2 feature maps. In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps. We trained 16 filters for each groups, that way we created 32 x16 filters, 2x5x5 pixels. This method is  referred as  (Fanin=2, learned) in the Tables 1 and 2. 
+
+2)  Grouping 2 features  randomly and train kernels as in the first case.  This method is  refered as  (Fanin=2, random) in the Tables 1 and 2.
+
+3) Grouping each maps individually, in other words if there are 32 filters in the first layer and so 32 maps are created after the first layer, we create 32 groups each has only 1 map. That way the filters were size of 1x5x5 pixels. This method is  referred as  (Fanin=1) in the Tables 1 and 2.
+
+4) Grouping all maps into 1 group. In other words, this method is full connection. In this case, we only have 1 group and we created 512 filters each is 32x5x5 sizes. This method is  referred as  (Fanin=32) in the Tables 1 and 2.
+
+The CNN networks used a fully connected input to 1st, and 1st to 2nd layer.
 
 %For the INRIA person dataset, we used a 3-layer network of size 32, 64, 128 filters in each convolutional layer.
 %We experimented with SLAC connections \cite{coates2012emergence}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers. Unfortunately SLAC did not give us any advantage because of the small number of features used, so we removed it from our workflow.
