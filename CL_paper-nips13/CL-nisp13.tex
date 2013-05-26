@@ -20,7 +20,7 @@
 
 \begin{document}
 
-\title{Unsupervised learning of the connections  \\ between layers of deep neural networks}
+\title{An analysis of the connections  \\ between layers of deep neural networks}
 
 \author{
 Eugenio Culurciello\thanks{More information on Eugenio Culurciello's laboratory and research can be found here: http://engineering.purdue.edu/elab/. Real time robotic vision systems: http://www.neuflow.org/} \\
@@ -45,8 +45,25 @@ Purdue University\\
 \maketitle
 
 \begin{abstract}
-We present the unsupervised clustering learning technique for learning the connection matrix between layers of a deep neural networks. Traditional deep neural networks use random connection tables between layers to keep the number of  connection small and tune to different image features. Fully-connected layers are also used when efficiency is not an issue. These kind of connections perform adequately in supervised deep networks because the training refines their values. 
-On the other hand, unsupervised learning requires a data-driven method that will connect the most relevant features to the next layer. In this paper we present a clustering learning algorithm to learn simultaneously the connection and filters of deep networks. We tested our technique on CIFAR, SVHN and Pedestrian datasets and improve the accuracy by ?? compared to ... We show that networks and connections trained with clustering learning can obtain similar levels of performance as supervised deep networks when the number of layers and the filters are the same. 
+%We present the unsupervised clustering learning technique for learning the connection matrix between layers of a deep neural networks. Traditional deep neural networks use random connection tables between layers to keep the number of  connection small and tune to different image features. Fully-connected layers are also used when efficiency is not an issue. These kind of connections perform adequately in supervised deep networks because the training refines their values. 
+%On the other hand, unsupervised learning requires a data-driven method that will connect the most relevant features to the next layer. In this paper we present a clustering learning algorithm to learn simultaneously the connection and filters of deep networks. We tested our technique on CIFAR, SVHN and Pedestrian datasets and improve the accuracy by ?? compared to ... We show that networks and connections trained with clustering learning can obtain similar levels of performance as supervised deep networks when the number of layers and the filters are the same. 
+We present an analysis of different techniques of connection matrixes
+between layers of a deep neural networks. Traditional deep neural
+networks use random connection tables between layers to keep the
+number of connection small and tune to different image features.
+Fully-connected layers are also used when efficiency is not an issue.
+These kind of connections perform adequately in supervised deep
+networks because the training refines their values.
+
+On the other hand, unsupervised learning, one cannot rely on
+back-propagation techniques to learn the connections between layers.
+This is because unsupervised networks do not used labeled data, and
+thus an error signal cannot be computed. We tested 4 different
+techniques of connecting first layer of the network to the second
+layer on CIFAR and SVHN datasets and show that the accuracy may change
+up to $6\%$ based on the used technique. We also showed that, learning
+the connections based on the co-occurrences of  the features does not
+have an affect over a random connection.
 This work can be applied to improve the efficiency of connections and combination of features between the layers of deep neural networks.
 \end{abstract}
 
@@ -84,8 +101,6 @@ In the figure we show two layers of a deep network: layer $N$ and layer $N+1$. T
 
 We investigate different techniques of grouping feature maps from layer $N$ into "receptive fields" (RF). These receptive fields are the input of one or multiple maps in layer $N+1$. We form these RF by 4 different methods. 1) Grouping a small number of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF. In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps. The idea behind this step is to group features that occur often together in the data. 2) Selecting a small number of layer $N$ features randomly, 3) Grouping each maps individually, in other words if there are 32 filters in the first layer and so 32 maps are created after the first layer, we create 32 groups each has only 1 map, and 4) Grouping all maps into 1 group. 
 In order to learn the filters for layer $N+1$ convolutional module, we perform clustering (Clustering Learning) only within the RF (and not all $N1$ maps). In Fig. \ref{fig-learnlayers}, we learn $N2$ filters per group for a total of $N2 \cdot G$ maps in layer $N+1$.
-
-%The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. The main contribution of this paper is a real-valued implementation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule. We call this connection matrix algorithm 'CL-connex'.
 
 In the literature, we found two deep learning papers that are related. 
 Paper \cite{coates2012learning} groups features on each layer by similarity, but does not explicitly use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feature is averaged with a large number of other features, thus reducing the signal-to-noise ratio of important features. 
@@ -164,6 +179,8 @@ The CNN networks used a fully connected input to 1st, and 1st to 2nd layer.
 
 
 \subsection{Similarity of features?}
+The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. The main contribution of this paper is a real-valued implementation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule. We call this connection matrix algorithm 'CL-connex'.
+
 %Fig. \ref{fig-filters123} shows an example of the filters learned in all three layer of the INRIA person network trained with CL-connex.
 
 
@@ -183,7 +200,7 @@ The CNN networks used a fully connected input to 1st, and 1st to 2nd layer.
 \section{Results}
 \label{sec-results}
 
-In Fig. \ref{fig-results1} we present the results of our test on the CIFAR10 and SVHN datasets. We compared accuracy in the test-set between our CL network and a standard convolutional neural network (CNN). We report learning rates per epochs to visualize converge speed and overfitting issues.
+%In Fig. \ref{fig-results1} we present the results of our test on the CIFAR10 and SVHN datasets. We compared accuracy in the test-set between our CL network and a standard convolutional neural network (CNN). We report learning rates per epochs to visualize converge speed and overfitting issues.
 
 
 \begin {table}
@@ -201,7 +218,6 @@ In Fig. \ref{fig-results1} we present the results of our test on the CIFAR10 and
 2 layer (Fanin=2, learned RF)            &$73.2\%$\\
 2 layer (Fanin=32)                          &$67.0\%$\\
 \\ \hline \\
-2 layer (random groups)                                      &$74.5\%$\\
 \end{tabular}
 \end{center}
 }
@@ -220,7 +236,6 @@ In Fig. \ref{fig-results1} we present the results of our test on the CIFAR10 and
 2 layer (Fanin=2, learned RF)           &$86.7\%$\\
 2 layer (Fanin=32)                        &$?\%$\\
 \\ \hline \\
-2 layer (random groups)                                  &$89.0\%$\\
 \end{tabular}
 \end{center}
 }
@@ -230,23 +245,33 @@ In Fig. \ref{fig-results1} we present the results of our test on the CIFAR10 and
 
 
 
-As one can see Fig. \ref{fig-results1}, our CL network performs very closely to the accuracy of the CNN. The CNN is always slightly better, since it uses global optimization techniques based on stochastic gradient descent (SGD) to adapt to both the signal and the noise. 
+%As one can see Fig. \ref{fig-results1}, our CL network performs very closely to the accuracy of the CNN. The CNN is always slightly better, since it uses global optimization techniques based on stochastic gradient descent (SGD) to adapt to both the signal and the noise. 
 
-Training the CNN takes $\sim 2$ hours on our test computer with a quad core Intel i7. Training of the CL network takes $\sim 4$ minutes.
-The two convolutional layers CL network are trained unsupervised using Cl on the train set for CIFAR10 and SVHN respectively. IThese layers can also be also trained with another set of natural images (a video of driving taken from YouTube), with only a slight loss of performance of $\sim 2\%$. 
+%Training the CNN takes $\sim 2$ hours on our test computer with a quad core Intel i7. Training of the CL network takes $\sim 4$ minutes.
+%The two convolutional layers CL network are trained unsupervised using Cl on the train set for CIFAR10 and SVHN respectively. IThese layers can also be also trained with another set of natural images (a video of driving taken from YouTube), with only a slight loss of performance of $\sim 2\%$. 
 
-Notice also that the test accuracy curves per epoch of the CL network do not overfit. Rather, they saturate to a constant average value. CL network cannot overfit by design, since they perform averages on the train-set. Because of the averaging intrinsic to the algorithms of CL, the network cannot learn specific examples of the dataset and thus overfit in the test data.
-
-
-\section{Discussion}
-\label{sec-disc}
-
-We presented results on clustering learning algorithms for general-purpose vision system. These algorithms can be used to train multi-layer feed-forward neural networks from videos in minutes. We show results on ...
+%Notice also that the test accuracy curves per epoch of the CL network do not overfit. Rather, they saturate to a constant average value. CL network cannot overfit by design, since they perform averages on the train-set. Because of the averaging intrinsic to the algorithms of CL, the network cannot learn specific examples of the dataset and thus overfit in the test data.
 
 
-EUGE first draft:
+%\section{Discussion}
+%\label{sec-disc}
 
-In this paper we use data whitening to be able to report state-of-the-art accuracy, as done in recent work\cite{coates_analysis_2011,coates_analysis_2011,coates2012emergence,coates2012learning}. Another technique that approximate whitening used in deep network is local contrast normalization (LCN). LCN can be done on an input stream one image at a time, and does not require a history of previous frames or a dataset. On the other hand whitening requires a fixed dataset to be able to push each dimension to the largest signal-to-noise ratio. Also whitening requires computing a covariance matrix the size of convolutional patches square for all patches used in the clustering learning algorithm and also on the entire dataset. This step could be performed in parallel to inference on a set of past input frames to compute the whitening matrices, and thus adapt to environment changes. But LCN is more efficient because it does not require training on a dataset. For this reason we recommend the use of LCN in real-time applications and whitening to fixed-dataset applications that might not need to perform in real-time.
+We presented results on clustering learning algorithms for general-purpose vision system. We focused on the small number of filter to make our network scalable on hardware. We show results on CIFAR-10 and SVHN datasets with different connection techniques between the first and second layer. 
+
+As stated in the Table 1 and 2, 1 layer (32 filters) gives $68.8\%$ on CIFAR-10 dataset and  $85.7\%$ on SVHN dataset.  The accuracy on the CIFAR-10 is similar to the k-means algorithm with 200 filters from this paper
+\cite{coates_analysis_2011}. We are obtaining the similar performance with only 32 filters because we use a different architecture in our network than \cite{coates_analysis_2011}. We use 2 by 2 maxpooling layer, whereas \cite{coates_analysis_2011} uses 7 by 7 subsampling pooling. Maxpooling as mentioned in the Section \ref{sec-net-arch} provides better performance over subsampling. Another improvement comes from the downsampling of the image and feeding it to the classifier which increases the accuracy by  $\sim 4\%$. add reference to the color-bypass!!
+
+First, the second layer with single RF is added to the architecture in order to analyze the effect of the connection. Receptive field of each neuron in the second layer is one feature map from the first layer. Since this architecture uses limited number of connection, it can be interpreted to decision tree as shown in figure X. High accuracy of 72.8\% compared to 1 layer is achieved here due to the property of decision tree in point that it simply finds features of features using each filter as each feature descriptor. This method handles only one feature from the previous layer instead of exploiting information from the combination of features.
+
+2 layer (Fanin=2, random RF)
+
+2 layer (Fanin=2, learned RF)         
+
+On the other hand, the second layer with full connection decreases performance and even worse than 1 layer. In this case, filters across 32 feature maps are obtained by clustering learning and we have the curse of dimensionality problem because of the 32x3x5x5 high-dimensional space. Filters in the figure X are rather plain and do not have distinct edge like Gabor filters. It was also shown in the paper (cite Adams). Definitely the filters have difficulties in characterizing features in the given dataset.
+
+%EUGE first draft:
+
+%In this paper we use data whitening to be able to report state-of-the-art accuracy, as done in recent work\cite{coates_analysis_2011,coates_analysis_2011,coates2012emergence,coates2012learning}. Another technique that approximate whitening used in deep network is local contrast normalization (LCN). LCN can be done on an input stream one image at a time, and does not require a history of previous frames or a dataset. On the other hand whitening requires a fixed dataset to be able to push each dimension to the largest signal-to-noise ratio. Also whitening requires computing a covariance matrix the size of convolutional patches square for all patches used in the clustering learning algorithm and also on the entire dataset. This step could be performed in parallel to inference on a set of past input frames to compute the whitening matrices, and thus adapt to environment changes. But LCN is more efficient because it does not require training on a dataset. For this reason we recommend the use of LCN in real-time applications and whitening to fixed-dataset applications that might not need to perform in real-time.
 
 %\section{TODO}
 %
