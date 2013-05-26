@@ -136,7 +136,7 @@ The layers in the clustering learning network used the following sequence of ope
 \item Threshold nonlinearity: $ynl_i = 0$ if $yp_i <= 0$, $ynl_i = yp_i$ if $yp_i > 0$
 \end{enumerate}
 
-All networks used 32 filters on the first layer, and 512 filters on the second layer. All the filters' size were Kx5x5, K will be explained in the next section. After the first convolution, 32 filters produced 32 feature maps each size 28x28. Dimension of the feature maps decreased by 2x2 pooling with a stride of 2 pixels. We used max pooling layers because they performed better than average and gaussian-masked averages with L-2 modules. Also max pooling is a bio-inspired approach to reducing the dimensionality of the data at each layer \cite{lampl2004intracellular}. The output became 32x14x14 pixels. In the second layer, 512 filters produced output of 512x10x10 feature maps which then max pooled again and the size became 512x5x5. 
+All networks used 32 filters on the first layer, and 512 filters on the second layer. We use k-means clustering algorithm (we refer to this step as \textit{Clustering Learning algorithm}) to learn a set of 32 filters in the first layer, and 512 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels. More information have been published in paper \cite {culurciello2013clustering}. After the first convolution, 32 filters produced 32 feature maps each size 28x28. Dimension of the feature maps decreased by 2x2 pooling with a stride of 2 pixels. We used max pooling layers because they performed better than average and gaussian-masked averages with L-2 modules. Also max pooling is a bio-inspired approach to reducing the dimensionality of the data at each layer \cite{lampl2004intracellular}. The output became 32x14x14 pixels. In the second layer, 512 filters produced output of 512x10x10 feature maps which then max pooled again and the size became 512x5x5. 
 We also subsampled the RGB data by 4x4 Subsampling module with a stride of 4 pixels which gave 3x8x8 pixels.  We then concatenated the subsampled RGB data with the output of the deep network into a final vector. This final vector was then passed to a 2-layer MLP classifier. The final classifier was fixed to 128 hidden units and 10 output classes for both CIFAR and SVHN.
 
 %Clustering learning networks used the connection matrix technique CL-connex, with receptive fields of size 32 and groups of features of size 2 and 4. The CNN networks used a fully connected input to 1st, and 1st to 2nd layer. 
@@ -153,8 +153,7 @@ We also subsampled the RGB data by 4x4 Subsampling module with a stride of 4 pix
 
 
 
-\subsection{Learning}
-We use k-means clustering algorithm (we refer to this step as \textit{Clustering Learning algorithm}) to learn a set of 32 filters in the first layer, and 64 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels. More information have been published in paper \cite {culurciello2013clustering}. 
+\subsection{Similarity of features?}
 %Fig. \ref{fig-filters123} shows an example of the filters learned in all three layer of the INRIA person network trained with CL-connex.
 
 
@@ -208,8 +207,8 @@ CNN 2 layer                                    &$?\%$\\
 \\ \hline \\
 1 layer (32 filters)                          & $85.7\%$\\
 2 layer (Fanin=1)                           &$87.6\%$ \\
-2 layer (Fanin=2, random)           &$1\%$ \\
-2 layer (Fanin=2, learned)           &$1\%$\\
+2 layer (Fanin=2, random)           &$?\%$ \\
+2 layer (Fanin=2, learned)           &$?\%$\\
 2 layer (Fanin=32)                        &$?\%$\\
 \\ \hline \\
 CNN 1 layer                                   &$?\%$\\
