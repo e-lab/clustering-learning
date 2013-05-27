@@ -18,16 +18,7 @@ require 'xlua'    -- xlua provides useful tools, like progress bars
 require 'optim'   -- an optimization package, for online and batch methods
 
 ----------------------------------------------------------------------
--- Model + Loss:
---local t = require 'model'
---local model = t.model
---local loss = t.loss
-
-----------------------------------------------------------------------
 print '==> defining some tools'
-
--- classes
-local classes = {'person','bg'}
 
 -- This matrix records the current confusion across classes
 local confusion = optim.ConfusionMatrix(classes)
@@ -143,10 +134,10 @@ function train(trainData)
    end
 
    -- save/log current net
-   local filename = paths.concat(opt.save, 'model.net')
+   local filename = paths.concat(opt.save, 'multinet.net')
    os.execute('mkdir -p ' .. sys.dirname(filename))
    print('==> saving model to '..filename)
-   -- torch.save(filename, model)
+   torch.save(filename, model)
 
    -- next epoch
    confusion:zero()

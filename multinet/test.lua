@@ -2,26 +2,16 @@
 -- This script implements a test procedure, to report accuracy
 -- on the test data. Nothing fancy here...
 --
--- Clement Farabet
+-- Clement Farabet & Alfredo Canziani (May 2013)
 ----------------------------------------------------------------------
 
-require 'torch'   -- torch
 require 'xlua'    -- xlua provides useful tools, like progress bars
 require 'optim'   -- an optimization package, for online and batch methods
 
 ----------------------------------------------------------------------
 print '==> defining some tools'
 
--- model:
---local t = require 'model'
---local model = t.model
---local loss = t.loss
---local dropout = t.dropout
-
--- classes
-local classes = {'person','bg'}
-
--- This matrix records the current confusion across classes
+-- This matrix records the current confusion across classes (<classes> is a global var.)
 local confusion = optim.ConfusionMatrix(classes)
 
 -- Logger:
@@ -42,9 +32,6 @@ print '==> defining test procedure'
 function test(testData)
    -- local vars
    local time = sys.clock()
-
-   -- dropout -> off
-   --dropout.p = 0
 
    -- test over test data
    print('==> testing on test set:')
@@ -89,13 +76,9 @@ function test(testData)
       testLogger:style{['% mean class accuracy (test set)'] = '-'}
       testLogger:plot()
    end
-   
+
    confusion:zero()
-   
-   -- dropout -> on
-   --dropout.p = opt.dropout
 end
 
 -- Export:
 return test
-
