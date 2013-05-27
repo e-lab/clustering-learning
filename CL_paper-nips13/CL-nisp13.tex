@@ -48,23 +48,21 @@ Purdue University\\
 %We present the unsupervised clustering learning technique for learning the connection matrix between layers of a deep neural networks. Traditional deep neural networks use random connection tables between layers to keep the number of  connection small and tune to different image features. Fully-connected layers are also used when efficiency is not an issue. These kind of connections perform adequately in supervised deep networks because the training refines their values. 
 %On the other hand, unsupervised learning requires a data-driven method that will connect the most relevant features to the next layer. In this paper we present a clustering learning algorithm to learn simultaneously the connection and filters of deep networks. We tested our technique on CIFAR, SVHN and Pedestrian datasets and improve the accuracy by ?? compared to ... We show that networks and connections trained with clustering learning can obtain similar levels of performance as supervised deep networks when the number of layers and the filters are the same. 
 We present an analysis of different techniques of connection matrixes
-between layers of a deep neural networks. Traditional deep neural
+between layers of deep neural networks. Traditional deep neural
 networks use random connection tables between layers to keep the
-number of connection small and tune to different image features.
-Fully-connected layers are also used when efficiency is not an issue.
-These kind of connections perform adequately in supervised deep
-networks because the training refines their values.
-
-On the other hand, unsupervised learning, one cannot rely on
+number of connections small and tune to different image features.
+This kind of connection performs adequately in supervised deep
+networks because their values are refined during the training.
+On the other hand, in unsupervised learning, one cannot rely on
 back-propagation techniques to learn the connections between layers.
-This is because unsupervised networks do not used labeled data, and
-thus an error signal cannot be computed. We tested 4 different
-techniques of connecting first layer of the network to the second
-layer on CIFAR and SVHN datasets and show that the accuracy may change
-up to $6\%$ based on the used technique. We also showed that, learning
+This is because unsupervised networks do not use labeled data, and
+thus an error signal cannot be computed. In this work, we tested 4 different techniques 
+of connecting first layer of the network to the second
+layer on CIFAR and SVHN datasets and showed that the accuracy may change
+up to $6\%$ based on the used technique. We also showed that learning
 the connections based on the co-occurrences of  the features does not
-have an affect over a random connection.
-This work can be applied to improve the efficiency of connections and combination of features between the layers of deep neural networks.
+have an affect over a random connection in small networks.
+This work is helpful to improve the efficiency of connections between the layers of deep neural networks.
 \end{abstract}
 
 
@@ -73,12 +71,12 @@ This work can be applied to improve the efficiency of connections and combinatio
 Most scientists and engineers are fascinated by the design of an artificial vision system that can reproduce some of the human visual system capabilities in detecting, categorizing, tracking objects in view. The availability of a real-time synthetic vision system with such capabilities would find use in a large variety of applications, such as: autonomous cars, co-robots helpers, smart appliances, cellular-phones, to name a few. The most promising approach in recent years, is the fusion of bio-inspired and neuromorphic vision models with machine learning \cite{lecun_gradient-based_1998,hadsell_dimensionality_2006,gregor_structured_2011,riesenhuber_hierarchical_1999,serre_feedforward_2007,serre_neuromorphic_2010,jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. This field, named Deep Learning, has provided state-of-the-art results in the categorization of multiple objects in static frames \cite{krizhevsky_imagenet_2012}.
 
 Deep Learning networks are computer-vision and computational-neuroscience models of the mammalian visual system implemented in deep neural networks, where each network layer is composed of: linear two-dimensional filtering, non-linearity, pooling of data, output data normalization \cite{jarrett_what_2009,lecun_convolutional_2010,boureau_theoretical_2010}. 
-Deep Networks training is performed by means of the abundant image frames and videos one can find on the internet and large labeled datasets. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representations usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{karpathy_lessons_2011, torralba_unbiased_2011, hou_meta-theory_2012}, the recent focus is on learning these features purely from unlabeled input data \cite{olshausen_emergence_1996, hyvarinen_independent_2000, hinton_fast_2006, vincent_extracting_2008, coates_analysis_2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of learning models. Traditional work in unsupervised deep learning has focused on learning layer features, and rarely on the connections between layers. In this paper we present unsupervised clustering algorithms applied to learning the connectivity matrix between layers and filters of deep neural networks for general-purpose vision systems. 
+Deep Networks training is performed by means of the abundant image frames and videos one can find on the internet and large labeled datasets. In particular, deep networks need to learn good feature representations for complex visual tasks such as object categorization and tracking of objects in space and time, identifying object presence and absence. These representations usually involve learning the linear filter weight values from labeled and unlabeled input data. Since labeled data is costly and often ridden with human errors \cite{karpathy_lessons_2011, torralba_unbiased_2011, hou_meta-theory_2012}, the recent focus is on learning these features purely from unlabeled input data \cite{olshausen_emergence_1996, hyvarinen_independent_2000, hinton_fast_2006, vincent_extracting_2008, coates_analysis_2011}. These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of learning models. Traditional work in unsupervised deep learning has focused on learning layer features, and rarely on the connections between layers. In this paper, we present an analysis of different connections between layers of deep neural networks for general-purpose vision systems. 
 
-Recent techniques based on unsupervised Clustering Learning (Cl) are especially promising because they use simple learning methods that quickly converge \cite{culurciello2013clustering,coates_analysis_2011}. 
-These algorithms are easy to setup and train and are especially suited for applied research, because environment-specific data can be collected quickly with a few minutes of video, setup of custom size deep networks is quick and can be adapted to specific tasks in minutes.
+Recent techniques based on unsupervised Clustering Learning (CL) are especially promising because they use simple learning methods that quickly converge \cite{culurciello2013clustering,coates_analysis_2011}. 
+These algorithms are easy to setup and train and are especially suited for applied research, because environment-specific data can be collected quickly with a few minutes of video and the network can be adapted to specific tasks in minutes.
 
-The paper presents the following key innovations: (1) use of clustering learning for learning both filters and connections of deep networks with fully unsupervised techniques (Section \ref{sec-main}), (2) the ability to self-organize connections and filters purely with a data-driven approach from video streams (Section \ref{sec-methods} and  \ref{sec-net-arch}), (3) the ability of trained network to perform as well as supervised networks trained on still frames (Section \ref{sec-results}), (4) the ability to run in real-time due to a optimized lean network with 32 filters or less in the first, most computationally expensive network layer (Section \ref{sec-net-arch}). 
+The paper is organized in the following way CHANGE THIS(1) use of clustering learning for learning both filters and connections of deep networks with fully unsupervised techniques (Section \ref{sec-main}), (2) the ability to self-organize connections and filters purely with a data-driven approach from video streams (Section \ref{sec-methods} and  \ref{sec-net-arch}), (3) the ability of trained network to perform as well as supervised networks trained on still frames (Section \ref{sec-results}), (4) the ability to run in real-time due to a optimized lean network with 32 filters or less in the first, most computationally expensive network layer (Section \ref{sec-net-arch}). 
 
 
 
@@ -92,7 +90,7 @@ In unsupervised deep networks, one cannot rely on back-propagation techniques to
 
 \begin{figure}
 \includegraphics[width=5in]{fig-learnlayers.pdf}
-\caption{Learn layers}
+\caption{Architecture of the connecting scheme from the first layer to the second layer. Different feature maps from the first layer are grouped together based on metrics (random, similarity, single, and full). Filters are learned from these groups individually by CL. The filters are only applied to the feature maps that they are learned from.}
 \label{fig-learnlayers}
 \end{figure}
 
@@ -100,11 +98,10 @@ In unsupervised deep networks, one cannot rely on back-propagation techniques to
 In the figure we show two layers of a deep network: layer $N$ and layer $N+1$. The maps on the left of the figure, are the $N1$ output feature maps of the $N$-the layer in response to an input image. The maps on the right of the figure, are the $N2$ outputs of the first convolutional module of layer $N+1$. 
 
 We investigate different techniques of grouping feature maps from layer $N$ into "receptive fields" (RF). These receptive fields are the input of one or multiple maps in layer $N+1$. We form these RF by 4 different methods. 1) Grouping a small number of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF. In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps. The idea behind this step is to group features that occur often together in the data. 2) Selecting a small number of layer $N$ features randomly, 3) Grouping each maps individually, in other words if there are 32 filters in the first layer and so 32 maps are created after the first layer, we create 32 groups each has only 1 map, and 4) Grouping all maps into 1 group. 
-In order to learn the filters for layer $N+1$ convolutional module, we perform clustering (Clustering Learning) only within the RF (and not all $N1$ maps). In Fig. \ref{fig-learnlayers}, we learn $N2$ filters per group for a total of $N2 \cdot G$ maps in layer $N+1$.
+In order to learn the filters for layer $N+1$ convolutional module, we perform CL only within the RF (and not all $N1$ maps). In Fig. \ref{fig-learnlayers}, we learn $N2$ filters per group for a total of $N2 \cdot G$ maps in layer $N+1$.
 
 In the literature, we found two deep learning papers that are related. 
-Paper \cite{coates2012learning} groups features on each layer by similarity, but does not explicitly use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feature is averaged with a large number of other features, thus reducing the signal-to-noise ratio of important features. 
-%The main difference between paper \cite{coates2012learning} and our work is that we focus on learning smaller networks, with much fewer number of filters (32 vs. 4096) in the first and successive layers. 
+Paper \cite{coates2012learning} groups features on each layer by similarity, but does not explicitly use connection matrices between layers, rather they flatten the data at each layer and re-apply clustering algorithms. This approach is equivalent to forming a full-connection between layers, which is less efficient because each feature is averaged with a large number of other features, thus reducing the signal-to-noise ratio of important features. The main difference between paper \cite{coates2012learning} and our work is that we focus on learning smaller networks, with much fewer number of filters (32 vs. 4096) in the first and successive layers. 
 The paper \cite{boureau_2011} presents the interesting idea of learning pooling strategies that include feature maps with similarity in local feature space. This paper uses simple clustering procedures to cluster data in order to improve pooling in the feature space. In this respect this paper present similar ideas to the first technique we test in this paper, but is not applied to deep neural networks.
 
 %Several papers in the neural physiology and computational neuroscience literature report similar ideas for learning the receptive fields of complex cells \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}. None of these paper reports results close to the state-of-the-art in publicly available datasets of natural images.
@@ -151,8 +148,8 @@ The layers in the clustering learning network used the following sequence of ope
 \item Threshold nonlinearity: $ynl_i = 0$ if $yp_i <= 0$, $ynl_i = yp_i$ if $yp_i > 0$
 \end{enumerate}
 
-All networks used 32 filters on the first layer, and 512 filters on the second layer. We use k-means clustering algorithm (we refer to this step as \textit{Clustering Learning algorithm}) to learn a set of 32 filters in the first layer, and 512 filters in the second layer. The techniques and scripts are general and can quickly modified to learn any number of filters. The filter sizes on both layers was set to 5 x 5 pixels. More information have been published in paper \cite {culurciello2013clustering}. After the first convolution, 32 filters produced 32 feature maps each size 28x28. Dimension of the feature maps decreased by 2x2 pooling with a stride of 2 pixels. We used max pooling layers because they performed better than average and gaussian-masked averages with L-2 modules. Also max pooling is a bio-inspired approach to reducing the dimensionality of the data at each layer \cite{lampl2004intracellular}. The output became 32x14x14 pixels. In the second layer, 512 filters produced output of 512x10x10 feature maps which then max pooled again and the size became 512x5x5. 
-We also subsampled the RGB data by 4x4 Subsampling module with a stride of 4 pixels which gave 3x8x8 pixels.  We then concatenated the subsampled RGB data with the output of the deep network into a final vector. This final vector was then passed to a 2-layer MLP classifier. The final classifier was fixed to 128 hidden units and 10 output classes for both CIFAR and SVHN.
+All networks used 32 filters on the first layer, and 512 filters on the second layer. We use k-means clustering algorithm (we refer to this step as \textit{Clustering Learning algorithm}) to learn a set of 32 filters in the first layer, and 512 filters in the second layer. The filter sizes on both layers were set to 5 x 5 pixels.  After the first convolution, 32 filters produced 32 feature maps each size 28x28. Dimension of the feature maps decreased by 2x2 pooling with a stride of 2 pixels. We used max pooling layers because they performed better than L-2 pooling. Also max pooling is a bio-inspired approach to reducing the dimensionality of the data at each layer \cite{lampl2004intracellular}. The output became 32x14x14 pixels. In the second layer, 512 filters produced output of 512x10x10 feature maps which then max pooled again and the size became 512x5x5. 
+We also subsampled the RGB data by 4x4 with a stride of 4 pixels which gave 3x8x8 pixels.  We then concatenated the subsampled RGB data with the output of the deep network into a final vector. This final vector was then passed to a 2-layer MLP classifier. The final classifier was fixed to 128 hidden units and 10 output classes for both CIFAR-10 and SVHN.
 
 %Clustering learning networks used the connection matrix technique CL-connex, with receptive fields of size 32 and groups of features of size 2 and 4. The CNN networks used a fully connected input to 1st, and 1st to 2nd layer. 
 
@@ -171,30 +168,26 @@ We tested 4 different techniques of grouping feature maps to create the connecti
 
 4) Grouping all maps into 1 group. In other words, this method is full connection. In this case, we only have 1 group and we created 512 filters each is 32x5x5 sizes. This method is  referred as  (Fanin=32) in the Tables 1 and 2.
 
-The CNN networks used a fully connected input to 1st, and 1st to 2nd layer.
+%The CNN networks used a fully connected input to 1st, and 1st to 2nd layer.
 
 %For the INRIA person dataset, we used a 3-layer network of size 32, 64, 128 filters in each convolutional layer.
 %We experimented with SLAC connections \cite{coates2012emergence}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers. Unfortunately SLAC did not give us any advantage because of the small number of features used, so we removed it from our workflow.
 
 
 
-\subsection{Similarity of features?}
-The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. The main contribution of this paper is a real-valued implementation of this learning rule. The RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule. We call this connection matrix algorithm 'CL-connex'.
+\subsection{Similarity of features}
+Similarity of features are calculated to learn the RFs. The main driving force for this idea is a bio-inspired model of learning in the mammalian brain. It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}. This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group (or receptive field, RF) can predict the response of the post-synaptic neuron. In other words neuron in the RF have strong connections to a neuron in layer $N+1$ if they can predict its response. The learned RF group features that are highly activated together in the same location. This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$. This implements the Hebbian rule. 
+
+
 
 %Fig. \ref{fig-filters123} shows an example of the filters learned in all three layer of the INRIA person network trained with CL-connex.
-
-
-
 %\begin{figure}
 %\includegraphics[width=5in]{fig-filters123.pdf}
 %\caption{Filters learned with Clustering Learning and CL-Connex, for layer 1, 2, 3 respectively. These examples are from the INRIA dataset network.}
 %\label{fig-filters123}
 %\end{figure}
-
-
 %Larger network:
 %This network can be executed in real-time with accelerated hardware [neuflow]
-
 
 
 \section{Results}
@@ -204,7 +197,6 @@ The main driving force for this idea is a bio-inspired model of learning in the 
 
 
 \begin {table}
-%\begin{wraptable}{r}{5cm}
 \parbox{.5\linewidth}{
 \caption{Results on CIFAR-10}
 \label{resuts-cifar10}
@@ -221,9 +213,7 @@ The main driving force for this idea is a bio-inspired model of learning in the 
 \end{tabular}
 \end{center}
 }
-%\end{wraptable}
 \parbox{.5\linewidth}{
-%\begin{wraptable}{r}{5cm}
 \caption{Results on SVHN}
 \label{resuts-svhn}
 \begin{center}
@@ -240,7 +230,6 @@ The main driving force for this idea is a bio-inspired model of learning in the 
 \end{center}
 }
 \end{table}
-%\end{wraptable}
 
 
 
@@ -263,11 +252,12 @@ As stated in the Table 1 and 2, 1 layer (32 filters) gives $68.8\%$ on CIFAR-10 
 
 First, the second layer with single RF is added to the architecture in order to analyze the effect of the connection. Receptive field of each neuron in the second layer is one feature map from the first layer. Since this architecture uses limited number of connection, it can be interpreted to decision tree as shown in figure X. High accuracy of 72.8\% compared to 1 layer is achieved here due to the property of decision tree in point that it simply finds features of features using each filter as each feature descriptor. This method handles only one feature from the previous layer instead of exploiting information from the combination of features.
 
-2 layer (Fanin=2, random RF)
-
-2 layer (Fanin=2, learned RF)         
+Secondly, RF with 2 feature maps are tested to analyze the possible advantages of exploring different features in the same RF. Random combinations and the learned RF's are tested. Learned RF's are obtained  based on the similar ideas for learning the receptive fields of complex cells that are reported in  several papers in the neural physiology and computational neuroscience literature  \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}. None of these paper reports results close to the state-of-the-art in publicly available datasets of natural images. We also didn't see any affect of the learning compare to randomization to group the features for each RF.
 
 On the other hand, the second layer with full connection decreases performance and even worse than 1 layer. In this case, filters across 32 feature maps are obtained by clustering learning and we have the curse of dimensionality problem because of the 32x3x5x5 high-dimensional space. Filters in the figure X are rather plain and do not have distinct edge like Gabor filters. It was also shown in the paper (cite Adams). Definitely the filters have difficulties in characterizing features in the given dataset.
+
+\section{Conclusion}
+\label{sec-conc}
 
 %EUGE first draft:
 
