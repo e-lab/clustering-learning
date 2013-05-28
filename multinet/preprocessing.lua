@@ -111,12 +111,12 @@ for i,channel in ipairs(channels) do
 end
 
 ----------------------------------------------------------------------
-print '==> visualizing data:\n'
-
--- Visualization is quite easy, using image.display(). Check out:
--- help(image.display), for more info about options.
-
 if opt.visualize then
+   print '==> visualizing data:\n'
+
+   -- Visualization is quite easy, using image.display(). Check out:
+   -- help(image.display), for more info about options.
+
    -- Showing some training exaples
    local first128Samples_y = trainData.data[{ {1,128},1 }]
    local first128Samples_u = trainData.data[{ {1,128},2 }]
