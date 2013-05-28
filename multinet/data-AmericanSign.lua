@@ -6,7 +6,6 @@
 
 -- Requires ------------------------------------------------------------------
 require 'image'
-require 'sys'
 require 'pl'
 require 'eex'
 require 'xlua'
@@ -28,6 +27,7 @@ if not opt then
 --ratio              (default 0.8)     Ratio of train to test dataset split
 --height             (default 46)      Height of dataset images
 --width              (default 46)      Width of dataset images
+--visualize                            Show some samples
 ]]
 end
 
@@ -114,3 +114,31 @@ end
 -- display some examples:
 image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
+-- Displaying the dataset architecture ---------------------------------------
+print('Training Data:')
+print(trainData)
+print()
+
+print('Test Data:')
+print(testData)
+print()
+
+-- Preprocessing -------------------------------------------------------------
+dofile 'preprocessing.lua'
+
+-- Printing the category statistics ------------------------------------------
+if opt.stat then
+   print '==> showing class statistics'
+   gnuplot.figure(1)
+   gnuplot.hist(trainData.labels,43)
+   gnuplot.title('Training dataset category statistics')
+   gnuplot.figure(2)
+   gnuplot.hist(testData.labels,43)
+   gnuplot.title('Testing dataset category statistics')
+end
+
+-- Exports -------------------------------------------------------------------
+return {
+   trainData = trainData,
+   testData = testData
+}
