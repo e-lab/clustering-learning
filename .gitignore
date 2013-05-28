@@ -13,4 +13,5 @@ datasets/
 scratch/
 *.swp
 *.eps
+!CL_paper-nips13/*.eps
 multinet/*.t7
