@@ -56,7 +56,6 @@ opt.samplepercar = opt.samplepercar or 6
 -- Parameters ----------------------------------------------------------------
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
-torch.setdefaulttensortype('torch.DoubleTensor')
 local ds = eex.datasetsPath()
 local path = ds .. 'KITTI_dataset/city/'
 
