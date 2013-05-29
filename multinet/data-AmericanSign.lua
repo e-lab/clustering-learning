@@ -71,7 +71,7 @@ end
 print '==> Generating dataset numerical labels'
 local signList = {}
 for i,s in ipairs(humanLabels) do
-   if signList[s] == nil then signList[s] = true end
+   if signList[s] == nil then signList[s] = 0 else signList[s] = signList[s] + 1 end
 end
 
 local signArray = {}
@@ -136,6 +136,10 @@ if opt.stat then
    gnuplot.figure(2)
    gnuplot.hist(testData.labels,43)
    gnuplot.title('Testing dataset category statistics')
+
+   print '   signList ='
+   print(signList)
+
 end
 
 -- Exports -------------------------------------------------------------------
