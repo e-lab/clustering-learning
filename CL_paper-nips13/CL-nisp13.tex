@@ -149,7 +149,7 @@ In this case $G = 1$ and $K = 32$. To keep the number of filters same as the oth
 \end{enumerate}
 
 \begin{figure}
-\includegraphics[width=5in]{fig-learnlayers.pdf}
+\includegraphics[width=5in]{fig-connection.eps}
 \caption{Architecture of the connecting scheme from the first layer to the second layer. Different feature maps from the first layer are grouped together based on metrics (random, similarity, single, and full). Filters are learned from these groups individually by CL. The filters are only applied to the feature maps that they are learned from.}
 \label{fig-learnlayers}
 \end{figure}
@@ -185,7 +185,7 @@ Using the naming convention in \cite{lecun_convolutional_2010}, for each layer $
 
 
 \begin{figure}
-\includegraphics[width=5in]{fig-netarch.pdf}
+\includegraphics[width=5in]{overall-structure.eps}
 \caption{Architecture of the CL network used in this paper: a 2 layer convolutional network with color bypass.}
 \label{fig-netarch}
 \end{figure}
@@ -238,8 +238,8 @@ Similarity of features are calculated to learn the RFs. The main driving force f
 \\ \hline \\
 1 layer (32 filters)                            & $68.8\%$\\
 2 layer (Fanin=1)                            &$72.8\%$ \\
-2 layer (Fanin=2, random RF)            &$72.4\%$ \\
-2 layer (Fanin=2, learned RF)            &$73.2\%$\\
+2 layer (Fanin=2, random RF)            &$73.2\%$ \\
+2 layer (Fanin=2, learned RF)            &$71.2\%$\\
 2 layer (Fanin=32)                          &$70.0\%$\\
 \\ \hline \\
 \end{tabular}
