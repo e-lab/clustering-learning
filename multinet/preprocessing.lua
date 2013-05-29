@@ -112,7 +112,7 @@ end
 
 ----------------------------------------------------------------------
 if opt.visualize then
-   print '==> visualizing data:\n'
+   print '==> visualizing data:'
 
    -- Visualization is quite easy, using image.display(). Check out:
    -- help(image.display), for more info about options.
@@ -133,3 +133,5 @@ if opt.visualize then
    image.display{image=first128Samples_u, nrow=16, legend='Some testing examples: ' ..channels[2].. ' channel'}
    image.display{image=first128Samples_v, nrow=16, legend='Some testing examples: ' ..channels[3].. ' channel'}
 end
+
+print('\n')
