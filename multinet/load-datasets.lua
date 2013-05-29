@@ -4,6 +4,9 @@
 -- Alfredo Canziani May 2013
 ------------------------------------------------------------------------------
 
+-- Requires ------------------------------------------------------------------
+require 'pl'
+
 -- Parsing the command line --------------------------------------------------
 if not opt then
    print '==> Processing options'
@@ -13,7 +16,6 @@ if not opt then
 end
 
 opt = opt or {}
-opt.German = opt.German or flase
 
 -- Parameters ----------------------------------------------------------------
 torch.setnumthreads(3)
@@ -64,7 +66,7 @@ else
    end
 
    -- Cleaning the screen before executing (a lot of text out will follow)
-   os.execute('clear')
+   -- os.execute('clear')
 
    -- Concatenating all datasets contained in <dataset> table
    for i,d in ipairs(datasets) do
