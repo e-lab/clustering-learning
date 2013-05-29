@@ -28,6 +28,7 @@ if not opt then
 --height             (default 46)      Height of dataset images
 --width              (default 46)      Width of dataset images
 --visualize                            Show some samples
+--stat                                 Show datasets statistics
 ]]
 end
 
@@ -90,7 +91,7 @@ local shuffle = torch.randperm(dataset:size())
 
 -- Training dataset
 trainData = {
-   data   = torch.zeros(trSize, 3, opt.width, opt.width),
+   data   = torch.zeros(trSize, 3, height, width),
    labels = torch.zeros(trSize),
    size   = function() return trSize  end
 }
@@ -103,7 +104,7 @@ image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train 
 
 -- Testing dataset
 testData  = {
-   data   = torch.zeros(teSize, 3, opt.width, opt.width),
+   data   = torch.zeros(teSize, 3, height, width),
    labels = torch.zeros(teSize),
    size   = function() return teSize end
 }
