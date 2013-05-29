@@ -4,6 +4,19 @@
 -- Alfredo Canziani May 2013
 ------------------------------------------------------------------------------
 
+-- Requires ------------------------------------------------------------------
+require 'pl'
+
+-- Parsing the command line --------------------------------------------------
+if not opt then
+   print '==> Processing options'
+   opt = lapp [[
+--German          Use the German road sign dataset
+]]
+end
+
+opt = opt or {}
+
 -- Parameters ----------------------------------------------------------------
 torch.setnumthreads(3)
 
@@ -31,16 +44,18 @@ else
    local totalTestData = {}
 
    -- Datasets' name
+   if opt.German then roadSign = 'data-sign' else roadSign = 'data-AmericanSign' end
    local datasets = {
       'data-person',
-      'data-sign',
+      roadSign,
       'data-kitti'
    }
 
    -- Number of classes per dataset
+   if opt.German then nbSign = 43 else nbSign = 35 end
    local classes = {
       1,
-      43,
+      nbSign,
       1
    }
 
@@ -51,7 +66,7 @@ else
    end
 
    -- Cleaning the screen before executing (a lot of text out will follow)
-   os.execute('clear')
+   -- os.execute('clear')
 
    -- Concatenating all datasets contained in <dataset> table
    for i,d in ipairs(datasets) do

@@ -36,10 +36,9 @@ opt = lapp[[
    -o,--save               (default results)    save directory
    -n,--network            (default false)      path to existing [trained] network
    -s,--save               (default scratch/)   file name to save network [after each epoch]
-      --display            (default false)      display training/testing samples while training
-      --plot               (default false)      plot error/accuracy live (if false, still logged in a file)
-      --log                (default true)       log the whole session to a file
+      --log                                     log the whole session to a file
       --seed               (default 1)          use fixed seed for randomized initialization
+      --German                                  use the German road sign dataset
 ]]
 
 opt.quicktest = true     --(default 0)          true = small test, false = full code running
@@ -89,53 +88,96 @@ fanin           = 8                 -- createCoCnxTable creates also 2*fanin con
 feat_group      = 32                --features per group (32=best in CIFAR, nk1=32, fanin=2)
 opt.hiddens     = 512               -- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2   = nk3, opt.hiddens  -- dimensions for top perceptron
-classes = {
-   'Person',
-   '20 km/h speed limit',
-   '30 km/h speed limit',
-   '50 km/h speed limit',
-   '60 km/h speed limit',
-   '70 km/h speed limit',
-   '80 km/h speed limit',
-   '80 km/h end of speed limit',
-   '100 km/h speed limit',
-   '120 km/h speed limih',
-   'No passing',
-   'No passing for vehicles over 3.5t',
-   'Priority',
-   'Priority road',
-   'Yield',
-   'Stop',
-   'Prohibited for all vehicles',
-   'Vehicles over 3.5t prohibited',
-   'Do not enter',
-   'General danger',
-   'Curve (left)',
-   'Curve (right)',
-   'Double curve. First curve is to the left',
-   'Rough road',
-   'Slippery when wet or dirty',
-   'Road narrows (right side)',
-   'Road work',
-   'Traffic signals ahead',
-   'Pedestrians',
-   'Watch for children',
-   'Bicycle crossing',
-   'Beware of ice/snow',
-   'Wild animal crossing',
-   'End of all restrictions',
-   'All traffic must turn right',
-   'All traffic must turn left',
-   'All traffic must continue straight ahead (i.e. no turns)',
-   'All traffic must continue straight ahead or turn right (i.e. no left turn)',
-   'All traffic must continue straight ahead or turn left (i.e. no right turn)',
-   'Pass by on right',
-   'Pass by on left',
-   'Roundabout',
-   'End of no passing zone',
-   'End of no passing zone for vehicles over 3.5t',
-   'Car'
-}
+
+if opt.German then
+   signLabels = {
+      '20 km/h speed limit',
+      '30 km/h speed limit',
+      '50 km/h speed limit',
+      '60 km/h speed limit',
+      '70 km/h speed limit',
+      '80 km/h speed limit',
+      '80 km/h end of speed limit',
+      '100 km/h speed limit',
+      '120 km/h speed limih',
+      'No passing',
+      'No passing for vehicles over 3.5t',
+      'Priority',
+      'Priority road',
+      'Yield',
+      'Stop',
+      'Prohibited for all vehicles',
+      'Vehicles over 3.5t prohibited',
+      'Do not enter',
+      'General danger',
+      'Curve (left)',
+      'Curve (right)',
+      'Double curve. First curve is to the left',
+      'Rough road',
+      'Slippery when wet or dirty',
+      'Road narrows (right side)',
+      'Road work',
+      'Traffic signals ahead',
+      'Pedestrians',
+      'Watch for children',
+      'Bicycle crossing',
+      'Beware of ice/snow',
+      'Wild animal crossing',
+      'End of all restrictions',
+      'All traffic must turn right',
+      'All traffic must turn left',
+      'All traffic must continue straight ahead (i.e. no turns)',
+      'All traffic must continue straight ahead or turn right (i.e. no left turn)',
+      'All traffic must continue straight ahead or turn left (i.e. no right turn)',
+      'Pass by on right',
+      'Pass by on left',
+      'Roundabout',
+      'End of no passing zone',
+      'End of no passing zone for vehicles over 3.5t'
+   }
+else
+   signLabels = {
+      'Merge',
+      'Do not pass',
+      'Turn right',
+      'Ramp speed advisory 20',
+      'Pedestrian crossing',
+      'Speed limit 65',
+      'Yield',
+      'Signal ahead',
+      'Truck speed limit 55',
+      'Speed limit 35',
+      'Dip',
+      'Speed limit urdbl',
+      'Stop ahead',
+      'Lane ends',
+      'Speed limit 55',
+      'Stop',
+      'Right lane must turn',
+      'Speed limit 50',
+      'Keep right',
+      'Ramp speed advisory urdbl',
+      'Speed limit 45',
+      'No right turn',
+      'Zone ahead 45',
+      'Speed limit 40',
+      'Slow',
+      'Ramp speed advisory 50',
+      'Intersection',
+      'Turn left',
+      'School speed limit 25',
+      'School',
+      'Yield ahead',
+      'Ramp speed advisory 45',
+      'Added lane',
+      'Speed limit 25',
+      'No left turn'
+   }
+end
+
+classes = {'Person'}
+for i = 1, #signLabels do classes[#classes+1] = signLabels[i] end
+classes[#classes+1] = 'Car'
 
 ivch=3
 
