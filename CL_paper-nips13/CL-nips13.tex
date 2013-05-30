@@ -287,7 +287,7 @@ Similarities of features are calculated based on the correlation of the feature 
 \begin {table}
 \parbox{.5\linewidth}{
 \caption{Results on CIFAR-10}
-\label{resuts-cifar10}
+\label{tab:results-cifar10}
 \begin{center}
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
@@ -298,13 +298,12 @@ Similarities of features are calculated based on the correlation of the feature 
 2 layer (Fan-in=2, learned RF)            &$71.2\%$\\
 2 layer (Fan-in=32)                          &$70.0\%$\\
 \\ \hline \\
-\label{tab:cifar}
 \end{tabular}
 \end{center}
 }
 \parbox{.5\linewidth}{
 \caption{Results on SVHN}
-\label{resuts-svhn}
+\label{tab:results-svhn}
 \begin{center}
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
@@ -315,7 +314,6 @@ Similarities of features are calculated based on the correlation of the feature 
 2 layer (Fan-in=2, learned RF)           &$86.7\%$\\
 2 layer (Fan-in=32)                        &$86.4\%$\\
 \\ \hline \\
-\label{tab:svhn}
 \end{tabular}
 \end{center}
 }
@@ -351,7 +349,7 @@ We show results on CIFAR-10 and SVHN datasets with different connection techniqu
 \end{figure}
 
 
-As stated in the Table \ref{tab:cifar} and \ref{tab:svhn}, 1 layer (32 filters) gives $68.8\%$ on CIFAR-10 dataset and $85.7\%$ on SVHN dataset.
+As stated in the Table \ref{tab:results-cifar10} and \ref{tab:results-svhn}, 1 layer (32 filters) gives $68.8\%$ on CIFAR-10 dataset and $85.7\%$ on SVHN dataset.
 The accuracy on the CIFAR-10 is similar to the k-means algorithm with 200 filters from the paper \cite{coates_analysis_2011}.
 We are obtaining the similar performance with only 32 filters because we use a different architecture in our network than \cite{coates_analysis_2011}.
 We use 2x2 max pooling layer, whereas \cite{coates_analysis_2011} uses 7x7 subsampling pooling, which gives better results in a small network.
@@ -424,7 +422,7 @@ Fig. 4(a) supports this argument because it does not have distinct edges, rather
 It was also shown in the paper (cite Adams).
 Definitely the filters have difficulties in characterizing features in the given dataset.
 
-Since the random connection of the features gave the best results on CIFAR-10 and SVHN as stated in the Tables \ref{tab:cifar} and \ref{tab:svhn},
+Since the random connection of the features gave the best results on CIFAR-10 and SVHN as stated in the Tables \ref{tab:results-cifar10} and \ref{tab:results-svhn},
 we tested how many features to be combined for the best accuracy.
 The results are presented in the Table \ref{tab:fanin}.
 However, exploring 2 features together increases the accuracy over single fan-in, increasing the fan-in more than 2 
