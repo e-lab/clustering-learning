@@ -6,7 +6,8 @@
 \usepackage{graphicx}
 \usepackage{epsfig}
 \usepackage{caption}
-\usepackage{subcaption}
+\usepackage[labelformat=simple]{subcaption}
+\renewcommand\thesubfigure{(\alph{subfigure})}
 \usepackage{cite}
 \usepackage{url}
 \usepackage{wrapfig}
@@ -332,6 +333,7 @@ We show results on CIFAR-10 and SVHN datasets with different connection techniqu
                 \centering
                 \includegraphics[width=1.0in]{fig-diagram-fanin1.eps}
                 \caption{Fan-in = 1}
+                \label{fig-secondconnex-fanin1}
         \end{subfigure}%
         ~%add desired spacing between images, e. g. ~, \quad, \qquad etc. 
           %(or a blank line to force the subfigure onto a new line)
@@ -339,17 +341,19 @@ We show results on CIFAR-10 and SVHN datasets with different connection techniqu
                 \centering
                 \includegraphics[width=1.0in]{fig-diagram-fanin2.eps}
                 \caption{Fan-in = 2}
+                \label{fig-secondconnex-fanin2}                
         \end{subfigure}%
         \begin{subfigure}[b]{0.3\textwidth}
                 \centering
                 \includegraphics[width=1.0in]{fig-diagram-faninall.eps}
                 \caption{Fully connected}
+                \label{fig-secondconnex-full}
         \end{subfigure}
         \caption{Simplified diagram of networks with different connection techniques.}
 \end{figure}
 
 
-As stated in the Table \ref{tab:results-cifar10} and \ref{tab:results-svhn}, 1 layer (32 filters) gives $68.8\%$ on CIFAR-10 dataset and $85.7\%$ on SVHN dataset.
+As stated in the Table \ref{tab:results-cifar10} and \ref{tab:results-svhn}, 1 layer (32 filters) achieves $68.8\%$ accuracy on CIFAR-10 dataset and $85.7\%$ on SVHN dataset.
 The accuracy on the CIFAR-10 is similar to the k-means algorithm with 200 filters from the paper \cite{coates_analysis_2011}.
 We are obtaining the similar performance with only 32 filters because we use a different architecture in our network than \cite{coates_analysis_2011}.
 We use 2x2 max pooling layer, whereas \cite{coates_analysis_2011} uses 7x7 subsampling pooling, which gives better results in a small network.
@@ -357,7 +361,7 @@ Another improvement comes from the downsampling of the image and feeding it to t
 
 In the table, we first tested single RF architecture.
 RF of each neuron in the second layer is one feature map from the first layer.
-Since this architecture is hierarchical and it uses a limited number of connection, it can be interpreted as decision tree as shown in Fig. 3(a).
+Since this architecture is hierarchical and it uses a limited number of connection, it can be interpreted as decision tree as shown in Fig. \ref{fig-secondconnex-fanin1}.
 High accuracy of 72.8\% compared to 1 layer is achieved here due to the property of decision tree in point that it finds
 features of features using each filter as a feature descriptor.
 This method handles only one feature from the previous layer instead of exploiting information from the group of features.
@@ -369,6 +373,7 @@ This method handles only one feature from the previous layer instead of exploiti
                 \centering
                 \includegraphics[width=2.0in]{fig-kernels2-full.eps}
                 \caption{Filters with full connection.}
+                \label{fig-secondkernels-full}
         \end{subfigure}%
         ~%add desired spacing between images, e. g. ~, \quad, \qquad etc. 
           %(or a blank line to force the subfigure onto a new line)
@@ -376,6 +381,7 @@ This method handles only one feature from the previous layer instead of exploiti
                 \centering
                 \includegraphics[width=2.0in]{fig-kernels2-random.eps}
                 \caption{Filters with fan-in of 2 random connection.}
+                \label{fig-secondkernels-random}
         \end{subfigure}
         \caption{Second layer filters from CL for comparison.}
 \end{figure}
@@ -418,7 +424,7 @@ We also didn't see any affect of the learning compare to randomization to group 
 
 In this case, filters across 32 feature maps are obtained by CL and this architecture suffers from the curse of dimensionality
 because of the 32x3x5x5 high-dimensional feature space.
-Fig. 4(a) supports this argument because it does not have distinct edges, rather plain.
+Fig. \ref{fig-secondkernels-full} supports this argument because it does not have distinct edges, rather plain.
 It was also shown in the paper (cite Adams).
 Definitely the filters have difficulties in characterizing features in the given dataset.
 
