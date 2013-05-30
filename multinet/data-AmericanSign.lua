@@ -29,6 +29,7 @@ if not opt then
 --width              (default 46)      Width of dataset images
 --visualize                            Show some samples
 --stat                                 Show datasets statistics
+--lim                (default 50)      At least <lim> examples per sign
 ]]
 end
 
@@ -39,46 +40,73 @@ opt = opt or {}
 local height = opt.height or 46
 local width = opt.width or 46
 opt.ratio = opt.ratio or .8
+local lim = opt.lim or 50
 
 -- Main program -------------------------------------------------------------
-print '==> Loading file names and cropping coordinates'
-
-dataset = {
-   data = torch.Tensor(3232,3,height,width),
-   labels = torch.Tensor(3232),
-   size = function() return 3232 end
-}
+print '==> Loading labels and choosing appropriate signs'
 
 local annotationsFile = io.open(path .. 'allAnnotations.csv', 'rb')
-header = sys.split(annotationsFile:read(),';')
-for i = 1, 4624 do line = annotationsFile:read() end -- skipping the B&W images
-humanLabels = {}
-idx = 0
+local header = sys.split(annotationsFile:read(),';')
+local line
+for i = 1, 4623 do line = annotationsFile:read() end -- skipping the B&W images
+local readFrom = annotationsFile:seek()
+line = annotationsFile:read()
+local humanLabels = {}
+local idx = 0
 while line ~= nil do
    annotation = sys.split(line,';')
-   local w,h = (annotation[5] - annotation[3]), (annotation[6] - annotation[4])
-   local min = (w < h) and w or h
-   img = image.crop(image.load(path .. annotation[1]),
-                    annotation[3] + math.floor((w-min)/2), annotation[4] + math.floor((h-min)/2),
-                    annotation[5] - math.ceil ((w-min)/2), annotation[6] - math.ceil ((h-min)/2))
    idx = idx + 1
-   image.scale(img,dataset.data[idx])
    humanLabels[idx] = annotation[2]
+   line = annotationsFile:read()
+   xlua.progress(idx,3232)
+end
+
+local signList = {}
+for i,s in ipairs(humanLabels) do
+   if signList[s] == nil then signList[s] = 1 else signList[s] = signList[s] + 1 end
+end
+torch.save('signList.t7',signList,'ascii')
+local datasetSize = 0
+for k in pairs(signList) do
+   if signList[k] >= lim then datasetSize = datasetSize + signList[k] end
+end
+
+local signArray = {}
+for s in pairs(signList) do signArray[#signArray + 1] = s end
+table.sort(signArray,function(a,b) return signList[a] > signList[b] end)
+
+local revSignDic = {}
+for i,s in ipairs(signArray) do revSignDic[s] = i end
+
+print '==> Loading file names and cropping coordinates'
+
+local dataset = {
+   data = torch.Tensor(datasetSize,3,height,width),
+   labels = torch.Tensor(datasetSize),
+   size = function() return datasetSize end
+}
+
+annotationsFile:seek('set',readFrom)
+line = annotationsFile:read()
+idx = 0
+humanLabels = {}
+while line ~= nil do
+   annotation = sys.split(line,';')
+   if signList[annotation[2]] >= lim then
+      local w,h = (annotation[5] - annotation[3]), (annotation[6] - annotation[4])
+      local min = (w < h) and w or h
+      img = image.crop(image.load(path .. annotation[1]),
+      annotation[3] + math.floor((w-min)/2), annotation[4] + math.floor((h-min)/2),
+      annotation[5] - math.ceil ((w-min)/2), annotation[6] - math.ceil ((h-min)/2))
+      idx = idx + 1
+      humanLabels[idx] = annotation[2]
+      image.scale(img,dataset.data[idx])
+   end
    line = annotationsFile:read()
    xlua.progress(idx,dataset.size())
 end
 
 print '==> Generating dataset numerical labels'
-local signList = {}
-for i,s in ipairs(humanLabels) do
-   if signList[s] == nil then signList[s] = 0 else signList[s] = signList[s] + 1 end
-end
-
-local signArray = {}
-for s in pairs(signList) do signArray[#signArray + 1] = s end
-
-local revSignDic = {}
-for i,s in ipairs(signArray) do revSignDic[s] = i end
 
 for i = 1,dataset.size() do
    dataset.labels[i] = revSignDic[humanLabels[i]] - 1
