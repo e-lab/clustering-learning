@@ -428,11 +428,11 @@ Fig. \ref{fig-secondkernels-full} supports this argument because it does not hav
 It was also shown in the paper  \cite{coates2012learning} .
 Definitely the filters have difficulties in characterizing features in the given dataset.
 
-Since the random connection of the features gave the best results on CIFAR-10 and SVHN as stated in the Tables \ref{tab:results-cifar10} and \ref{tab:results-svhn},
-we tested how many features to be combined for the best accuracy.
+Since the random connection of the features gave the best results on CIFAR-10 and SVHN as shown in the Tables \ref{tab:results-cifar10} and \ref{tab:results-svhn},
+we ran experiments to measure the effect of varying the fan-in of the connection table.
 The results are presented in the Table \ref{tab:fanin}.
-However, exploring 2 features together increases the accuracy over single fan-in, increasing the fan-in more than 2 
-reports loss in the accuracy.
+A fan-in of 2 provides higher accuracy than a one-to-one connection table, but increasing the fan-in above 2
+leads to a loss in accuracy.
 
 
 \section{Conclusion}
