@@ -20,7 +20,7 @@
 
 \begin{document}
 
-\title{An analysis of the connections  \\ between layers of deep neural networks}
+\title{An Analysis of the Connections  \\ Between Layers of Deep Neural Networks}
 
 \author{
 Eugenio Culurciello\thanks{More information on Eugenio Culurciello's laboratory and research can be found here: http://engineering.purdue.edu/elab/. Real time robotic vision systems: http://www.neuflow.org/} \\
@@ -130,28 +130,29 @@ perform CL only with the RF (and not all $N1$ maps). In Fig. \ref{fig-learnlayer
 $N2 \cdot G$ maps in layer $N+1$.
 We form these RF by 4 different methods.
 \begin{enumerate}
-\item (Fanin=1) Grouping each maps individually. In other words, we create $N1$ groups which have only 1 feature map. 
+\item (Fan-in=1) Grouping each maps individually. In other words, we create $N1$ groups which have only 1 feature map. 
 $G = N1$ and $K = 1$ is used in this case (Fig. \ref{fig-learnlayers}). In our tests we fixed the number of filters in the first layer to 32, $N1=32$. 
 From each group, 16 filters are learned by CL, ($N2 = 16$).
 Therefore, in total we produce $N2 \cdot G = 32 \cdot 16 = 512$ filters. 
 The size of filters is 1x5x5. 
-\item (Fanin=2, learned RF) Grouping a small number of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. 
+\item (Fan-in=2, learned RF) Grouping a small number of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. 
 In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF.
 In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps.
-The idea behind this step is to group features that occur 
-often together in the data \cite{masquelier2007learning}.
+The idea behind this step is to group features that occur often together in the data \cite{masquelier2007learning}.
 The calculation of the similarity of the feature maps is described in Section \ref{sec-similarity}.
 For our tests we group 2 features together from the first layer.
 We again created 32 groups ($G = 32$ and $K = 2$), and from each group we learned 16 filters.
 Therefore, in total we again produce 512 filters but in this case the filters have size of 2x5x5. 
-\item (Fanin=2, random RF) Selecting a small number of layer $N$ features randomly.
+\item (Fan-in=2, random RF) Selecting a small number of layer $N$ features randomly.
 This test is very similar to the second test, but we didn't use any similarity metric to group similar features together.
-Instead, we group features randomly. All the numbers are kept the same as in the second test.
+Instead, we group features randomly.
+All the numbers are kept the same as in the second test.
 With this test, we want to see if grouping the similar features gives any advantages over the random grouping.
-\item (Fanin=32) Grouping all maps into 1 group.
+\item (Fan-in=32) Grouping all maps into 1 group.
 This method is basically a full connection from the first layer to the second layer. 
-$G = 1$ and $K = 32$ is used in this case.
-To keep the number of filters same as the other tests we learned 512 filters from this 1 group which includes all the feature maps from the first layer.
+$G = 1$ and $K = 32$ are used in this case.
+To keep the number of filters same as the other tests we learned 512 filters from this 1 group
+which includes all the feature maps from the first layer.
 In this case, the size of filters is 32x5x5. 
 \end{enumerate}
 
@@ -190,15 +191,15 @@ In addition it features a "Spatial" mode that allows a trained network to be eff
 
 \subsection{Input data}
 
-We tested and obtained results using the CIFAR10 \cite{krizhevsky_learning_2009} and the Street View House Numbers (SVHN) \cite{netzer_reading_2011} datasets.
+We tested and obtained results using the CIFAR-10 \cite{krizhevsky_learning_2009} and the Street View House Numbers (SVHN) \cite{netzer_reading_2011} datasets.
 The SVHN dataset has a training size of 73,257 32x32 images and test size of 26,032 32x32 images.
-The CIFAR10 dataset has a training size of 20,000 32x32 images and a test size of 2,000 32x32 images.
+The CIFAR-10 dataset has a training size of 20,000 32x32 images and a test size of 2,000 32x32 images.
 Both datasets offer a 10 categories classification task on 32x32 size images.
 The train dataset was in all cases learned to 100\% accuracy, and training was then stopped. 
 
-We did not use the YUV color space in CIFAR10 and SVHN because they were reporting $\sim 2-4\%$ loss in accuracy.
+We did not use the YUV color space in CIFAR-10 and SVHN because they were reporting $\sim 2-4\%$ loss in accuracy.
 This is contrary to what has been reported by others \cite{jarrett_what_2009}.
-We kept the images of CIFAR10 and SVHN in their original RGB format.
+We kept the images of CIFAR-10 and SVHN in their original RGB format.
 Input data was first normalized by subtracting out the mean and dividing by the standard deviation and then whitened.
 
 In our experiment we fed all RGB planes to the deep network.
@@ -292,10 +293,10 @@ Similarities of features are calculated based on the correlation of the feature 
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
 \\ \hline \\
 1 layer (32 filters)                            & $68.8\%$\\
-2 layer (Fanin=1)                            &$72.8\%$ \\
-2 layer (Fanin=2, random RF)            &$73.2\%$ \\
-2 layer (Fanin=2, learned RF)            &$71.2\%$\\
-2 layer (Fanin=32)                          &$70.0\%$\\
+2 layer (Fan-in=1)                            &$72.8\%$ \\
+2 layer (Fan-in=2, random RF)            &$73.2\%$ \\
+2 layer (Fan-in=2, learned RF)            &$71.2\%$\\
+2 layer (Fan-in=32)                          &$70.0\%$\\
 \\ \hline \\
 \end{tabular}
 \end{center}
@@ -308,10 +309,10 @@ Similarities of features are calculated based on the correlation of the feature 
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
 \\ \hline \\
 1 layer (32 filters)                          & $85.7\%$\\
-2 layer (Fanin=1)                           &$87.6\%$ \\
-2 layer (Fanin=2, random RF)           &$88.1\%$ \\
-2 layer (Fanin=2, learned RF)           &$86.7\%$\\
-2 layer (Fanin=32)                        &$86.4\%$\\
+2 layer (Fan-in=1)                           &$87.6\%$ \\
+2 layer (Fan-in=2, random RF)           &$88.1\%$ \\
+2 layer (Fan-in=2, learned RF)           &$86.7\%$\\
+2 layer (Fan-in=32)                        &$86.4\%$\\
 \\ \hline \\
 \end{tabular}
 \end{center}
@@ -374,7 +375,7 @@ This method handles only one feature from the previous layer instead of exploiti
         \begin{subfigure}[b]{0.5\textwidth}
                 \centering
                 \includegraphics[width=2.0in]{fig-kernels2-random.eps}
-                \caption{Kernels with fanin of 2 random connection.}
+                \caption{Kernels with fan-in of 2 random connection.}
         \end{subfigure}
         \caption{Second layer kernels from CL for comparison.}
 \end{figure}
@@ -387,12 +388,46 @@ several papers in the neural physiology and computational neuroscience literatur
 None of these papers reports results close to the state-of-the-art in publicly available datasets of natural images.
 We also didn't see any affect of the learning compare to randomization to group the features for each RF.
 
-On the other hand, the second layer with full connection gave significantly worse performance than the others.
+\setlength{\tabcolsep}{10pt}
+
+\begin{wraptable}{O}{0.5\columnwidth}
+% 0.5\columnwidth is 50% of the width for text. It will wrap to the "outer"
+% of the current page, and thus if you have double-sided print, it'll still look
+% good.
+\caption{Results on CIFAR-10, 2 layers with different number of fan-ins.}
+\begin{centering}
+% The centering will look nice (else it's left-aligned, which isn't nice)
+\begin{tabular}{ll}
+% Having your own tabular here.
+\multicolumn{1}{c}{\bf Number of connections}  &\multicolumn{1}{c}{\bf Accuracy}\\
+\hline
+1 Fan-in                                 &$72.8\%$\\
+2 Fan-ins                           &$73.2\%$\\
+4 Fan-ins                           &$71.1\%$ \\
+8 Fan-ins                        &$71.1\%$\\
+16 Fan-ins                           &$70.0\%$\\
+\hline
+% End of content.
+\end{tabular}
+\par % Add for spacing
+\end{centering}
+
+% Enter your caption (a float having a caption looks cool)
+\end{wraptable}
+
 In this case, filters across 32 feature maps are obtained by CL and this architecture suffers from the curse of dimensionality
 because of the 32x3x5x5 high-dimensional feature space.
 Fig. 4(a) supports this argument because it does not have distinct edges, rather plain.
 It was also shown in the paper (cite Adams).
 Definitely the filters have difficulties in characterizing features in the given dataset.
+
+
+
+Since the random connection of the features gave the best results on CIFAR-10 and SVHN as stated in the Table 1 and 2, 
+we tested how many features to be combined for the best accuracy. The results are presented in the Table 3. 
+However, exploring 2 features together increases the accuracy over single fan-in, increasing the fan-in more than 2 
+reports loss in the accuracy.
+
 
 \section{Conclusion}
 \label{sec-conc}
