@@ -14,10 +14,10 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
-require 'online-kmeans' -- allow you to re-train k-means kernels
-require 'ffmpeg'
+--require 'online-kmeans' -- allow you to re-train k-means kernels
+--[[require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
-require 'unsup'
+require 'unsup']]
 
 ----------------------------------------------------------------------
 print '==> processing options'
@@ -27,16 +27,12 @@ opt = lapp[[
    -d,--learningRateDecay  (default 1e-7)       learning rate decay (in # samples)
    -w,--weightDecay        (default 1e-5)       L2 penalty on the weights
    -m,--momentum           (default 0.5)        momentum
-   -d,--dropout            (default 0.5)        dropout amount
    -b,--batchSize          (default 128)        batch size
    -t,--threads            (default 8)          number of threads
    -p,--type               (default float)      float or cuda
-   -i,--devid              (default 1)          device ID (if using CUDA)
-   -s,--size               (default extra)      dataset: small or full or extra
-   -o,--save               (default results)    save directory
-   -n,--network            (default false)      path to existing [trained] network
-   -s,--save               (default scratch/)   file name to save network [after each epoch]
-      --log                                     log the whole session to a file
+   -s,--save               (default results/)   file name to save network [after each epoch]
+      --plot                                    plot error/accuracy live (if false, still logged in a file)
+      --log                (default true)       log the whole session to a file
       --seed               (default 1)          use fixed seed for randomized initialization
       --German                                  use the German road sign dataset
 ]]
@@ -75,19 +71,9 @@ if opt.threads > 1 then
 end
 
 ----------------------------------------------------------------------
--- define network to train
-
-print('<trainer> creating new network')
-
-nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
-nk0,nk1,nk2,nk3 = 3,16,128,256      -- nb of features
-is0,is1,is2,is3 = 15,7,7,7          -- size of kernels
-ss1,ss2         = 2,2               -- size of subsamplers (strides)
-scales          = 1                 -- scales
-fanin           = 8                 -- createCoCnxTable creates also 2*fanin connections
-feat_group      = 32                --features per group (32=best in CIFAR, nk1=32, fanin=2)
-opt.hiddens     = 512               -- nb of hidden features for top perceptron (0=linear classifier)
-cl_nk1,cl_nk2   = nk3, opt.hiddens  -- dimensions for top perceptron
+-- load/get dataset
+print '==> Loading datasets'
+require 'load-datasets'
 
 if opt.German then
    signLabels = {
@@ -137,49 +123,63 @@ if opt.German then
    }
 else
    signLabels = {
-      'Merge',
-      'Do not pass',
-      'Turn right',
-      'Ramp speed advisory 20',
-      'Pedestrian crossing',
-      'Speed limit 65',
-      'Yield',
-      'Signal ahead',
-      'Truck speed limit 55',
-      'Speed limit 35',
-      'Dip',
-      'Speed limit urdbl',
-      'Stop ahead',
-      'Lane ends',
-      'Speed limit 55',
       'Stop',
-      'Right lane must turn',
-      'Speed limit 50',
+      'Signal ahead',
+      'Pedestrian crossing',
+      'Speed limit 35',
       'Keep right',
-      'Ramp speed advisory urdbl',
-      'Speed limit 45',
-      'No right turn',
-      'Zone ahead 45',
-      'Speed limit 40',
-      'Slow',
-      'Ramp speed advisory 50',
-      'Intersection',
-      'Turn left',
-      'School speed limit 25',
+      'Speed limit urdbl',
+      'Merge',
       'School',
-      'Yield ahead',
-      'Ramp speed advisory 45',
-      'Added lane',
       'Speed limit 25',
-      'No left turn'
+      'Added lane',
+      'Stop ahead',
+      'Speed limit 40',
+      'Speed limit 45',
+      'Yield ahead',
+      'School speed limit 25',
+      'Speed limit 50',
+      'Yield',
+      'Right lane must turn',
+      'Turn right',
+      'Truck speed limit 55',
+      'Lane ends',
+      'Speed limit 65',
+      'Ramp speed advisory 50',
+      'Ramp speed advisory 45',
+      'Do not pass',
+      'No left turn',
+      'Slow',
+      'Zone ahead 45',
+      'No right turn',
+      'Turn left',
+      'Ramp speed advisory urdbl',
+      'Dip',
+      'Speed limit 55',
+      'Intersection',
+      'Ramp speed advisory 20'
    }
 end
 
 classes = {'Person'}
-for i = 1, #signLabels do classes[#classes+1] = signLabels[i] end
+for i = 1, nbClasses[2]  do classes[#classes+1] = signLabels[i] end
 classes[#classes+1] = 'Car'
 
-ivch=3
+----------------------------------------------------------------------
+-- define network to train
+
+print('<trainer> creating new network')
+
+nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
+nk0,nk1,nk2,nk3 = 3,16,128,256      -- nb of features
+is0,is1,is2,is3 = 15,7,7,7          -- size of kernels
+ss1,ss2         = 2,2               -- size of subsamplers (strides)
+scales          = 1                 -- scales
+fanin           = 8                 -- createCoCnxTable creates also 2*fanin connections
+feat_group      = 32                --features per group (32=best in CIFAR, nk1=32, fanin=2)
+opt.hiddens     = 512               -- nb of hidden features for top perceptron (0=linear classifier)
+cl_nk1,cl_nk2   = nk3, opt.hiddens  -- dimensions for top perceptron
+ivch            = 3
 
 ----------------------------------------------------------------------
 
@@ -233,8 +233,6 @@ print(model)
 loss = nn.ClassNLLCriterion()
 
 ----------------------------------------------------------------------
--- load/get dataset
-require 'load-datasets'
 
 print '==> load modules'
 train = require 'train'
