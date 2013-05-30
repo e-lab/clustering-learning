@@ -51,8 +51,9 @@ We present an analysis of different techniques for selecting connection matrices
 Traditional deep neural networks use random connection tables between layers to keep the number of connections small and tune to different image features.
 This kind of connection performs adequately in supervised deep networks because their values are refined during the training.
 On the other hand, in unsupervised learning, one cannot rely on back-propagation techniques to learn the connections between layers.
+% JTB: remove the sentence below? probably redundant
 This is because unsupervised networks do not use labeled data, and thus an error signal cannot be computed.
-In this work, we tested 4 different techniques for connecting the first layer of the network to the second layer on the CIFAR and SVHN datasets and showed that the accuracy may change up to $3\%$ depending on the technique used.
+In this work, we tested four different techniques for connecting the first layer of the network to the second layer on the CIFAR and SVHN datasets and showed that the accuracy may change up to $3\%$ depending on the technique used.
 We also showed that learning the connections based on the co-occurrences of the features does not confer an advantage over a random connection table in small networks.
 This work is helpful to improve the efficiency of connections between the layers of unsupervised deep neural networks.
 \end{abstract}
@@ -110,11 +111,10 @@ random connections \cite{lecun_convolutional_2010}.
 The reason for using custom connection matrices is to reduce the number of computations, and avoid over-fitting problems.
  
 In unsupervised deep networks, one cannot rely on back-propagation techniques to learn the connections between layers. 
-This is because unsupervised networks do not used labeled data, and thus an error signal cannot be computed. 
-Fully connected layers can be used \cite{culurciello2013clustering,coates_analysis_2011} at the expense of more computational time
-and also reduced performance.
-The lower performance is attributable to the averaging effect that a fully connected layer has in an 
-unsupervised network, where the connection weights are not adapted to the training data.
+This is because unsupervised networks do not used labeled data, and thus cannot compute an error signal. 
+Fully connected layers can be used \cite{culurciello2013clustering,coates_analysis_2011} at the expense of more computational time and also reduced performance.
+The lower performance is attributable to the averaging effect that a fully connected layer has in an unsupervised network, 
+where the connection weights are not adapted to the training data.
 In order to use unlabeled data to train large deep networks, we investigate different techniques for grouping features from one layer into the features of the next layers, 
 and at the same time learn the filters needed by the next layer.
 Figure \ref{fig-learnlayers} qualitatively explains the main contribution of the paper.
@@ -384,10 +384,10 @@ Next, RF with 2 feature maps are tested to analyze the possible advantages of ex
 Random combinations and the learned RF's are tested.
 Learned RF's are obtained  based on the similar ideas for learning the receptive fields of complex cells that are reported in 
 several papers in the neural physiology and computational neuroscience literature \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}.
-None of these paper reports results close to the state-of-the-art in publicly available datasets of natural images.
+None of these papers reports results close to the state-of-the-art in publicly available datasets of natural images.
 We also didn't see any affect of the learning compare to randomization to group the features for each RF.
 
-On the other hand, the second layer with full connection gave significant worse performance than the others.
+On the other hand, the second layer with full connection gave significantly worse performance than the others.
 In this case, filters across 32 feature maps are obtained by CL and this architecture suffers from the curse of dimensionality
 because of the 32x3x5x5 high-dimensional feature space.
 Fig. 4(a) supports this argument because it does not have distinct edges, rather plain.
@@ -401,7 +401,7 @@ We have presented an analysis of 4 different techniques for selecting connection
 These techniques consisted of one-to-one connection, two-to-one connections and full-connected networks.
 For two-to-one connections, we used random grouping as well as grouping based on the similarity of the feature maps from the first layer. 
 We tested these networks on CIFAR and SVHN datasets and showed the fully-connected network performs poorly in unsupervised learning.
-We also showed that learning the connections based on the co-occurrences of  the features does not have an affect over a random connection in small networks.
+We also showed that learning the connections based on the co-occurrences of  the features does not confer an advantage over a random connection in small networks.
 We expect this work to be helpful to improve the efficiency of connections between the layers of deep small neural networks for the further study.
 
 
