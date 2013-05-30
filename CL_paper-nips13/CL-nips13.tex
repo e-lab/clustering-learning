@@ -148,7 +148,7 @@ This test is very similar to the second test, but we didn't use any similarity m
 Instead, we group features randomly.
 All the numbers are kept the same as in the second test.
 With this test, we want to see if grouping the similar features gives any advantages over the random grouping.
-\item (Fan-in=32) Grouping all maps into 1 group.
+\item (Fully connected) Grouping all maps into 1 group.
 This method is basically a full connection from the first layer to the second layer. 
 $G = 1$ and $K = 32$ are used in this case.
 To keep the number of filters same as the other tests we learned 512 filters from this 1 group
@@ -296,7 +296,7 @@ Similarities of features are calculated based on the correlation of the feature 
 2 layer (Fan-in=1)                            &$72.8\%$ \\
 2 layer (Fan-in=2, random RF)            &$73.2\%$ \\
 2 layer (Fan-in=2, learned RF)            &$71.2\%$\\
-2 layer (Fan-in=32)                          &$70.0\%$\\
+2 layer (Fully connected)                          &$70.0\%$\\
 \\ \hline \\
 \end{tabular}
 \end{center}
@@ -312,7 +312,7 @@ Similarities of features are calculated based on the correlation of the feature 
 2 layer (Fan-in=1)                           &$87.6\%$ \\
 2 layer (Fan-in=2, random RF)           &$88.1\%$ \\
 2 layer (Fan-in=2, learned RF)           &$86.7\%$\\
-2 layer (Fan-in=32)                        &$86.4\%$\\
+2 layer (Fully connected)                        &$86.4\%$\\
 \\ \hline \\
 \end{tabular}
 \end{center}
@@ -343,7 +343,7 @@ We show results on CIFAR-10 and SVHN datasets with different connection techniqu
         \begin{subfigure}[b]{0.3\textwidth}
                 \centering
                 \includegraphics[width=1.0in]{fig-diagram-faninall.eps}
-                \caption{Fan-in = 32}
+                \caption{Fully connected}
         \end{subfigure}
         \caption{Simplified diagram of networks with different connection techniques.}
 \end{figure}
