@@ -183,7 +183,7 @@ if opt.slacmodel then
    kernels1_ = kernels1s:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
    vnet.modules[1].weight = kernels1_:reshape(nk1s, ivch, i1s,is1)
 else 
-   kernels1_ = kernels1:clone():div(nnf1*nk1/2) -- divide kernels so output of SpatialConv std =~0.5
+   kernels1_ = kernels1:clone():div(nnf1*nk1) -- divide kernels so output of SpatialConv std =~0.5
    vnet.modules[1].weight = kernels1_:reshape(nk1, ivch, is1,is1)
 end
 
@@ -230,7 +230,7 @@ vnet2:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
 
 -- setup net/ load kernels into network:
 vnet2.modules[1].bias = vnet2.modules[1].bias*0 -- set bias to 0!!! not needed
-kernels2_= kernels2:clone():div(15/2) -- divide kernels so output of SpatialConv std =~0.5
+kernels2_= kernels2:clone():div(15) -- divide kernels so output of SpatialConv std =~0.5
 vnet2.modules[1].weight = kernels2_:reshape(kernels2_:size(1),is2,is2)  -- OR-AND model *3/2 because of fanin and 2*fanin connnex table
 
 ----------------------------------------------------------------------
