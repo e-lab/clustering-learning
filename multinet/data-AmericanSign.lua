@@ -78,7 +78,7 @@ table.sort(signArray,function(a,b) return signList[a] > signList[b] end)
 local revSignDic = {}
 for i,s in ipairs(signArray) do revSignDic[s] = i end
 
-print '==> Loading file names and cropping coordinates'
+print('==> Loading file names and cropping coordinates (at least ' .. lim .. ' samples)')
 
 local dataset = {
    data = torch.Tensor(datasetSize,3,height,width),
