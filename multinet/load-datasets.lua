@@ -26,6 +26,7 @@ if paths.filep('train.t7') and paths.filep('test.t7') then
    print '==> loading previously generated dataset:'
    trainData = torch.load('train.t7')
    testData = torch.load('test.t7')
+   nbClasses = torch.load('nbClasses.t7')
 
 else
 
@@ -51,19 +52,8 @@ else
       'data-kitti'
    }
 
-   -- Number of classes per dataset
-   if opt.German then nbSign = 43 else nbSign = 35 end
-   local classes = {
-      1,
-      nbSign,
-      1
-   }
-
-   -- Computing cumulative number of classes
+   nbClasses = {}
    local totNbClasses = {0}
-   for i,c in ipairs(classes) do
-      totNbClasses[i+1] = totNbClasses[i] + c
-   end
 
    -- Cleaning the screen before executing (a lot of text out will follow)
    -- os.execute('clear')
@@ -80,6 +70,9 @@ else
       totalTestData.data = cat(totalTestData.data,data.testData.data)
       totalTestData.labels = cat(totalTestData.labels,data.testData.labels + 1 + totNbClasses[i])
       totalTestData.size = function() return (#totalTestData.data)[1] end
+
+      nbClasses[i] = torch.max(data.trainData.labels) + 1
+      totNbClasses[i+1] = totNbClasses[i] + nbClasses[i]
 
    end
 
@@ -100,6 +93,7 @@ else
    print '==> saving dataset on disk'
    torch.save('train.t7',trainData)
    torch.save('test.t7',testData)
+   torch.save('nbClasses.t7',nbClasses)
 
 end
 
