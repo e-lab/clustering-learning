@@ -119,6 +119,8 @@ In Figure \ref{fig-learnlayers} we show two layers of a deep network: layer $N$ 
 The maps on the left of the figure are the $N1$ output feature maps of the $N$-the layer in response to an input image.
 The maps on the right of the figure are the $N2$ outputs of the first convolutional module of layer $N+1$. 
 
+\subsection{Grouping features into receptive fields}
+
 We investigate different techniques for grouping feature maps from layer $N$ into receptive fields (RF).
 These receptive fields are the input of one or multiple (fanin or $K$) maps in layer $N+1$. In order to learn the filters for layer $N+1$ convolutional module, we perform clustering learning only with the receptive field (and not all $N1$ maps). We show a diagram in Fig. \ref{fig-learnlayers}. We learn $N2$ filters per group for a total of $N2 \cdot G$ maps in layer $N+1$.
 We form these RF by four different methods, described below:
@@ -148,6 +150,8 @@ $G = 1$ and $K = 32$ are used in this case.
 
 \end{enumerate}
 
+\subsection{Computing feature similarity}
+
 Similarities of features are calculated to learn the RF. 
 The main driving force for this idea is a bio-inspired model of learning in the mammalian brain.
 It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}.
@@ -158,7 +162,7 @@ The learned RF group features that are highly activated together in the same loc
 This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$.
 This implements the Hebbian rule.
 
-Correlation of activation of features is computed by creating a distance-based covariance matrix between all feature maps in one or more sample images from the datasets. By computing the sum of distances for all pixels in each image, we can define which feature maps are more similar to each other. In order to compute meaningful statistics of co-activation of features, we used several hundred images from each dataset.
+The correlation of activation of features is computed by creating a distance-based covariance matrix between all feature maps in one or more sample images from the datasets. By computing the sum of distances for all pixels in each image, we can define which feature maps are more similar to each other. In order to compute meaningful statistics of co-activation of features, we used several hundred images from each dataset.
 
 
 \begin{figure}
@@ -171,7 +175,7 @@ The filters are only applied to the group of feature maps that they are learned 
 \end{figure}
 
 
-\section{Prior Art}
+\section{Previous work}
 \label{sec-priorart}
 
 In the literature, we found two deep learning papers that are related. 
@@ -287,13 +291,13 @@ The final classifier was fixed to 128 hidden units and 10 output classes for bot
 \begin{center}
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
-\\ \hline \\
+ \\ \hline \hline \\
 1 layer (32 filters)			& $68.8\%$\\
 2 layers (K = 1)				&$72.8\%$ \\
 2 layers (K = 2, random RF)	&$73.2\%$ \\
 2 layers (K = 2, learned RF)	&$71.2\%$\\
 2 layers (Fully connected)		&$70.0\%$\\
-\\ \hline \\
+\\ \hline  \hline
 \end{tabular}
 \end{center}
 }
@@ -303,13 +307,13 @@ The final classifier was fixed to 128 hidden units and 10 output classes for bot
 \begin{center}
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
-\\ \hline \\
+\\ \hline \hline \\
 1 layer (32 filters)			& $85.7\%$\\
-2 layers (K= 1)                           &$87.6\%$ \\
+2 layers (K = 1)                           &$87.6\%$ \\
 2 layers (K = 2, random RF)	&$88.1\%$ \\
-2 layers (K= 2, learned RF)	&$86.7\%$\\
+2 layers (K = 2, learned RF)	&$86.7\%$\\
 2 layers (Fully connected)		&$86.4\%$\\
-\\ \hline \\
+\\ \hline \hline
 \end{tabular}
 \end{center}
 }
@@ -392,7 +396,7 @@ Unfortunately in our tests we did not see an advantage in learning the RF compar
 
 \setlength{\tabcolsep}{10pt}
 
-\begin{wraptable}{O}{0.5\columnwidth}
+\begin{wraptable}{r}{0.5\columnwidth}
 % 0.5\columnwidth is 50% of the width for text. It will wrap to the "outer"
 % of the current page, and thus if you have double-sided print, it'll still look
 % good.
@@ -402,20 +406,17 @@ Unfortunately in our tests we did not see an advantage in learning the RF compar
 \begin{tabular}{ll}
 % Having your own tabular here.
 \multicolumn{1}{c}{\bf Number of connections}  &\multicolumn{1}{c}{\bf Accuracy}\\
-\hline
+\hline \hline \\
 K = 1		&$72.8\%$\\
 K = 2		&$73.2\%$\\
 K = 4		&$71.1\%$\\
 K = 8		&$71.1\%$\\
-K = 16		&$70.0\%$\\
-\hline
+K = 16		&$70.0\%$
+\\ \hline \hline 
 % End of content.
 \label{tab:fanin}
 \end{tabular}
-\par % Add for spacing
 \end{centering}
-
-% Enter your caption (a float having a caption looks cool)
 \end{wraptable}
 
 The fully connected RF use filters obtained by CL across all 32 input feature maps. This architecture suffers from the curse of dimensionality because of the large 32 $\times$ 5 $\times$ 5 high-dimensional feature space, and clustering learning is not able to find selective RF and groups.
