@@ -52,9 +52,7 @@ We present an analysis of different techniques for selecting connection matrices
 Traditional deep neural networks use random connection tables between layers to keep the number of connections small and tune to different image features.
 This kind of connection performs adequately in supervised deep networks because their values are refined during the training.
 On the other hand, in unsupervised learning, one cannot rely on back-propagation techniques to learn the connections between layers.
-% JTB: remove the sentence below? probably redundant
-This is because unsupervised networks do not use labeled data, and thus an error signal cannot be computed.
-In this work, we tested four different techniques for connecting the first layer of the network to the second layer on the CIFAR and SVHN datasets and showed that the accuracy may change up to $3\%$ depending on the technique used.
+In this work, we tested four different techniques for connecting the first layer of the network to the second layer on the CIFAR and SVHN datasets and showed that the accuracy can be improved up to $3\%$ depending on the technique used.
 We also showed that learning the connections based on the co-occurrences of the features does not confer an advantage over a random connection table in small networks.
 This work is helpful to improve the efficiency of connections between the layers of unsupervised deep neural networks.
 \end{abstract}
@@ -82,7 +80,7 @@ Since labeled data is costly and imperfect due to human error
 from unlabeled input data \cite{olshausen_emergence_1996, hyvarinen_independent_2000, hinton_fast_2006, vincent_extracting_2008, coates_analysis_2011}.
 These recent methods typically learn multiple layers of deep networks by training several layers of features, one layer at a time, with varying complexity of learning models.
 Traditional work in unsupervised deep learning has focused on learning layer features, and rarely on the connections between layers.
-In this paper, we present an analysis of different connections between layers of deep neural networks for general-purpose vision systems. 
+In this paper, we present an analysis of different connection topologies between layers of deep neural networks for general-purpose vision systems. 
 
 Recent techniques based on unsupervised Clustering Learning (CL) are especially promising because they use 
 simple learning methods that quickly converge \cite{culurciello2013clustering,coates_analysis_2011}.
@@ -91,8 +89,7 @@ can be collected quickly with a few minutes of video and the network can be adap
 
 The paper is organized in the following way: 
 Use of clustering learning for learning filters with different connections of deep networks will be explained in the Section \ref{sec-main}. 
-% JTB: The term receptive field (RF) has not been introduced yet.
-The details of the networks including the pre-processing and similarity calculation for learning the receptive field will be described in Section \ref{sec-methods}. 
+The details of the networks including the pre-processing and similarity calculation for learning groups of connections will be described in Section \ref{sec-methods}. 
 Finally, we will discuss and analyze our results from CIFAR-10 and SVHN datasets in the Section \ref{sec-results}. 
 
 
@@ -125,46 +122,60 @@ The maps on the left of the figure are the $N1$ output feature maps of the $N$-t
 The maps on the right of the figure are the $N2$ outputs of the first convolutional module of layer $N+1$. 
 
 We investigate different techniques for grouping feature maps from layer $N$ into ``receptive fields (RF)''.
-These receptive fields are the input of one or multiple maps in layer $N+1$. In order to learn the filters for layer $N+1$ convolutional module, we
-% JTB: jargony: CL, RF...
-perform CL only with the RF (and not all $N1$ maps). In Fig. \ref{fig-learnlayers}, we learn $N2$ filters per group for a total of
-$N2 \cdot G$ maps in layer $N+1$.
-We form these RF by 4 different methods.
+These receptive fields are the input of one or multiple (fanin or $K$) maps in layer $N+1$. In order to learn the filters for layer $N+1$ convolutional module, we perform clustering learning only with the receptive field (and not all $N1$ maps). We show a diagram in Fig. \ref{fig-learnlayers}. We learn $N2$ filters per group for a total of $N2 \cdot G$ maps in layer $N+1$.
+We form these RF by four different methods, described below:
+
+
 \begin{enumerate}
-\item (Fan-in=1) Grouping each maps individually. In other words, we create $N1$ groups which have only 1 feature map. 
-$G = N1$ and $K = 1$ is used in this case (Fig. \ref{fig-learnlayers}). In our tests we fixed the number of filters in the first layer to 32, $N1=32$. 
-From each group, 16 filters are learned by CL, ($N2 = 16$).
-Therefore, in total we produce $N2 \cdot G = 32 \cdot 16 = 512$ filters. 
-The size of filters is 1x5x5. 
-\item (Fan-in=2, learned RF) Grouping a small number of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$. 
+
+\item Grouping each maps individually (K = 1, learned RF). In other words, we create $N1$ groups which have only 1 feature map. 
+$G = N1$ and $K = 1$ is used in this case (refer to Fig. \ref{fig-learnlayers}).
+% EC: MOVED TO RESULTS! In our tests we fixed the number of filters in the first layer to 32, $N1=32$. From each group, 16 filters are learned by CL, ($N2 = 16$). Therefore, in total we produce $N2 \cdot G = 32 \cdot 16 = 512$ filters. The size of filters is 1x5x5. 
+
+\item Grouping a small number of layer $N$ features that co-occur in one or multiple sets of feature maps from layer $N$ (K = 2, learned RF). 
 In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF.
 In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps.
 The idea behind this step is to group features that occur often together in the data \cite{masquelier2007learning}.
 The calculation of the similarity of the feature maps is described in Section \ref{sec-similarity}.
-For our tests we group 2 features together from the first layer.
-We again created 32 groups ($G = 32$ and $K = 2$), and from each group we learned 16 filters.
-Therefore, in total we again produce 512 filters but in this case the filters have size of 2x5x5. 
-\item (Fan-in=2, random RF) Selecting a small number of layer $N$ features randomly.
+% EC: MOVED TO results! For our tests we group 2 features together from the first layer. We again created 32 groups ($G = 32$ and $K = 2$), and from each group we learned 16 filters. Therefore, in total we again produce 512 filters but in this case the filters have size of 2x5x5. 
+
+\item Selecting a small number of layer $N$ features randomly (K = 2, random RF).
 This test is very similar to the second test, but we didn't use any similarity metric to group similar features together.
 Instead, we group features randomly.
-All the numbers are kept the same as in the second test.
-With this test, we want to see if grouping the similar features gives any advantages over the random grouping.
-\item (Fully connected) Grouping all maps into 1 group.
+% EC: MOVED to results ! All the numbers are kept the same as in the second test. With this test, we want to see if grouping the similar features gives any advantages over the random grouping.
+
+\item Grouping all input maps into 1 group Fully connected).
 This method is basically a full connection from the first layer to the second layer. 
 $G = 1$ and $K = 32$ are used in this case.
-To keep the number of filters same as the other tests we learned 512 filters from this 1 group
-which includes all the feature maps from the first layer.
-In this case, the size of filters is 32x5x5. 
+%EC: MOVED TO results! To keep the number of filters same as the other tests we learned 512 filters from this 1 group which includes all the feature maps from the first layer. In this case, the size of filters is 32x5x5. 
+
 \end{enumerate}
+
+Similarities of features are calculated to learn the RF. 
+The main driving force for this idea is a bio-inspired model of learning in the mammalian brain.
+It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}.
+This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group
+(or receptive field, RF) can predict the response of the post-synaptic neuron.
+In other words, neurons in the RF have strong connections to a neuron in layer $N+1$ if it can predict their response.
+The learned RF group features that are highly activated together in the same location.
+This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$.
+This implements the Hebbian rule.
+
+Correlation of activation of features is computed by creating a distance-based covariance matrix between all feature maps in one or more sample images from the datasets. By computing the sum of distances for all pixels in each image, we can define which feature maps are more similar to each other. In order to compute meaningful statistics of co-activation of features, we used several hundred images from each dataset.
+
 
 \begin{figure}
 \includegraphics[width=5in]{fig-connection.eps}
 \caption{Architecture of the connecting scheme from the first layer to the second layer. 
 Different feature maps from the first layer are grouped together based on metrics (random, similarity, single, and full). 
-Filters are learned from these groups individually by CL.
+Filters are learned from these groups individually with the clustering learning (CL) technique.
 The filters are only applied to the group of feature maps that they are learned from.}
 \label{fig-learnlayers}
 \end{figure}
+
+
+\section{Prior Art}
+\label{sec-priorart}
 
 In the literature, we found two deep learning papers that are related. 
 % JTB: cite Coates & Ng, "Selecting Receptive Fields in Deep Networks", NIPS 2011 here
@@ -178,12 +189,13 @@ The paper \cite{boureau_2011} presents the interesting idea of learning pooling 
 This paper uses simple clustering procedures to cluster data in order to improve pooling in the feature space. 
 In this respect, this paper presents similar ideas to the first technique we test in this paper, but is not applied to deep neural networks.
 
-%Several papers in the neural physiology and computational neuroscience literature report similar ideas for learning the receptive fields of complex cells \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}. None of these paper reports results close to the state-of-the-art in publicly available datasets of natural images.
+Several papers in the neural physiology and computational neuroscience literature report similar ideas for learning the receptive fields of complex cells \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}. None of these paper reports results close to the state-of-the-art in publicly available datasets of natural images.
+
+
 
 
 \section{Methods}
 \label{sec-methods}
-
 
 We used the Torch7 software for all our experiments \cite{collobert_torch7_2011}, since this software can reduce training and learning of deep networks
 by 5-10 times compared to similar Matlab and Python tools.
@@ -237,14 +249,14 @@ where $\ast$ is the 2D discrete convolution operator.
 
 All networks used 32 filters on the first layer, and 512 filters on the second layer.
 We use k-means clustering algorithm (we refer to this step as \textit{Clustering Learning algorithm})
-to learn a set of 32 filters in the first layer,and 512 filters in the second layer.
-The filter sizes on both layers were set to 5x5 pixels.
-After the first convolution, 32 filters produced 32 feature maps each size 28x28.
-Dimension of the feature maps decreased by 2x2 pooling with a stride of 2 pixels.
+to learn a set of 32 filters in the first layer, and 512 filters in the second layer.
+The filter sizes on both layers were set to 5 $\cdot$ 5 pixels.
+After the first convolution, 32 filters produced 32 feature maps each size 28 $\cdot$ 28.
+Dimension of the feature maps decreased by 2 $\cdot$ 2 pooling with a stride of 2 pixels.
 We used max pooling layer which is a bio-inspired approach to reducing the dimensionality of the data at each layer \cite{lampl2004intracellular}.
-The output became 32x14x14 pixels.
-In the second layer, 512 filters produced output of 512x10x10 feature maps which then max pooled again and the size became 512x5x5. 
-We also subsampled the RGB data by 4x4 with a stride of 4 pixels which gave 3x8x8 pixels.
+The output became 32 $\cdot$ 14 $\cdot$ 14 pixels.
+In the second layer, 512 filters produced output of 512 $\cdot$ 10 $\cdot$ 10 feature maps which then max pooled again and the size became 512 $\cdot$ 5 $\cdot$ 5. 
+We also subsampled the RGB data by 4 $\cdot$ 4 with a stride of 4 pixels which gave 3 $\cdot$ 8 $\cdot$ 8 pixels.
 We then concatenated the subsampled RGB data with the output of the deep network into a final vector.
 This final vector was then passed to a 2-layer MLP classifier.
 The final classifier was fixed to 128 hidden units and 10 output classes for both CIFAR-10 and SVHN.
@@ -255,20 +267,6 @@ The final classifier was fixed to 128 hidden units and 10 output classes for bot
 %For the INRIA person dataset, we used a 3-layer network of size 32, 64, 128 filters in each convolutional layer.
 %We experimented with SLAC connections \cite{coates2012emergence}. In this case we used 4x more features than the numbers given above as beginning features, and then we decreased them to the same size of 32,64 in each respective layer. After the Convolution modules we added a SpatialMaxMap module to compute the groups and reduce the feature numbers. Unfortunately SLAC did not give us any advantage because of the small number of features used, so we removed it from our workflow.
 
-
-
-\subsection{Similarity of features}
-\label{sec-similarity}
-Similarities of features are calculated to learn the RF.
-The main driving force for this idea is a bio-inspired model of learning in the mammalian brain.
-It is widely believed that one of the possible physical mechanism of learning in the brain is the Hebbian method \cite{masquelier2007learning}.
-This learning method suggests that a group of pre-synaptic neurons is strongly connected to a post-synaptic neuron if the group
-(or receptive field, RF) can predict the response of the post-synaptic neuron.
-In other words, neurons in the RF have strong connections to a neuron in layer $N+1$ if it can predict their response.
-The learned RF group features that are highly activated together in the same location.
-This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$.
-This implements the Hebbian rule.
-Similarities of features are calculated based on the correlation of the feature maps from the first layer. 
 
 
 
@@ -293,11 +291,11 @@ Similarities of features are calculated based on the correlation of the feature 
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
 \\ \hline \\
-1 layer (32 filters)                            & $68.8\%$\\
-2 layer (Fan-in=1)                            &$72.8\%$ \\
-2 layer (Fan-in=2, random RF)            &$73.2\%$ \\
-2 layer (Fan-in=2, learned RF)            &$71.2\%$\\
-2 layer (Fully connected)                          &$70.0\%$\\
+1 layer (32 filters)			& $68.8\%$\\
+2 layers (K = 1)				&$72.8\%$ \\
+2 layers (K = 2, random RF)	&$73.2\%$ \\
+2 layers (K = 2, learned RF)	&$71.2\%$\\
+2 layers (Fully connected)		&$70.0\%$\\
 \\ \hline \\
 \end{tabular}
 \end{center}
@@ -309,11 +307,11 @@ Similarities of features are calculated based on the correlation of the feature 
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
 \\ \hline \\
-1 layer (32 filters)                          & $85.7\%$\\
-2 layer (Fan-in=1)                           &$87.6\%$ \\
-2 layer (Fan-in=2, random RF)           &$88.1\%$ \\
-2 layer (Fan-in=2, learned RF)           &$86.7\%$\\
-2 layer (Fully connected)                        &$86.4\%$\\
+1 layer (32 filters)			& $85.7\%$\\
+2 layers (K= 1)                           &$87.6\%$ \\
+2 layers (K = 2, random RF)	&$88.1\%$ \\
+2 layers (K= 2, learned RF)	&$86.7\%$\\
+2 layers (Fully connected)		&$86.4\%$\\
 \\ \hline \\
 \end{tabular}
 \end{center}
@@ -322,9 +320,17 @@ Similarities of features are calculated based on the correlation of the feature 
 
 
 
-We presented results on CL for general-purpose vision system.
-We focused on the small number of filter to make our network scalable on hardware.
-We show results on CIFAR-10 and SVHN datasets with different connection techniques between the first and second layer. 
+We presented results on CL for general-purpose vision system. We focused on the small number of filter to make our network scalable on hardware. We show results on CIFAR-10 and SVHN datasets with different connection techniques between the first and second layer.  We used the following parameters for each type of RF, as described in Section \ref{sec-main}:
+
+K = 1, learned RF: we fixed the number of filters in the first layer to 32, $N1=32$. From each group, 16 filters are learned by CL, ($N2 = 16$). Therefore, in total we produce $N2 \cdot G = 32 \cdot 16 = 512$ filters. The size of filters is 1 $\cdot$ 5 $\cdot$ 5. 
+
+K = 2, learned RF: we group 2 features together from the first layer. We again created 32 groups ($G = 32$ and $K = 2$), and from each group we learned 16 filters. Therefore, in total we again produce 512 filters but in this case the filters have size of 2 $\cdot$ 5 $\cdot$ 5. 
+
+K = 2, random RF: all the numbers are kept the same as in the second test. With this test, we want to see if grouping the similar features gives any advantages over the random grouping.
+
+Fully connected: in order to keep the number of filters same as the other tests we learned 512 filters from this 1 group which includes all the feature maps from the first layer. In this case, the size of filters is 32 $\cdot$ 5 $\cdot$ 5. 
+
+
 
 \begin{figure}
         \centering
@@ -332,7 +338,7 @@ We show results on CIFAR-10 and SVHN datasets with different connection techniqu
         \begin{subfigure}[b]{0.3\textwidth}
                 \centering
                 \includegraphics[width=1.0in]{fig-diagram-fanin1.eps}
-                \caption{Fan-in = 1}
+                \caption{K = 1}
                 \label{fig-secondconnex-fanin1}
         \end{subfigure}%
         ~%add desired spacing between images, e. g. ~, \quad, \qquad etc. 
@@ -340,7 +346,7 @@ We show results on CIFAR-10 and SVHN datasets with different connection techniqu
           \begin{subfigure}[b]{0.3\textwidth}
                 \centering
                 \includegraphics[width=1.0in]{fig-diagram-fanin2.eps}
-                \caption{Fan-in = 2}
+                \caption{K = 2}
                 \label{fig-secondconnex-fanin2}                
         \end{subfigure}%
         \begin{subfigure}[b]{0.3\textwidth}
@@ -353,10 +359,10 @@ We show results on CIFAR-10 and SVHN datasets with different connection techniqu
 \end{figure}
 
 
-As stated in the Table \ref{tab:results-cifar10} and \ref{tab:results-svhn}, 1 layer (32 filters) achieves $68.8\%$ accuracy on CIFAR-10 dataset and $85.7\%$ on SVHN dataset.
+As reported in the Table \ref{tab:results-cifar10} and \ref{tab:results-svhn}, 1 layer (32 filters) achieves $68.8\%$ accuracy on CIFAR-10 dataset and $85.7\%$ on SVHN dataset.
 The accuracy on the CIFAR-10 is similar to the k-means algorithm with 200 filters from the paper \cite{coates_analysis_2011}.
 We are obtaining the similar performance with only 32 filters because we use a different architecture in our network than \cite{coates_analysis_2011}.
-We use 2x2 max pooling layer, whereas \cite{coates_analysis_2011} uses 7x7 subsampling pooling, which gives better results in a small network.
+We use 2 $\cdot$ 2 max pooling layer, whereas \cite{coates_analysis_2011} uses 7 $\cdot$ 7 subsampling pooling, which gives better results in a small network.
 Another improvement comes from the downsampling of the image and feeding it to the classifier which increases the accuracy by  $\sim 4\%$. 
 
 In the table, we first tested single RF architecture.
@@ -380,10 +386,10 @@ This method handles only one feature from the previous layer instead of exploiti
         \begin{subfigure}[b]{0.5\textwidth}
                 \centering
                 \includegraphics[width=2.0in]{fig-kernels2-random.eps}
-                \caption{Filters learned with fan-in 2 random connection}
+                \caption{Filters learned with fanin 2 random connection}
                 \label{fig-secondkernels-random}
         \end{subfigure}
-        \caption{Second layer filters from CL for comparison.  The filters learned with the full connection table look uniform, while the filters learned with the fan-in 2 random connections table provide more specificity.}
+        \caption{Second layer filters from CL for comparison.  The filters learned with the full connection table look uniform, while the filters learned with the K = 2 random connections table provide more specificity.}
 \end{figure}
 
 
@@ -391,7 +397,6 @@ Next, RF with 2 feature maps are tested to analyze the possible advantages of ex
 Random combinations and the learned RF's are tested.
 Learned RF's are obtained  based on the similar ideas for learning the receptive fields of complex cells that are reported in 
 several papers in the neural physiology and computational neuroscience literature \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}.
-None of these papers reports results close to the state-of-the-art in publicly available datasets of natural images.
 We also didn't see any affect of the learning compare to randomization to group the features for each RF.
 
 \setlength{\tabcolsep}{10pt}
@@ -400,18 +405,18 @@ We also didn't see any affect of the learning compare to randomization to group 
 % 0.5\columnwidth is 50% of the width for text. It will wrap to the "outer"
 % of the current page, and thus if you have double-sided print, it'll still look
 % good.
-\caption{Results on CIFAR-10, 2 layers with different number of fan-ins.}
+\caption{Results on CIFAR-10, 2 layers with different number of fanin.}
 \begin{centering}
 % The centering will look nice (else it's left-aligned, which isn't nice)
 \begin{tabular}{ll}
 % Having your own tabular here.
 \multicolumn{1}{c}{\bf Number of connections}  &\multicolumn{1}{c}{\bf Accuracy}\\
 \hline
-1 Fan-in                                 &$72.8\%$\\
-2 Fan-ins                           &$73.2\%$\\
-4 Fan-ins                           &$71.1\%$ \\
-8 Fan-ins                        &$71.1\%$\\
-16 Fan-ins                           &$70.0\%$\\
+K = 1		&$72.8\%$\\
+K = 2		&$73.2\%$\\
+K = 4		&$71.1\%$\\
+K = 8		&$71.1\%$\\
+K = 16		&$70.0\%$\\
 \hline
 % End of content.
 \label{tab:fanin}
@@ -423,15 +428,15 @@ We also didn't see any affect of the learning compare to randomization to group 
 \end{wraptable}
 
 In this case, filters across 32 feature maps are obtained by CL and this architecture suffers from the curse of dimensionality
-because of the 32x5x5 high-dimensional feature space.
+because of the 32 $\cdot$ 5 $\cdot$ 5 high-dimensional feature space.
 Fig. \ref{fig-secondkernels-full} supports this argument because it does not have distinct edges, rather plain.
 It was also shown in the paper  \cite{coates2012learning} .
 Definitely the filters have difficulties in characterizing features in the given dataset.
 
 Since the random connection of the features gave the best results on CIFAR-10 and SVHN as shown in the Tables \ref{tab:results-cifar10} and \ref{tab:results-svhn},
-we ran experiments to measure the effect of varying the fan-in of the connection table.
+we ran experiments to measure the effect of varying the fanin of the connection table.
 The results are presented in the Table \ref{tab:fanin}.
-A fan-in of 2 provides higher accuracy than a one-to-one connection table, but increasing the fan-in above 2
+A fanin of 2 provides higher accuracy than a one-to-one connection table, but increasing the fanin above 2
 leads to a loss in accuracy.
 
 
