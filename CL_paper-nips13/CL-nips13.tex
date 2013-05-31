@@ -46,9 +46,7 @@ Purdue University\\
 \maketitle
 
 \begin{abstract}
-%We present the unsupervised clustering learning technique for learning the connection matrix between layers of a deep neural networks. Traditional deep neural networks use random connection tables between layers to keep the number of  connection small and tune to different image features. Fully-connected layers are also used when efficiency is not an issue. These kind of connections perform adequately in supervised deep networks because the training refines their values. 
-%On the other hand, unsupervised learning requires a data-driven method that will connect the most relevant features to the next layer. In this paper we present a clustering learning algorithm to learn simultaneously the connection and filters of deep networks. We tested our technique on CIFAR, SVHN and Pedestrian datasets and improve the accuracy by ?? compared to ... We show that networks and connections trained with clustering learning can obtain similar levels of performance as supervised deep networks when the number of layers and the filters are the same. 
-We present an analysis of different techniques for selecting connection matrices between layers of deep neural networks.
+We present an analysis of different techniques for selecting the connection between layers of deep neural networks.
 Traditional deep neural networks use random connection tables between layers to keep the number of connections small and tune to different image features.
 This kind of connection performs adequately in supervised deep networks because their values are refined during the training.
 On the other hand, in unsupervised learning, one cannot rely on back-propagation techniques to learn the connections between layers.
@@ -96,7 +94,7 @@ Finally, we will discuss and analyze our results from CIFAR-10 and SVHN datasets
 \section{Main idea and contribution}
 \label{sec-main}
 
-The connections between layers in a deep neural network are very important parameters.
+The connections between layers in a deep neural network are very important parameters. These connections are also referred as \textit{receptive fields} (RF).
 It has been shown that in many cases random filters perform only slightly worse than fully trained network layers \cite{saxe2011random} suggesting
 that filters, used in the convolutional module of each layer, might not play a dominant role in determining the network performance.
 Rather, the connections between layers and the combination of features are mainly responsible for the recent success of 
@@ -106,7 +104,7 @@ learned from the data using global gradient-descent techniques at large scale.
 Because training will intimately select the strength of connections, 
 developers of deep networks have traditionally used fully connected layers, custom table connections \cite{lecun_gradient-based_1998}, or 
 random connections \cite{lecun_convolutional_2010}.
-The reason for using custom connection matrices is to reduce the number of computations, and avoid over-fitting problems.
+The reason for using custom RF is to reduce the number of computations, and avoid over-fitting problems.
  
 In unsupervised deep networks, one cannot rely on back-propagation techniques to learn the connections between layers. 
 This is because unsupervised networks do not used labeled data, and thus cannot compute an error signal. 
@@ -121,7 +119,7 @@ In Figure \ref{fig-learnlayers} we show two layers of a deep network: layer $N$ 
 The maps on the left of the figure are the $N1$ output feature maps of the $N$-the layer in response to an input image.
 The maps on the right of the figure are the $N2$ outputs of the first convolutional module of layer $N+1$. 
 
-We investigate different techniques for grouping feature maps from layer $N$ into ``receptive fields (RF)''.
+We investigate different techniques for grouping feature maps from layer $N$ into receptive fields (RF).
 These receptive fields are the input of one or multiple (fanin or $K$) maps in layer $N+1$. In order to learn the filters for layer $N+1$ convolutional module, we perform clustering learning only with the receptive field (and not all $N1$ maps). We show a diagram in Fig. \ref{fig-learnlayers}. We learn $N2$ filters per group for a total of $N2 \cdot G$ maps in layer $N+1$.
 We form these RF by four different methods, described below:
 
@@ -136,7 +134,6 @@ $G = N1$ and $K = 1$ is used in this case (refer to Fig. \ref{fig-learnlayers}).
 In other words, we look for features that are highly activated in the same pixel, and we group these features into the RF.
 In Fig. \ref{fig-learnlayers}, these are $G$ groups of $K$ maps.
 The idea behind this step is to group features that occur often together in the data \cite{masquelier2007learning}.
-The calculation of the similarity of the feature maps is described in Section \ref{sec-similarity}.
 % EC: MOVED TO results! For our tests we group 2 features together from the first layer. We again created 32 groups ($G = 32$ and $K = 2$), and from each group we learned 16 filters. Therefore, in total we again produce 512 filters but in this case the filters have size of 2x5x5. 
 
 \item Selecting a small number of layer $N$ features randomly (K = 2, random RF).
@@ -179,7 +176,7 @@ The filters are only applied to the group of feature maps that they are learned 
 
 In the literature, we found two deep learning papers that are related. 
 % JTB: cite Coates & Ng, "Selecting Receptive Fields in Deep Networks", NIPS 2011 here
-Paper \cite{coates2012learning} groups features on each layer by similarity, but does not explicitly use connection matrices between layers, 
+Paper \cite{coates2012learning} groups features on each layer by similarity, but does not explicitly use receptive fields between layers, 
 rather they flatten the data at each layer and re-apply clustering algorithms. 
 This approach is equivalent to forming a full-connection between layers, 
 which is less efficient because each feature is averaged with a large number of other features, thus reducing the signal-to-noise ratio of important features.
@@ -365,11 +362,8 @@ We are obtaining the similar performance with only 32 filters because we use a d
 We use 2 $\cdot$ 2 max pooling layer, whereas \cite{coates_analysis_2011} uses 7 $\cdot$ 7 subsampling pooling, which gives better results in a small network.
 Another improvement comes from the downsampling of the image and feeding it to the classifier which increases the accuracy by  $\sim 4\%$. 
 
-In the table, we first tested single RF architecture.
-RF of each neuron in the second layer is one feature map from the first layer.
-Since this architecture is hierarchical and it uses a limited number of connection, it can be interpreted as decision tree as shown in Fig. \ref{fig-secondconnex-fanin1}.
-High accuracy of 72.8\% compared to 1 layer is achieved here due to the property of decision tree in point that it finds
-features of features using each filter as a feature descriptor.
+The single RF architecture (K = 1, learned RF) can be interpreted as decision tree as shown in Fig. \ref{fig-secondconnex-fanin1}.
+The decision tree architecture obtains a high accuracy of 72.8\% compared to 1 layer. This is due to the fact that the tree is able to refine the selectivity of each feature at each level.
 This method handles only one feature from the previous layer instead of exploiting information from the group of features.
 
 \begin{figure}
@@ -393,11 +387,8 @@ This method handles only one feature from the previous layer instead of exploiti
 \end{figure}
 
 
-Next, RF with 2 feature maps are tested to analyze the possible advantages of exploring different features in the same RF.
-Random combinations and the learned RF's are tested.
-Learned RF's are obtained  based on the similar ideas for learning the receptive fields of complex cells that are reported in 
-several papers in the neural physiology and computational neuroscience literature \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}.
-We also didn't see any affect of the learning compare to randomization to group the features for each RF.
+The RF with 2 feature maps (K = 2, learned RF) are compared to random combination (K = 2, random RF) to analyze the possible advantages of exploring different features in the same RF. Learned RF's are obtained  based on the similar ideas for learning the receptive fields of complex cells that are reported in  several papers in the neural physiology and computational neuroscience literature \cite{masquelier2007learning,spratling2005learning,wiskott2002slow,wallis1997invariant}.
+Unfortunately in our tests we did not see an advantage in learning the RF compare to random groups of features for each RF.
 
 \setlength{\tabcolsep}{10pt}
 
@@ -427,27 +418,21 @@ K = 16		&$70.0\%$\\
 % Enter your caption (a float having a caption looks cool)
 \end{wraptable}
 
-In this case, filters across 32 feature maps are obtained by CL and this architecture suffers from the curse of dimensionality
-because of the 32 $\cdot$ 5 $\cdot$ 5 high-dimensional feature space.
-Fig. \ref{fig-secondkernels-full} supports this argument because it does not have distinct edges, rather plain.
-It was also shown in the paper  \cite{coates2012learning} .
-Definitely the filters have difficulties in characterizing features in the given dataset.
+The fully connected RF use filters obtained by CL across all 32 input feature maps. This architecture suffers from the curse of dimensionality because of the large 32 $\cdot$ 5 $\cdot$ 5 high-dimensional feature space, and clustering learning is not able to find selective RF and groups.
+Fig. \ref{fig-secondkernels-full} supports this argument because the filters reported do not have distinct selectivity, but are rather plainly uniform. A similar argument was also made in the paper \cite{coates2012learning}.
 
-Since the random connection of the features gave the best results on CIFAR-10 and SVHN as shown in the Tables \ref{tab:results-cifar10} and \ref{tab:results-svhn},
-we ran experiments to measure the effect of varying the fanin of the connection table.
-The results are presented in the Table \ref{tab:fanin}.
-A fanin of 2 provides higher accuracy than a one-to-one connection table, but increasing the fanin above 2
-leads to a loss in accuracy.
+Since the random grouping of the features gave the best results on CIFAR-10 and SVHN as shown in the Tables \ref{tab:results-cifar10} and \ref{tab:results-svhn}, we ran experiments to measure the effect of varying the fanin of the connection table.
+The results are presented in the Table \ref{tab:fanin}. A fanin of 2 provides higher accuracy than a one-to-one connection table, but increasing the fanin above 2 leads to a loss in accuracy.
+
+We believe that random grouping provides powerful results in the case of small number of input filters. In our work we used only 32 filters in order to perform real-time execution on standard hardware. If the number of filters is higher, as in  \cite{coates2012learning} and similar work, then grouping the RF by similarly is effective. In the future we plan to use a larger number of filters organized topographically, and pool features not only spatially, but also in the feature dimension. The topographic organization will allow to use a 3D pooling stage, and we will then re-test learning of RF in this case.
 
 
 \section{Conclusion}
 \label{sec-conc}
 
-We have presented an analysis of four different techniques for selecting connection matrices between layers of deep neural networks.
+We have presented an analysis of four different techniques for selecting receptive fields between layers of deep neural networks.
 These techniques consisted of one-to-one connection, two-to-one connections and full-connected networks.
-For two-to-one connections, we used random grouping as well as grouping based on the similarity of the feature maps from the first layer. 
-We tested these networks on the CIFAR and SVHN datasets and showed the fully-connected network performs poorly with unsupervised learning.
-We also showed that learning the connections based on the co-occurrences of  the features does not confer an advantage over a random connection in small networks.
+For two-to-one connections, we used random grouping as well as grouping based on the similarity of the feature maps from the first layer.  We tested these networks on the CIFAR and SVHN datasets and showed the fully-connected network performs poorly with unsupervised learning. We also showed that learning the connections based on the co-occurrences of  the features does not confer an advantage over a random connection in small networks.
 We expect this work to be helpful to improve the efficiency of connections between the layers of deep small neural networks for the further study.
 
 
