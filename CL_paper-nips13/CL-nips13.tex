@@ -238,10 +238,10 @@ The output is also a 3D array, $y_i$ composed of $m_l$ feature maps of size $m_{
 
 The layers in the clustering learning network used the following sequence of operations:
 \begin{enumerate}
-\item Spatial Convolution module: performing convolutions on images with the learned CL filters: $yc_i=\sum_i{k_{ij}\ast x_i}$,
+\item Spatial Convolution module: performing convolutions on images with the learned CL filters: $y_{c_i}=\sum_i{k_{ij}\ast x_i}$,
 where $\ast$ is the 2D discrete convolution operator.
-\item Spatial Max Pooling module: $yp_i = max_{n \times n}(yc_{ij})$ with $n =  2$ in this work.
-\item Threshold nonlinearity: $ynl_i = max(ypi_i, 0)$
+\item Spatial Max Pooling module: $y_{p_i} = max_{n \times n}(y_{c_{ij}})$ with $n =  2$ in this work.
+\item Threshold nonlinearity: $y_i = max(y_{p_i}, 0)$
 \end{enumerate}
 
 All networks used 32 filters on the first layer, and 512 filters on the second layer.
