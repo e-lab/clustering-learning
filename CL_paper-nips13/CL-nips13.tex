@@ -141,7 +141,7 @@ This test is very similar to the second test, but we didn't use any similarity m
 Instead, we group features randomly.
 % EC: MOVED to results ! All the numbers are kept the same as in the second test. With this test, we want to see if grouping the similar features gives any advantages over the random grouping.
 
-\item Grouping all input maps into 1 group Fully connected).
+\item Grouping all input maps into 1 group fully connected).
 This method is basically a full connection from the first layer to the second layer. 
 $G = 1$ and $K = 32$ are used in this case.
 %EC: MOVED TO results! To keep the number of filters same as the other tests we learned 512 filters from this 1 group which includes all the feature maps from the first layer. In this case, the size of filters is 32x5x5. 
@@ -158,7 +158,7 @@ The learned RF group features that are highly activated together in the same loc
 This group of highly activated features will then propagate a high value to the same location in the relative map of layer $N+1$.
 This implements the Hebbian rule.
 
-Correlation of activation of features is computed by creating a distance-based covariance matrix between all feature maps in one or more sample images from the datasets. By computing the sum of distances for all pixels in each image, we can define which feature maps are more similar to each other. In order to compute meaningful statistics of co-activation of features, we used several hundred images from each dataset.
+Correlation of activation of features is computed by creating a similarity matrix between all feature maps in one or more sample images from the datasets. By computing the normalized cross-correlation for all pixels in each image and sorting their similarities in descending order, we can define which feature maps are more similar to each other. In order to compute meaningful statistics of co-activation of features, we used several hundred images from each dataset.
 
 
 \begin{figure}
@@ -171,7 +171,7 @@ The filters are only applied to the group of feature maps that they are learned 
 \end{figure}
 
 
-\section{Prior Art}
+\section{Prior art}
 \label{sec-priorart}
 
 In the literature, we found two deep learning papers that are related. 
@@ -213,8 +213,7 @@ We kept the images of CIFAR-10 and SVHN in their original RGB format.
 Input data was first normalized by subtracting out the mean and dividing by the standard deviation and then whitened.
 
 In our experiment we fed all RGB planes to the deep network.
-We also subsampled the RGB data as much as the deep network.
-We then concatenated the subsampled RGB data with the output of the deep network into a final vector.
+We also subsampled the RGB data and concatenated it with the output of the deep network into a final vector.
 This final vector was then passed to a 2-layer MLP classifier.
 
 \subsection{Network architecture}
@@ -240,8 +239,8 @@ The layers in the clustering learning network used the following sequence of ope
 \begin{enumerate}
 \item Spatial Convolution module: performing convolutions on images with the learned CL filters: $y_{c_i}=\sum_i{k_{ij}\ast x_i}$,
 where $\ast$ is the 2D discrete convolution operator.
-\item Spatial Max Pooling module: $y_{p_i} = max_{n \times n}(y_{c_{ij}})$ with $n =  2$ in this work.
-\item Threshold nonlinearity: $y_i = max(y_{p_i}, 0)$
+\item Spatial Max Pooling module: $y_{p_i} = max_{n \times n}(y_{c_{ij}})$ with $n = 2$.
+\item Threshold nonlinearity: $y_i = max(y_{p_i}, \theta)$ where the threshold $\theta = 0$.
 \end{enumerate}
 
 All networks used 32 filters on the first layer, and 512 filters on the second layer.
@@ -360,7 +359,9 @@ As reported in the Table \ref{tab:results-cifar10} and \ref{tab:results-svhn}, 1
 The accuracy on the CIFAR-10 is similar to the k-means algorithm with 200 filters from the paper \cite{coates_analysis_2011}.
 We are obtaining the similar performance with only 32 filters because we use a different architecture in our network than \cite{coates_analysis_2011}.
 We use 2 $\times$ 2 max pooling layer, whereas \cite{coates_analysis_2011} uses 7 $\times$ 7 subsampling pooling, which gives better results in a small network.
-Another improvement comes from the downsampling of the image and feeding it to the classifier which increases the accuracy by  $\approx 4\%$. 
+Another improvement comes from the downsampling of the image and feeding it to the classifier which increases the accuracy by $\approx 4\%$.
+The similar bypass approach was used in a few other works \cite{hinton2012dropout,coates_selecting_2011}. 
+This color bypass delivers strong color information to the final classifier.
 
 The single RF architecture (K = 1, learned RF) can be interpreted as decision tree as shown in Fig. \ref{fig-secondconnex-fanin1}.
 The decision tree architecture obtains a high accuracy of 72.8\% compared to 1 layer. This is due to the fact that the tree is able to refine the selectivity of each feature at each level.
@@ -423,6 +424,9 @@ Fig. \ref{fig-secondkernels-full} supports this argument because the filters rep
 
 Since the random grouping of the features gave the best results on CIFAR-10 and SVHN as shown in the Tables \ref{tab:results-cifar10} and \ref{tab:results-svhn}, we ran experiments to measure the effect of varying the fanin of the connection table.
 The results are presented in the Table \ref{tab:fanin}. A fanin of 2 provides higher accuracy than a one-to-one connection table, but increasing the fanin above 2 leads to a loss in accuracy.
+
+The current state of the art on CIFAR-10, 88.79\% accuracy, was reported in the paper \cite{dan2012multicolnet} with a 10-layer multi-column deep network. However,
+such a massive network is not suitable for real-time applications. Our work focuses on small networks that can run in real-time.
 
 We believe that random grouping provides powerful results in the case of small number of input filters. In our work we used only 32 filters in order to perform real-time execution on standard hardware. If the number of filters is higher, as in  \cite{coates2012learning} and similar work, then grouping the RF by similarly is effective. In the future we plan to use a larger number of filters organized topographically, and pool features not only spatially, but also in the feature dimension. The topographic organization will allow to use a 3D pooling stage, and we will then re-test learning of RF in this case.
 
