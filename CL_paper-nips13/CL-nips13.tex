@@ -288,6 +288,7 @@ The final classifier was fixed to 128 hidden units and 10 output classes for bot
 \caption{Results on CIFAR-10}
 \label{tab:results-cifar10}
 \begin{center}
+\vspace*{-8pt}
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
  \\ \hline \hline \\
@@ -298,12 +299,14 @@ The final classifier was fixed to 128 hidden units and 10 output classes for bot
 2 layers (Fully connected)		&$70.0\%$\\
 \\ \hline  \hline
 \end{tabular}
+\vspace*{-15pt}
 \end{center}
 }
 \parbox{.5\linewidth}{
 \caption{Results on SVHN}
 \label{tab:results-svhn}
 \begin{center}
+\vspace*{-8pt}
 \begin{tabular}{ll}
 \multicolumn{1}{c}{\bf Architecture}  &\multicolumn{1}{c}{\bf Accuracy}
 \\ \hline \hline \\
@@ -314,6 +317,7 @@ The final classifier was fixed to 128 hidden units and 10 output classes for bot
 2 layers (Fully connected)		&$86.4\%$\\
 \\ \hline \hline
 \end{tabular}
+\vspace*{-15pt}
 \end{center}
 }
 \end{table}
@@ -398,12 +402,10 @@ Unfortunately in our tests we did not see an advantage in learning the RF compar
 \setlength{\tabcolsep}{10pt}
 
 \begin{wraptable}{r}{0.5\columnwidth}
-% 0.5\columnwidth is 50% of the width for text. It will wrap to the "outer"
-% of the current page, and thus if you have double-sided print, it'll still look
-% good.
+\vspace*{-15pt}
 \caption{Results on CIFAR-10, 2 layers with different number of fanin.}
+\vspace*{-5pt}
 \begin{centering}
-% The centering will look nice (else it's left-aligned, which isn't nice)
 \begin{tabular}{ll}
 % Having your own tabular here.
 \multicolumn{1}{c}{\bf Number of connections}  &\multicolumn{1}{c}{\bf Accuracy}\\
@@ -414,9 +416,9 @@ K = 4		&$71.1\%$\\
 K = 8		&$71.1\%$\\
 K = 16		&$70.0\%$
 \\ \hline \hline 
-% End of content.
 \label{tab:fanin}
 \end{tabular}
+\vspace*{-25pt}
 \end{centering}
 \end{wraptable}
 
