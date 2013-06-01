@@ -17,7 +17,7 @@
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
-%\nipsfinaltrue  % Uncomment for camera-ready version
+\nipsfinaltrue  % Uncomment for camera-ready version
 
 \begin{document}
 
@@ -166,7 +166,7 @@ The correlation of activation of features is computed by creating a similarity m
 
 
 \begin{figure}
-\includegraphics[width=5in]{fig-connection.eps}
+\includegraphics[width=5in]{fig-connection.pdf}
 \caption{Architecture of the connecting scheme from the first layer to the second layer. 
 Different feature maps from the first layer are grouped together based on metrics (random, similarity, single, and full). 
 Filters are learned from these groups individually with the clustering learning (CL) technique.
@@ -233,7 +233,7 @@ The output is also a 3D array, $y_i$ composed of $m_l$ feature maps of size $m_{
 
 
 \begin{figure}
-\includegraphics[width=5in]{overall-structure.eps}
+\includegraphics[width=5in]{overall-structure.pdf}
 \caption{Architecture of the CL network used in this paper: a 2 layer convolutional network with color bypass.}
 \label{fig-netarch}
 \end{figure}
@@ -341,7 +341,7 @@ Fully connected: in order to keep the number of filters same as the other tests 
          \label{fig-secondconnex}
         \begin{subfigure}[b]{0.3\textwidth}
                 \centering
-                \includegraphics[width=1.0in]{fig-diagram-fanin1.eps}
+                \includegraphics[width=1.0in]{fig-diagram-fanin1.pdf}
                 \caption{K = 1}
                 \label{fig-secondconnex-fanin1}
         \end{subfigure}%
@@ -349,13 +349,13 @@ Fully connected: in order to keep the number of filters same as the other tests 
           %(or a blank line to force the subfigure onto a new line)
           \begin{subfigure}[b]{0.3\textwidth}
                 \centering
-                \includegraphics[width=1.0in]{fig-diagram-fanin2.eps}
+                \includegraphics[width=1.0in]{fig-diagram-fanin2.pdf}
                 \caption{K = 2}
                 \label{fig-secondconnex-fanin2}                
         \end{subfigure}%
         \begin{subfigure}[b]{0.3\textwidth}
                 \centering
-                \includegraphics[width=1.0in]{fig-diagram-faninall.eps}
+                \includegraphics[width=1.0in]{fig-diagram-faninall.pdf}
                 \caption{Fully connected}
                 \label{fig-secondconnex-full}
         \end{subfigure}
@@ -380,7 +380,7 @@ This method handles only one feature from the previous layer instead of exploiti
         \label{fig-secondkernels}
         \begin{subfigure}[b]{0.5\textwidth}
                 \centering
-                \includegraphics[width=2.0in]{fig-kernels2-full.eps}
+                \includegraphics[width=2.0in]{fig-kernels2-full.pdf}
                 \caption{Filters learned with a full connection table}
                 \label{fig-secondkernels-full}
         \end{subfigure}%
@@ -388,7 +388,7 @@ This method handles only one feature from the previous layer instead of exploiti
           %(or a blank line to force the subfigure onto a new line)
         \begin{subfigure}[b]{0.5\textwidth}
                 \centering
-                \includegraphics[width=2.0in]{fig-kernels2-random.eps}
+                \includegraphics[width=2.0in]{fig-kernels2-random.pdf}
                 \caption{Filters learned with fanin 2 random connection}
                 \label{fig-secondkernels-random}
         \end{subfigure}
