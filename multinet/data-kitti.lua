@@ -12,6 +12,7 @@ require 'nnx'
 require 'ffmpeg'
 require 'xml'
 require 'kitti2Dbox'
+require 'eex'
 
 -- Exporting functions to the global namespace -------------------------------
 local max = math.max
@@ -62,8 +63,8 @@ local path = ds .. 'KITTI_dataset/city/'
 -- Global functions ----------------------------------------------------------
 -- Parse XML
 function parseXML(tracklet_labels)
-   parse = xml.parse(tracklet_labels)
-   tracklet = parse.boost_serialization.tracklets
+   local parse = xml.parse(tracklet_labels)
+   local tracklet = parse.boost_serialization.tracklets
 
    return tracklet
 end
@@ -269,21 +270,32 @@ xlua.progress(iter,tot)
 
 print '==> split dataset into train/test datasets'
 
-trSize  = floor(opt.ratio*carData:size())
-teSize = floor((carData:size()-trSize))
+local carTrSize = math.floor(opt.ratio*carData:size())
+local carTeSize = math.floor((carData:size()-carTrSize))
 local shuffleCar = torch.randperm(carData:size())
+
+local bgTrSize = math.floor(opt.ratio*backgroundData:size())
+local bgTeSize = math.floor((backgroundData:size()-bgTrSize))
+local shuffleBg = torch.randperm(backgroundData:size())
+
+trSize = carTrSize + bgTrSize
+teSize = carTeSize + bgTeSize
 
 -- Training dataset
 trainData = {
    data   = zeros(trSize, 3, opt.width, opt.width),
    labels = zeros(trSize),
-   size   = function() return trSize  end
+   size   = function() return trSize end
 }
-for i=1 , trSize  do
-   trainData.data[i]  = carData.data[shuffleCar[i]]
+for i = 1,bgTrSize do
+   trainData.data[i] = backgroundData.data[shuffleBg[i]]
+end
+for i=bgTrSize+1, trSize  do
+   trainData.data[i]   = carData.data[shuffleCar[i-bgTrSize]]
+   trainData.labels[i] = 1
 end
 -- display some examples:
-image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train Data'}
+image.display{image=trainData.data[{{bgTrSize+1-64,bgTrSize+64}}], nrow=16, zoom=2, legend = 'Train data'}
 
 -- Testing dataset
 testData  = {
@@ -291,11 +303,16 @@ testData  = {
    labels = zeros(teSize),
    size   = function() return teSize end
 }
-for i=1 , teSize  do
-   testData.data[i] = carData.data[shuffleCar[i+trSize]]
+for i = 1,bgTeSize do
+   testData.data[i] = backgroundData.data[shuffleBg[i+bgTrSize]]
+end
+for i=bgTeSize+1, teSize  do
+   testData.data[i]   = carData.data[shuffleCar[i-bgTeSize+carTrSize]]
+   testData.labels[i] = 1
 end
 -- display some examples:
-image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
+image.display{image=testData.data[{{bgTeSize+1-64,bgTeSize+64}}], nrow=16, zoom=2, legend = 'Test data'}
+
 
 -- Displaying the dataset architecture ---------------------------------------
 print('Training Data:')

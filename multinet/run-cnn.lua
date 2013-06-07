@@ -31,10 +31,11 @@ opt = lapp[[
    -t,--threads            (default 8)          number of threads
    -p,--type               (default float)      float or cuda
    -s,--save               (default results/)   file name to save network [after each epoch]
-      --plot                                    plot error/accuracy live (if false, still logged in a file)
+      --plot               (default true)       plot error/accuracy live (if false, still logged in a file)
       --log                (default true)       log the whole session to a file
       --seed               (default 1)          use fixed seed for randomized initialization
       --German                                  use the German road sign dataset
+      --lim                (default 50)         at least <lim> examples per sign, max 1000
 ]]
 
 opt.quicktest = true     --(default 0)          true = small test, false = full code running
@@ -75,6 +76,7 @@ end
 print '==> Loading datasets'
 require 'load-datasets'
 
+local signLabels
 if opt.German then
    signLabels = {
       '20 km/h speed limit',
@@ -163,6 +165,7 @@ end
 
 classes = {'Person'}
 for i = 1, nbClasses[2]  do classes[#classes+1] = signLabels[i] end
+classes[#classes+1] = 'Background'
 classes[#classes+1] = 'Car'
 
 ----------------------------------------------------------------------
@@ -188,16 +191,16 @@ print '==> generating CNN network:'
 -- compute network CL train time
 time = sys.clock()
 
-model = nn.Sequential()
-model:add(nn.SpatialConvolution(ivch, nk1, is1, is1)) -- TODO SpatialConvolutionMM!!
-model:add(nn.Threshold())
-model:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
+CNN = nn.Sequential()
+CNN:add(nn.SpatialConvolutionMM(ivch, nk1, is1, is1)) -- TODO SpatialConvolutionMM!!
+CNN:add(nn.Threshold())
+CNN:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
 -- 2nd layer -- TODO fanin 8, random connections
-model:add(nn.SpatialConvolution(nk1,nk2, is2, is2)) -- connex table based on similarity of features
-model:add(nn.Threshold())
-model:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
+CNN:add(nn.SpatialConvolutionMM(nk1,nk2, is2, is2)) -- connex table based on similarity of features
+CNN:add(nn.Threshold())
+CNN:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
 -- 3rd layer
-model:add(nn.SpatialConvolution(nk2,nk3, is3, is3)) -- connex table based on similarity of features
+CNN:add(nn.SpatialConvolutionMM(nk2,nk3, is3, is3)) -- connex table based on similarity of features
 
 ----------------------------------------------------------------------
 
@@ -206,23 +209,33 @@ time = sys.clock() - time
 print("==>  time to CL train network = " .. (time*1000) .. 'ms')
 
 ----------------------------------------------------------------------
--- Classifier
+-- Classifier (trainable with mini-batch)
 -- a 2-layer perceptron
-model:add(nn.Tanh())
-model:add(nn.Reshape(cl_nk1))
-model:add(nn.Linear(cl_nk1,cl_nk2))
-model:add(nn.Tanh())
-model:add(nn.Linear(cl_nk2,#classes))
+classifier = nn.Sequential()
+classifier:add(nn.Tanh())
+classifier:add(nn.Reshape(cl_nk1))
+classifier:add(nn.Linear(cl_nk1,cl_nk2))
+classifier:add(nn.Tanh())
+classifier:add(nn.Linear(cl_nk2,#classes))
 
 -- final stage: log probabilities
-model:add(nn.LogSoftMax())
+classifier:add(nn.LogSoftMax())
 
--- Save model
+-- putting network together: a <Sequential> of <Sequential>s
+--    <model>
+--       |___<CNN>
+--       |___<classifier>
+
+model = nn.Sequential()
+model:add(CNN)
+model:add(classifier)
+
+--[[ Save model (pointless here, I will save it after training)
 if opt.save then
    print('==>  <trainer> saving bare network to '..opt.save)
    os.execute('mkdir -p ' .. opt.save)
    torch.save(opt.save..'network.net', model)
-end
+end]]
 
 -- verbose
 print('==>  model:')
