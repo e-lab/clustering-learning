@@ -212,10 +212,10 @@ print("==>  time to CL train network = " .. (time*1000) .. 'ms')
 -- Classifier (trainable with mini-batch)
 -- a 2-layer perceptron
 classifier = nn.Sequential()
-classifier:add(nn.Tanh())
+classifier:add(nn.Threshold())
 classifier:add(nn.Reshape(cl_nk1))
 classifier:add(nn.Linear(cl_nk1,cl_nk2))
-classifier:add(nn.Tanh())
+classifier:add(nn.Threshold())
 classifier:add(nn.Linear(cl_nk2,#classes))
 
 -- final stage: log probabilities
@@ -225,6 +225,18 @@ classifier:add(nn.LogSoftMax())
 --    <model>
 --       |___<CNN>
 --       |___<classifier>
+
+-- adjust all biases for threshold activation units
+for _,layer in ipairs(CNN.modules) do
+   if layer.bias then
+      layer.bias:add(.1)
+   end
+end
+for _,layer in ipairs(classifier.modules) do
+   if layer.bias then
+      layer.bias:add(.1)
+   end
+end
 
 model = nn.Sequential()
 model:add(CNN)
