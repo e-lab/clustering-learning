@@ -14,6 +14,7 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
+require 'Dropout'
 --require 'online-kmeans' -- allow you to re-train k-means kernels
 --[[require 'ffmpeg'
 require 'trainLayer' -- functions for Clustering Learning on video
@@ -24,12 +25,14 @@ print '==> processing options'
 
 opt = lapp[[
    -r,--learningRate       (default 0.2)        learning rate
-   -d,--learningRateDecay  (default 1e-7)       learning rate decay (in # samples)
+   -l,--learningRateDecay  (default 1e-7)       learning rate decay (in # samples)
+   -d,--dropout            (default 0.5)        dropout amount
    -w,--weightDecay        (default 1e-5)       L2 penalty on the weights
    -m,--momentum           (default 0.5)        momentum
    -b,--batchSize          (default 128)        batch size
    -t,--threads            (default 8)          number of threads
    -p,--type               (default float)      float or cuda
+   -i,--devid              (default 1)          device ID (if using CUDA)
    -s,--save               (default results/)   file name to save network [after each epoch]
       --plot               (default true)       plot error/accuracy live (if false, still logged in a file)
       --log                (default true)       log the whole session to a file
@@ -51,24 +54,26 @@ dname,fname = sys.fpath()
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens','--slacmodel','--cnnmodel'})
 opt.save = opt.save:gsub('PARAMS', parsed)
 
-if opt.type == 'float' then
-   torch.setdefaulttensortype('torch.FloatTensor')
-else
-   torch.setdefaulttensortype('torch.DoubleTensor')
-end
 
-if opt.seed then
-   torch.manualSeed(opt.seed)
-end
+torch.setdefaulttensortype('torch.FloatTensor')
+torch.manualSeed(opt.seed)
+torch.setnumthreads(opt.threads)
+print('Training: using ' .. opt.threads .. ' threads')
 
 if opt.log then
    xlua.log(sys.dirname(opt.save) .. '/session.txt')
 end
 
-opt.threads = tonumber(opt.threads)
-if opt.threads > 1 then
-   torch.setnumthreads(opt.threads)
-   print('<trainer> using ' .. opt.threads .. ' threads')
+-- type:
+if opt.type == 'cuda' then
+   print('==> switching to CUDA')
+   require 'cunn'
+   cutorch.setDevice(opt.devid)
+   print('==> using GPU #' .. cutorch.getDevice())
+end
+
+if opt.type == 'cuda' then
+   nn.SpatialConvolutionMM = nn.SpatialConvolution
 end
 
 ----------------------------------------------------------------------
@@ -184,6 +189,9 @@ opt.hiddens     = 512               -- nb of hidden features for top perceptron 
 cl_nk1,cl_nk2   = nk3, opt.hiddens  -- dimensions for top perceptron
 ivch            = 3
 
+-- dropout?
+local dropout = nn.Dropout(opt.dropout)
+
 ----------------------------------------------------------------------
 
 print '==> generating CNN network:'
@@ -216,6 +224,7 @@ classifier:add(nn.Threshold())
 classifier:add(nn.Reshape(cl_nk1))
 classifier:add(nn.Linear(cl_nk1,cl_nk2))
 classifier:add(nn.Threshold())
+classifier:add(dropout)
 classifier:add(nn.Linear(cl_nk2,#classes))
 
 -- final stage: log probabilities
@@ -257,11 +266,16 @@ print(model)
 -- Loss: NLL
 loss = nn.ClassNLLCriterion()
 
+if opt.type == 'cuda' then
+   model:cuda()
+   loss:cuda()
+end
+
 ----------------------------------------------------------------------
 
 print '==> load modules'
-train = require 'train'
-test  = require 'test'
+local train = require 'train'
+local test  = require 'test'
 
 ----------------------------------------------------------------------
 print '==> training!'
