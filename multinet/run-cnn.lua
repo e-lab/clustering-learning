@@ -179,13 +179,13 @@ classes[#classes+1] = 'Car'
 print('<trainer> creating new network')
 
 nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
-nk0,nk1,nk2,nk3 = 3,16,128,256      -- nb of features
-is0,is1,is2,is3 = 15,7,7,7          -- size of kernels
-ss1,ss2         = 2,2               -- size of subsamplers (strides)
+nk0,nk1,nk2,nk3 = 3,16,32,64      -- nb of features
+is0,is1,is2,is3 = 15,7,5,5          -- size of kernels
+ss1,ss2,ss3         = 2,2,4               -- size of subsamplers (strides)
 scales          = 1                 -- scales
 fanin           = 8                 -- createCoCnxTable creates also 2*fanin connections
 feat_group      = 32                --features per group (32=best in CIFAR, nk1=32, fanin=2)
-opt.hiddens     = 512               -- nb of hidden features for top perceptron (0=linear classifier)
+opt.hiddens     = 64               -- nb of hidden features for top perceptron (0=linear classifier)
 cl_nk1,cl_nk2   = nk3, opt.hiddens  -- dimensions for top perceptron
 ivch            = 3
 
@@ -209,6 +209,8 @@ CNN:add(nn.Threshold())
 CNN:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
 -- 3rd layer
 CNN:add(nn.SpatialConvolutionMM(nk2,nk3, is3, is3)) -- connex table based on similarity of features
+CNN:add(nn.Threshold())
+CNN:add(nn.SpatialMaxPooling(ss3,ss3,ss3,ss3))
 
 ----------------------------------------------------------------------
 
@@ -220,7 +222,6 @@ print("==>  time to CL train network = " .. (time*1000) .. 'ms')
 -- Classifier (trainable with mini-batch)
 -- a 2-layer perceptron
 classifier = nn.Sequential()
-classifier:add(nn.Threshold())
 classifier:add(nn.Reshape(cl_nk1))
 classifier:add(nn.Linear(cl_nk1,cl_nk2))
 classifier:add(nn.Threshold())
