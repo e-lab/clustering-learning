@@ -181,7 +181,7 @@ print('<trainer> creating new network')
 nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
 nk0,nk1,nk2,nk3 = 3,16,32,64      -- nb of features
 is0,is1,is2,is3 = 15,7,5,5          -- size of kernels
-ss1,ss2,ss3         = 2,2,4               -- size of subsamplers (strides)
+ss1,ss2,ss3     = 2,2,4               -- size of subsamplers (strides)
 scales          = 1                 -- scales
 fanin           = 8                 -- createCoCnxTable creates also 2*fanin connections
 feat_group      = 32                --features per group (32=best in CIFAR, nk1=32, fanin=2)
