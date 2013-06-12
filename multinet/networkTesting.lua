@@ -95,13 +95,28 @@ image.display{image=proc3[2],zoom=10}
 image.display{image=proc3[3],zoom=10}]]
 
 require 'eex'
+require 'ffmpeg'
+require 'sys'
 ls = eex.ls
---[[require 'ffmpeg'
 path = eex.datasetsPath()
 videoPath = path .. 'videos/intersection.mp4'
-video = ffmpeg.Video{path=videoPath, width=1280/1, height=720/1, length=180, encoding='jpg', delete=false}]]
+-- Aspect ratio = 16/9 !
+w = {16*16, 1280} -- they have to be a multiple of 16 for the fovea
+h = { 9*16, 720 } -- the second value is the actual resolution of the input video
+io.write(sys.COLORS.red .. 'Do you want to dump the video? [y/n] ')
+if io.read() == 'y' then
+   io.write('The minimum resolution is 256x512. You can scale it up to 1280x720.\n' ..
+            'Introduce scale factor (1,2,...): ')
+   local s = io.read()
+   print 'Please wait...'
+   video = ffmpeg.Video{path=videoPath, width=s*w[1], height=s*h[1], length=180, encoding='jpg', delete=false}
+   print 'Done :)'
+   return
+end
 
-imgList = ls('scratch/intersection.mp4_10fps_454x256_180s_c0_sk0_jpg/*')
+io.write(sys.COLORS.blue .. 'Choose scale factor (1,2,...): ')
+local s = io.read()
+imgList = ls('scratch/intersection.mp4_10fps_' ..w[1]*s ..'x'..h[1]*s..'_180s_c0_sk0_jpg/*')
 
 multi = torch.load('results/multinet.net') -- loading
 torch.setdefaulttensortype(torch.typename(multi.output)) -- kinda bug
@@ -113,9 +128,10 @@ sift.modules[2] = nn.SpatialClassifier(sift.modules[2]) -- classif. alteration
 neighborhood = image.gaussian1D(7)
 normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 winMulti, winSift = nil, nil -- disataching from previous session
+print('Press <Enter> to advance to the next frame, <Ctrl>-<c>-<Enter> to terminate')
 for i,imgName in ipairs(imgList) do
+   io.write('Current frame: ' .. i)
    img = image.load(imgName)
-   img = image.crop(img,67,0,454-67,256)
    winRgb = image.display{image=img,legend='RGB frame #' .. tostring(i),win=winRgb}
    winSift  = image.display{image=sift :forward(img),win=winSift,zoom=2,legend='Sift'}
 
