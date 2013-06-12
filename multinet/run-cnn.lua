@@ -1,24 +1,16 @@
 ----------------------------------------------------------------------
--- Test of clustering learning on INRIA pedestrian, etc datasets
--- April 2013
+-- network for signs, pedestrians, cars - driving demo
+-- June 2013
 --
--- Author: Eugenio Culurciello, Feb 2013 for Clustering Learning
+-- Author: Eugenio Culurciello, Alfredo Canziani
 --
 ----------------------------------------------------------------------
--- TODO:
-----------------------------------------------------------------------
-
--- CNN test for CNN only
 
 require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
 require 'Dropout'
---require 'online-kmeans' -- allow you to re-train k-means kernels
---[[require 'ffmpeg'
-require 'trainLayer' -- functions for Clustering Learning on video
-require 'unsup']]
 
 ----------------------------------------------------------------------
 print '==> processing options'
@@ -41,11 +33,9 @@ opt = lapp[[
       --lim                (default 50)         at least <lim> examples per sign, max 1000
 ]]
 
-
 dname,fname = sys.fpath()
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens','--slacmodel','--cnnmodel'})
 opt.save = opt.save:gsub('PARAMS', parsed)
-
 
 torch.setdefaulttensortype('torch.FloatTensor')
 torch.manualSeed(opt.seed)
@@ -55,7 +45,6 @@ print('Training: using ' .. opt.threads .. ' threads')
 if opt.log then
    xlua.log(sys.dirname(opt.save) .. '/session.txt')
 end
-
 
 ----------------------------------------------------------------------
 -- load/get dataset
