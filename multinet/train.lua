@@ -62,6 +62,36 @@ if opt.type == 'cuda' then
 end
 
 ----------------------------------------------------------------------
+print '==> generating recursive network cleaning routine'
+function nilling(module)
+   module.gradBias   = nil
+   module.finput     = nil
+   module.gradWeight = nil
+   module.output     = nil
+   module.fgradInput = nil
+   module.gradInput  = nil
+end
+
+function netLighter(network)
+   nilling(network)
+   if network.modules then
+      for _,a in ipairs(network.modules) do
+         netLighter(a)
+      end
+   end
+end
+
+----------------------------------------------------------------------
+print '==> generating network saving routine'
+function saveNet(name)
+   local filename = paths.concat(opt.save, name)
+   os.execute('mkdir -p ' .. sys.dirname(filename))
+   print('==> saving model to '..filename)
+   modelToSave = model:clone()
+   netLighter(modelToSave)
+   torch.save(filename, modelToSave)
+
+----------------------------------------------------------------------
 print '==> defining training procedure'
 
 local epoch
@@ -116,7 +146,7 @@ function train(trainData)
 
       -- optimize on current mini-batch
       optim.sgd(eval_E, w, optimState)
-      
+
       -- update confusion
       dropout.train = false
       local y = model:forward(x)
@@ -124,7 +154,7 @@ function train(trainData)
          confusion:add(y[i],yt[i])
       end
       dropout.train = true
-      
+
    end
 
    -- time taken
@@ -143,10 +173,7 @@ function train(trainData)
    end
 
    -- save/log current net
-   local filename = paths.concat(opt.save, 'multinet.net')
-   os.execute('mkdir -p ' .. sys.dirname(filename))
-   print('==> saving model to '..filename)
-   torch.save(filename, w:float())
+   saveNet('multinet.net')
 
    -- next epoch
    confusion:zero()
