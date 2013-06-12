@@ -5,6 +5,7 @@ local Dropout, Parent = torch.class('nn.Dropout', 'nn.Module')
 function Dropout:__init(p)
    Parent.__init(self)
    self.p = p or 0.5
+   self.train = true
    if self.p >= 1 or self.p < 0 then
       error('<Dropout> illegal percentage, must be 0 <= p < 1')
    end
@@ -13,17 +14,23 @@ end
 
 function Dropout:updateOutput(input)
    self.noise:resizeAs(input)
-   self.noise:bernoulli(1-self.p)
    self.output:resizeAs(input):copy(input)
-   self.output:cmul(self.noise)
-   self.output:div(1-self.p)
+   if self.train then
+      self.noise:bernoulli(1-self.p)
+      self.output:cmul(self.noise)
+   else
+      self.output:mul(1-self.p)
+   end
    return self.output
 end
 
 function Dropout:updateGradInput(input, gradOutput)
-   self.gradInput:resizeAs(gradOutput):copy(gradOutput)
-   self.gradInput:cmul(self.noise) -- simply mask the gradients with the noise vector
-   self.gradInput:div(1-self.p)
+   if self.train then
+      self.gradInput:resizeAs(gradOutput):copy(gradOutput)
+      self.gradInput:cmul(self.noise) -- simply mask the gradients with the noise vector
+   else
+      error('backprop only defined while training')
+   end
    return self.gradInput
 end
 
