@@ -38,7 +38,7 @@ print '==> defining test procedure'
 function test(testData)
    -- local vars
    local time = sys.clock()
-   
+
    -- dropout -> off
    dropout.train = false
 
@@ -87,6 +87,8 @@ function test(testData)
    end
 
    confusion:zero()
+
+   -- dropout -> on
    dropout.train = true
 end
 
