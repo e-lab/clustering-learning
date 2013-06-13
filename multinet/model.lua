@@ -19,11 +19,11 @@ end
 
 print '==> Defining network parameters:'
 
-local nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
-local nk0,nk1,nk2,nk3 = 3,16,32,64      -- nb of features
-local is0,is1,is2,is3 = 15,7,5,5          -- size of kernels
-local ss1,ss2,ss3     = 2,2,4               -- size of subsamplers (strides)
-local hiddens     = 64               -- nb of hidden features for top perceptron (0=linear classifier)
+local nnf1,nnf2,nnf3  = 1,1,1         -- number of frames at each layer
+local nk0,nk1,nk2,nk3 = 3,16,32,64    -- nb of features
+local is0,is1,is2,is3 = 15,7,5,5      -- size of kernels
+local ss1,ss2,ss3     = 2,2,4         -- size of subsamplers (strides)
+local hiddens         = 64            -- nb of hidden features for top perceptron (0=linear classifier)
 local cl_nk1,cl_nk2   = nk3, hiddens  -- dimensions for top perceptron
 local ivch            = 3
 
