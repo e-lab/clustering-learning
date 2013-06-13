@@ -1,3 +1,4 @@
+#!/usr/bin/env torch
 ----------------------------------------------------------------------
 -- network for signs, pedestrians, cars - driving demo
 -- June 2013
