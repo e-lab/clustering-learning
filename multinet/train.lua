@@ -90,6 +90,7 @@ function saveNet(name)
    modelToSave = model:clone()
    netLighter(modelToSave)
    torch.save(filename, modelToSave)
+end
 
 ----------------------------------------------------------------------
 print '==> defining training procedure'
