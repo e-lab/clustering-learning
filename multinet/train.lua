@@ -65,9 +65,9 @@ end
 print '==> generating recursive network cleaning routine'
 function nilling(module)
    module.gradBias   = nil
-   module.finput     = nil
+   if module.finput then module.finput = torch.Tensor() end
    module.gradWeight = nil
-   module.output     = nil
+   module.output     = torch.Tensor()
    module.fgradInput = nil
    module.gradInput  = nil
 end
