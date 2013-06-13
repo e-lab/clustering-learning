@@ -87,6 +87,7 @@ function test(testData)
    end
 
    confusion:zero()
+   dropout.train = true
 end
 
 -- Export:
