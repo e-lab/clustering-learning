@@ -10,9 +10,9 @@ require 'image'   -- to visualize the dataset
 
 www = 'http://data.neuflow.org/data/housenumbers/'
 
-train_file = '../../elabshare/datasets/housenumbers/train_32x32.t7'
-test_file = '../../elabshare/datasets/housenumbers/test_32x32.t7'
-extra_file = '../../elabshare/datasets/housenumbers/extra_32x32.t7'
+train_file = '../../datasets//housenumbers/train_32x32.t7'
+test_file = '../../datasets//housenumbers/test_32x32.t7'
+extra_file = '../../datasets//housenumbers/extra_32x32.t7'
 
 
 if not paths.filep(train_file) then

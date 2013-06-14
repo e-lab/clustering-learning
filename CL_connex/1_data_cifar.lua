@@ -10,7 +10,7 @@ require 'image'   -- to visualize the dataset
 ----------------------------------------------------------------------
 
 tar = 'http://data.neuflow.org/data/cifar10.t7.tgz'
-if not paths.dirp('../../elabshare/datasets/cifar-10-batches-t7') then
+if not paths.dirp('../../datasets/cifar-10-batches-t7') then
    print '==> downloading dataset'
    os.execute('wget ' .. tar)
    os.execute('tar xvf ' .. paths.basename(tar))
@@ -27,24 +27,24 @@ trainData = {
 }
 
 for i = 0,4 do
-   subset = torch.load('../../elabshare/datasets/cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
-   trainData.data[{ {i*10000+1, (i+1)*10000} }] = subset.data:t():double()
-   trainData.labels[{ {i*10000+1, (i+1)*10000} }] = subset.labels:double()
+   subset = torch.load('../../datasets//cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
+   trainData.data[{ {i*10000+1, (i+1)*10000} }] = subset.data:t():float()
+   trainData.labels[{ {i*10000+1, (i+1)*10000} }] = subset.labels:float()
 end
 trainData.labels = trainData.labels + 1
 
-subset = torch.load('../../elabshare/datasets/cifar-10-batches-t7/test_batch.t7', 'ascii')
+subset = torch.load('../../datasets//cifar-10-batches-t7/test_batch.t7', 'ascii')
 testData = {
-   data = subset.data:t():double(),
-   labels = subset.labels[1]:double(),
+   data = subset.data:t():float(),
+   labels = subset.labels[1]:float(),
    size = function() return tesize end
 }
 testData.labels = testData.labels + 1
 
 -- dataset size:
 if opt.size=='small' then
-	trsize = 3000
-	tesize = 1000
+	trsize = 10000
+	tesize = 2000
 
     trainData.data = trainData.data[{ {1,trsize} }]
     trainData.labels = trainData.labels[{ {1,trsize} }]

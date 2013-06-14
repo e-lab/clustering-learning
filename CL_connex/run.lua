@@ -44,7 +44,7 @@ opt.initstd= 0.1
 opt.batchSize = 1 -- mini batch for the stochastic gradient
 verbose = false    -- display information and kernels
 if (opt.whitening=='false') then opt.whitening = false end  -- false from the option is not boolean format
-torch.setdefaulttensortype('torch.DoubleTensor')
+torch.setdefaulttensortype('torch.FloatTensor')
 opt.threads = tonumber(opt.threads)
 if opt.threads > 1 then
    torch.setnumthreads(opt.threads)
@@ -74,8 +74,8 @@ end
 -- input image dateaset params:
 ivch = trainData.data[1]:size(1) -- channels
 
-trainData.data = trainData.data:double()
-testData.data = testData.data:double()
+trainData.data = trainData.data
+testData.data = testData.data
 
 ----------------------------------------------------------------------
 print '==> generating CL unsupervised network:'

@@ -86,7 +86,7 @@ function train()
       local targets = {}
       for i = t,math.min(t+opt.batchSize-1,trainData:size()) do
          -- load new sample
-         local input = trainData.data[shuffle[i]]:double()
+         local input = trainData.data[shuffle[i]]
          local target = trainData.labels[shuffle[i]]
          table.insert(inputs, input)
          table.insert(targets, target)
