@@ -8,6 +8,18 @@ require 'torch'   -- torch
 require 'nnx'      -- provides all sorts of trainable modules/layers
 
 ----------------------------------------------------------------------
+-- define network to train
+--
+print('<trainer> creating new network')
+
+nk1           =  32          -- nb of features
+is1,is2       =  5,5  	     -- size of kernels
+ss1,ss2, ss3  =  2,2,4 		 -- size of subsamplers (strides)
+fanin 	     =  2 		     -- createCoCnxTable creates also 2*fanin connections
+feat_group 	  =  32 		 -- features per group (32=best in CIFAR nk1=32, fanin=2)
+nhiddens      =  256 		 -- nb of hidden features for top perceptron (0=linear classifier)
+
+----------------------------------------------------------------------
 print '==> construct model'
 
 if opt.model == '1st-layer' then

@@ -34,8 +34,8 @@ opt = lapp[[
    -o,--save               (default results)     save directory
    -c,--colorbypass        (default true)        subsampling of the input and feeding into the classifier
    -a,--nsamples           (default 40000)       samples for the kmeans
-   -l,--plot               (default true)
-   -e,--niter              (default 15)
+   -l,--plot               (default true)        plot training/testing curves
+   -e,--niter              (default 15)          number of iterations for k-means
    -n,--loss               (default nll)         type of loss function to minimize: nll | mse | margin
    -w,--whitening          (default true)        whitening applied to first layer
    -f,--dataset            (default cifar)       dataset: cifar or svhn
@@ -50,18 +50,6 @@ if opt.threads > 1 then
    torch.setnumthreads(opt.threads)
    print('<trainer> using ' .. opt.threads .. ' threads')
 end
-
-----------------------------------------------------------------------
--- define network to train
---
-print('<trainer> creating new network')
-
-nk1           =  32          -- nb of features
-is1,is2       =  5,5  	     -- size of kernels
-ss1,ss2, ss3  =  2,2,4 		 -- size of subsamplers (strides)
-fanin 	      =  2 		     -- createCoCnxTable creates also 2*fanin connections
-feat_group 	  =  32 		 -- features per group (32=best in CIFAR nk1=32, fanin=2)
-nhiddens      =  256 		 -- nb of hidden features for top perceptron (0=linear classifier)
 
 ----------------------------------------------------------------------
 -- loading and processing dataset:
