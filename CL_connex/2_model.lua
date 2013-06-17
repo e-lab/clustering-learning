@@ -33,7 +33,9 @@ if opt.model == '1st-layer' then
    --model:add(nn.Threshold())
    rss1 = 32-is1+1
    model:add(nn.Reshape(nk1, rss1^2))
+   model:add(nn.Transpose({1,2}))
    model:add(nn.SoftMax())
+   model:add(nn.Transpose({1,2}))
    model:add(nn.Reshape(nk1, rss1, rss1))
    model:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
 
@@ -45,7 +47,9 @@ elseif opt.model == '2nd-layer' then
    --model:add(nn.Threshold())
    rss2 = rss1/ss1-is2+1
    model:add(nn.Reshape(nk2, rss2^2))
+   model:add(nn.Transpose({1,2}))
    model:add(nn.SoftMax())
+   model:add(nn.Transpose({1,2}))
    model:add(nn.Reshape(nk2, rss2, rss2))
    model:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
 

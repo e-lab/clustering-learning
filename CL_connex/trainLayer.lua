@@ -56,10 +56,14 @@ function trainLayer(nlayer, invdata, nsamples, nk, is, verbose)
       end
    end
    -- display final filters:
-   if verbose then
+   if verbose  and nlayer == 1 then
       win = image.display{image=kernels:reshape(nk, ivch, 1*is, is), padding=2, symmetric=true, 
          zoom=4, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
-   end     
+   end
+   if verbose  and nlayer > 1 then
+      win = image.display{image=kernels, padding=2, symmetric=true, 
+         zoom=4, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
+   end 
    return kernels, counts, Mmat, Pmat 
 end
 
