@@ -83,7 +83,6 @@ kernels1, counts1, M, P = trainLayer(1, trainData.data, opt.nsamples, nk1, is1, 
 -- setup net/ load kernels into network:
 model.modules[1].bias = model.modules[1].bias*0 -- set bias to 0
 model.modules[1].weight = kernels1:reshape(nk1, ivch, is1,is1)
-if opt.verbose then image.display{image=kernels1:reshape(nk1,3,5,5), zoom=4, padding=2} end
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 1st layer:'
@@ -106,7 +105,6 @@ dofile '2_model.lua'
 -- setup net/ load kernels into network:
 model.modules[1].bias = model.modules[1].bias*0 -- set bias to 0
 model.modules[1].weight = kernels2:reshape(kernels2:size(1),is2,is2)
-if opt.verbose then image.display{image=kernels2, zoom=2, padding=2, nrow=32} end
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 2nd layer:'
