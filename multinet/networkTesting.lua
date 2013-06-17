@@ -7,13 +7,89 @@
 -- Requires --------------------------------------------------------------------
 require 'image'
 require 'nnx'
+require 'eex'
+require 'ffmpeg'
+require 'sys'
+require 'Dropout'
 
 -- Parameters ------------------------------------------------------------------
 zoom = 2
 
 -- Main program ----------------------------------------------------------------
 
---[[ Loading the network and making the classifier testable on large images
+--------------------------------------------------------------------------------
+-- Test on test dataset samples ------------------------------------------------
+--------------------------------------------------------------------------------
+-- Loading the network and making the classifier testable on large images
+model = torch.load('results/multinet.net') -- loading
+torch.setdefaulttensortype(torch.typename(model.output)) -- kinda bug
+model.modules[2] = nn.SpatialClassifier(model.modules[2]) -- classif. alteration]]
+
+-- Loading testing dataset
+test = torch.load('scratch/stopPedBckCarEQUAL/test.t7')
+
+--[[ Going throgh the whole testing dataset
+for i = 1, test.size(), 10 do
+win2 = image.display{image=test.data[i],zoom=10,win=win2,legend=i}
+io.read()
+end]]
+
+idx = {}
+idx.pds = {   1,  563}
+idx.stp = { 564,  775}
+idx.bgr = { 776, 1609}
+idx.car = {1610, 1788}
+
+-- Testing the testing dataset
+pds = test.data[math.random(idx.pds[1],idx.pds[2])]
+stp = test.data[math.random(idx.stp[1],idx.stp[2])]
+car = test.data[math.random(idx.car[1],idx.car[2])]
+img = torch.cat(torch.cat(pds,stp,3),car,3)
+
+image.display{image=img,zoom=zoom}
+output = model:forward(img)
+output[3] = output[4]
+image.display{image=output[{ {1,3},{},{} }],zoom=zoom*5.75}
+
+
+--------------------------------------------------------------------------------
+--[[ Another test on test dataset samples ----------------------------------------
+--------------------------------------------------------------------------------
+model = torch.load('results/multinet.net') -- loading
+torch.setdefaulttensortype(torch.typename(model.output)) -- kinda bug
+model.modules[2] = nn.SpatialClassifier(model.modules[2]) -- classif. alteration
+
+imgOrg = image.load('testImg.png')
+image.display{image=imgOrg,legend='Original image'}
+
+-- Some preprocessing
+neighborhood = image.gaussian1D(7)
+normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
+img = imgOrg:clone()
+img[{ {1},{},{} }] = normalization:forward(img[{ {1},{},{} }])
+image.display{image=img,legend='SCN-Y'}
+for i = 2,3 do
+   mean = img[{ i,{},{} }]:mean()
+   std = img[{ i,{},{} }]:std()
+   img[{ i,{},{} }]:add(-mean)
+   img[{ i,{},{} }]:div(std)
+end
+image.display{image=img,legend='SCN-Y & UV-normalised'}
+
+output = model:forward(img)
+image.display{image=output,zoom=15,padding=2,legend='pedestrian - stop - background - car'}
+map = torch.Tensor(3,(#output)[2],(#output)[3])
+map[{ {1,2},{},{} }] = output[{ {1,2},{},{} }]
+map[3] = output[4]
+image.display{image=map,zoom=15,legend='R: pedestrian, G: stop, B: car'}
+masc = imgOrg:clone()
+masc = image.scale(map,masc,'simple')]]
+
+
+--------------------------------------------------------------------------------
+--[[ Test on test dataset samples ------------------------------------------------
+--------------------------------------------------------------------------------
+-- Loading the network and making the classifier testable on large images
 model = torch.load('results/multinet.net') -- loading
 torch.setdefaulttensortype(torch.typename(model.output)) -- kinda bug
 model.modules[2] = nn.SpatialClassifier(model.modules[2]) -- classif. alteration]]
@@ -94,9 +170,9 @@ image.display{image=proc3[1],zoom=10}
 image.display{image=proc3[2],zoom=10}
 image.display{image=proc3[3],zoom=10}]]
 
-require 'eex'
-require 'ffmpeg'
-require 'sys'
+--------------------------------------------------------------------------------
+--[[ Test on videos --------------------------------------------------------------
+--------------------------------------------------------------------------------
 ls = eex.ls
 path = eex.datasetsPath()
 videoPath = path .. 'videos/intersection.mp4'
@@ -148,4 +224,4 @@ for i,imgName in ipairs(imgList) do
 
    winMulti = image.display{image=multi:forward(img),win=winMulti,zoom=2,nrow=2,legend='Multinet'}
    io.read()
-end
+end]]
