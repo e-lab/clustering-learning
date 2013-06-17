@@ -27,6 +27,15 @@ local hiddens         = 64            -- nb of hidden features for top perceptro
 local cl_nk1,cl_nk2   = nk3, hiddens  -- dimensions for top perceptron
 local ivch            = 3
 
+-- Old net
+--[[nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
+nk0,nk1,nk2,nk3 = 3,16,128,256      -- nb of features
+is0,is1,is2,is3 = 15,7,7,7          -- size of kernels
+ss1,ss2         = 2,2               -- size of subsamplers (strides)
+hiddens         = 512               -- nb of hidden features for top perceptron (0=linear classifier)
+cl_nk1,cl_nk2   = nk3, hiddens      -- dimensions for top perceptron
+ivch            = 3]]
+
 -- dropout?
 local dropout = nn.Dropout(opt.dropout)
 
