@@ -39,10 +39,10 @@ opt = lapp[[
    -n,--loss               (default nll)         type of loss function to minimize: nll | mse | margin
    -w,--whitening          (default true)        whitening applied to first layer
    -f,--dataset            (default cifar)       dataset: cifar or svhn
+   -v,--verbose            (default true)        plot results, filters, etc
 ]]
 opt.initstd= 0.1
 opt.batchSize = 1 -- mini batch for the stochastic gradient
-verbose = false    -- display information and kernels
 if (opt.whitening=='false') then opt.whitening = false end  -- false from the option is not boolean format
 torch.setdefaulttensortype('torch.FloatTensor')
 opt.threads = tonumber(opt.threads)
@@ -77,24 +77,25 @@ opt.model = '1st-layer'
 dofile '2_model.lua'
 
 print '==> generating filters for layer 1:'
-kernels1, counts1, M, P = trainLayer(1, trainData.data, opt.nsamples, nk1, is1, verbose)
+kernels1, counts1, M, P = trainLayer(1, trainData.data, opt.nsamples, nk1, is1, opt.verbose)
 
 
 -- setup net/ load kernels into network:
 model.modules[1].bias = model.modules[1].bias*0 -- set bias to 0
 model.modules[1].weight = kernels1:reshape(nk1, ivch, is1,is1)
+if opt.verbose then image.display{image=kernels1:reshape(nk1,3,5,5), zoom=4, padding=2} end
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 1st layer:'
 if opt.whitening then 
-   trainData2, testData2 = whitenprocessLayer(model, trainData.data, testData.data, M, P, verbose)
+   trainData2, testData2 = whitenprocessLayer(model, trainData.data, testData.data, M, P, opt.verbose)
 else
-   trainData2, testData2 = processLayer(model, trainData.data, testData.data, verbose)
+   trainData2, testData2 = processLayer(model, trainData.data, testData.data, opt.verbose)
 end
 
 ----------------------------------------------------------------------
 print '==> Computing connection tables based on co-occurence of features and generate filters'
-cTable2, kernels2 = createCoCnx(2, trainData2, nk1, feat_group, fanin, opt.nsamples, is2, verbose)
+cTable2, kernels2 = createCoCnx(2, trainData2, nk1, feat_group, fanin, opt.nsamples, is2, opt.verbose)
 nk2 = cTable2:max()
 
 ----------------------------------------------------------------------
@@ -104,12 +105,13 @@ dofile '2_model.lua'
 
 -- setup net/ load kernels into network:
 model.modules[1].bias = model.modules[1].bias*0 -- set bias to 0
-model.modules[1].weight = kernels2:reshape(kernels2:size(1),is2,is2)  
+model.modules[1].weight = kernels2:reshape(kernels2:size(1),is2,is2)
+if opt.verbose then image.display{image=kernels2, zoom=2, padding=2, nrow=32} end
 
 ----------------------------------------------------------------------
 print '==> process dataset throught 2nd layer:'
 
-trainData2, testData2 = processLayer(model, trainData2, testData2, verbose)
+trainData2, testData2 = processLayer(model, trainData2, testData2, opt.verbose)
 
 ----------------------------------------------------------------------
 -- compute network creation time time 
@@ -119,7 +121,7 @@ print("<net> time to CL train network = " .. (time*1000) .. 'ms')
 -- colorbypass
 model = nn.Sequential()
 model:add(nn.SpatialDownSampling(ss3,ss3,ss3,ss3))
-trainData3, testData3 = processLayer(model, trainData.data, testData.data, verbose)
+trainData3, testData3 = processLayer(model, trainData.data, testData.data, opt.verbose)
 
 l1netoutsize = testData2:size(2)*testData2:size(3)*testData2:size(4)
 cdatasize = trainData3:size(2)*trainData3:size(3)*trainData3:size(4) 
