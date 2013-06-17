@@ -32,11 +32,13 @@ opt = lapp[[
       --seed               (default 1)          use fixed seed for randomized initialization
       --German                                  use the German road sign dataset
       --lim                (default 50)         at least <lim> examples per sign, max 1000
+      --maxBg              (default 4170)       max number of background samples
+      --samplepercar       (default 6)          number of the patch to extract from per car (bounding box)
 ]]
 
-dname,fname = sys.fpath()
+--[[dname,fname = sys.fpath()
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens','--slacmodel','--cnnmodel'})
-opt.save = opt.save:gsub('PARAMS', parsed)
+opt.save = opt.save:gsub('PARAMS', parsed)]]
 
 torch.setdefaulttensortype('torch.FloatTensor')
 torch.manualSeed(opt.seed)

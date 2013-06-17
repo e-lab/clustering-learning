@@ -11,7 +11,10 @@ require 'pl'
 if not opt then
    print '==> Processing options'
    opt = lapp [[
---German          Use the German road sign dataset
+      --German          Use the German road sign dataset
+      --lim                (default 50)         at least <lim> examples per sign, max 1000
+      --maxBg              (number)             max number of background samples
+      --samplepercar       (default 6)          number of the patch to extract from per car (bounding box)
 ]]
 end
 

@@ -113,10 +113,6 @@ print()
 -- Preprocessing -------------------------------------------------------------
 dofile 'preprocessing.lua'
 
---[[ Save created dataset ------------------------------------------------------
-torch.save(path .. 'train.t7',trainData)
-torch.save(path .. 'test.t7',testData)]]
-
 -- Exports -------------------------------------------------------------------
 return {
    trainData = trainData,

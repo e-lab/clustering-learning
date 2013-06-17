@@ -36,11 +36,12 @@ if not opt then
    cmd:option('-visualize',  true,    'display kernels')
    cmd:option('-seed',        1,      'initial random seed')
    cmd:option('-threads',     8,      'threads')
-   cmd:option('-savedataset', true,  'save dataset')
-   cmd:option('-width',       46,   'width of extracted patch')
-   cmd:option('-height',      46,   'height of extracted patch')
+   cmd:option('-savedataset', true,   'save dataset')
+   cmd:option('-width',       46,     'width of extracted patch')
+   cmd:option('-height',      46,     'height of extracted patch')
    cmd:option('-ratio',       0.8,    'ratio of train to test dataset split')
    cmd:option('-samplepercar',6,      'number of the patch to extract from per car (bounding box)')
+   cmd:option('-maxBg',       false,  'max number of background samples')
 
    cmd:text()
    opt = cmd:parse(arg or {}) -- pass parameters to training files:
@@ -274,9 +275,13 @@ local carTrSize = math.floor(opt.ratio*carData:size())
 local carTeSize = math.floor((carData:size()-carTrSize))
 local shuffleCar = torch.randperm(carData:size())
 
+local shuffleBg = torch.randperm(backgroundData:size())
+if opt.maxBg then
+   lower = (opt.maxBg < backgroundData:size()) and opt.maxBg or backgroundData:size()
+   backgroundData.size = function() return lower end
+end
 local bgTrSize = math.floor(opt.ratio*backgroundData:size())
 local bgTeSize = math.floor((backgroundData:size()-bgTrSize))
-local shuffleBg = torch.randperm(backgroundData:size())
 
 trSize = carTrSize + bgTrSize
 teSize = carTeSize + bgTeSize
