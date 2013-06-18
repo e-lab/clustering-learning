@@ -19,22 +19,19 @@ function trainLayer(nlayer, invdata, nsamples, nk, is, verbose)
    if verbose then  print '==> extracting patches' end
    local img = torch.Tensor(ivch, 1, ivhe, ivwi)
    local data = torch.Tensor(nsamples, ivch*is*is) 
-   local i = 1
-   while i <= nsamples do
-      fimg = math.random(1,invdata:size(1)) -- pointer to current frame    
+   for i =1, nsamples do
+      local fimg = math.random(1,invdata:size(1)) -- pointer to current frame    
       img[{{},{1}}] = invdata[fimg] -- pointer to current and all previous frames
- 
       local z = math.random(1,ivch)
       local x = math.random(1,ivwi-is+1)
       local y = math.random(1,ivhe-is+1)
       local patches = img[{ {},{},{y,y+is-1},{x,x+is-1} }]:clone()   
       data[i] = patches
-      i = i+1 -- if patches is used then count up   
       if verbose then xlua.progress(i, nsamples) end
    end 
 
-   Mmat = torch.Tensor()           -- to avoid error if no whitening
-   Pmat = torch.Tensor()           -- to avoid error if no whitening
+   local Mmat = torch.Tensor()           -- to avoid error if no whitening
+   local Pmat = torch.Tensor()           -- to avoid error if no whitening
 
    -- apply whitening only for 1st layer input
    if nlayer == 1 and opt.whitening then
