@@ -34,6 +34,8 @@ opt = lapp[[
       --lim                (default 50)         at least <lim> examples per sign, max 1000
       --maxBg              (default 4170)       max number of background samples
       --samplepercar       (default 6)          number of the patch to extract from per car (bounding box)
+      --visualize                               show some outputs while loading the datasets
+      --dataStop                                use German stop signs
 ]]
 
 --[[dname,fname = sys.fpath()
@@ -101,6 +103,8 @@ if opt.German then
       'End of no passing zone',
       'End of no passing zone for vehicles over 3.5t'
    }
+elseif opt.dataStop then
+   signLabels = {'Stop'}
 else
    signLabels = {
       'Stop',
