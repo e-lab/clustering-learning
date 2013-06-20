@@ -18,21 +18,27 @@ zoom = 2
 -- Main program ----------------------------------------------------------------
 
 --------------------------------------------------------------------------------
+-- Gazing at the datasets ------------------------------------------------------
+--------------------------------------------------------------------------------
+train = torch.load('scratch/stopPedBckCarEQUAL-images/train.t7')
+require 'sys'
+win = image.display{image=train.data[1],win=win,zoom=5}
+io.write('Position the window where desired and press <Enter>...')
+io.read()
+for i = 1,train.size(),2 do
+   image.display{image=train.data[i],legend=i..' sample',win=win,zoom=5}
+   sys.sleep(.2)
+end
+--------------------------------------------------------------------------------
 -- Test on test dataset samples ------------------------------------------------
 --------------------------------------------------------------------------------
--- Loading the network and making the classifier testable on large images
+--[[ Loading the network and making the classifier testable on large images
 model = torch.load('results/multinet.net') -- loading
 torch.setdefaulttensortype(torch.typename(model.output)) -- kinda bug
-model.modules[2] = nn.SpatialClassifier(model.modules[2]) -- classif. alteration]]
+model.modules[2] = nn.SpatialClassifier(model.modules[2]) -- classif. alteration
 
 -- Loading testing dataset
 test = torch.load('scratch/stopPedBckCarEQUAL/test.t7')
-
---[[ Going throgh the whole testing dataset
-for i = 1, test.size(), 10 do
-win2 = image.display{image=test.data[i],zoom=10,win=win2,legend=i}
-io.read()
-end]]
 
 idx = {}
 idx.pds = {   1,  563}
@@ -49,8 +55,7 @@ img = torch.cat(torch.cat(pds,stp,3),car,3)
 image.display{image=img,zoom=zoom}
 output = model:forward(img)
 output[3] = output[4]
-image.display{image=output[{ {1,3},{},{} }],zoom=zoom*5.75}
-
+image.display{image=output[{ {1,3},{},{} }],zoom=zoom*5.75}]]
 
 --------------------------------------------------------------------------------
 --[[ Another test on test dataset samples ----------------------------------------
