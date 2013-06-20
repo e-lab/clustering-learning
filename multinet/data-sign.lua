@@ -163,9 +163,11 @@ if opt.stat then
    gnuplot.figure(1)
    gnuplot.hist(trainData.labels,43)
    gnuplot.title('Training dataset category statistics')
+   gnuplot.axis({'','',0,''})
    gnuplot.figure(2)
    gnuplot.hist(testData.labels,43)
    gnuplot.title('Testing dataset category statistics')
+   gnuplot.axis({'','',0,''})
 end
 
 -- Exports -------------------------------------------------------------------
