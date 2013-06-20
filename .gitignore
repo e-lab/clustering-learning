@@ -11,7 +11,7 @@ session.txt
 paper/clustering.log
 datasets/
 scratch/
-*.swp
+*.sw?
 *.eps
 !CL_paper-nips13/*.eps
 multinet/*.t7

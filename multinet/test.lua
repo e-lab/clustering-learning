@@ -11,6 +11,12 @@ require 'optim'   -- an optimization package, for online and batch methods
 ----------------------------------------------------------------------
 print '==> defining some tools'
 
+-- model:
+local t = require 'model'
+local model = t.model
+local loss = t.loss
+local dropout = t.dropout
+
 -- This matrix records the current confusion across classes (<classes> is a global var.)
 local confusion = optim.ConfusionMatrix(classes)
 
@@ -32,6 +38,9 @@ print '==> defining test procedure'
 function test(testData)
    -- local vars
    local time = sys.clock()
+
+   -- dropout -> off
+   dropout.train = false
 
    -- test over test data
    print('==> testing on test set:')
@@ -78,6 +87,9 @@ function test(testData)
    end
 
    confusion:zero()
+
+   -- dropout -> on
+   dropout.train = true
 end
 
 -- Export:

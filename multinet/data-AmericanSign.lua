@@ -29,7 +29,7 @@ if not opt then
 --width              (default 46)      Width of dataset images
 --visualize                            Show some samples
 --stat                                 Show datasets statistics
---lim                (default 50)      At least <lim> examples per sign
+--lim                (default 50)      At least <lim> examples per sign, max 1000
 ]]
 end
 
@@ -65,7 +65,7 @@ local signList = {}
 for i,s in ipairs(humanLabels) do
    if signList[s] == nil then signList[s] = 1 else signList[s] = signList[s] + 1 end
 end
-torch.save('signList.t7',signList,'ascii')
+-- torch.save('signList.t7',signList,'ascii')
 local datasetSize = 0
 for k in pairs(signList) do
    if signList[k] >= lim then datasetSize = datasetSize + signList[k] end

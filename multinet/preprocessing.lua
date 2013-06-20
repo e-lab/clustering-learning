@@ -46,6 +46,7 @@ local channels = {'y','u','v'}
 -- the trainable parameters. At test time, test data will be normalized
 -- using these values.
 print '==> preprocessing data: global normalization:'
+--[[ Global normalisation
 local mean = {}
 local std = {}
 for i,channel in ipairs(channels) do
@@ -61,7 +62,7 @@ for i,channel in ipairs(channels) do
    -- normalize each channel globally:
    testData.data[{ {},i,{},{} }]:add(-mean[i])
    testData.data[{ {},i,{},{} }]:div(std[i])
-end
+end]]
 
 -- Local normalization
 -- (note: the global normalization is useless, if this local normalization
@@ -77,13 +78,13 @@ local neighborhood = image.gaussian1D(7)
 local normalization = nn.SpatialContrastiveNormalization(1, neighborhood, 1e-3):float()
 
 -- Normalize all channels locally:
-for c=1,1 do-- in ipairs(channels) do
-   print '       Normalising the training dataset'
+for c,channel in ipairs(channels) do
+   print('       Normalising the training dataset ' .. channel .. ' channel')
    for i = 1,trSize do
       trainData.data[{ i,{c},{},{} }] = normalization:forward(trainData.data[{ i,{c},{},{} }])
       xlua.progress(i,trSize)
    end
-   print '       Normalising the testing dataset'
+   print('       Normalising the testing dataset ' .. channel .. ' channel')
    for i = 1,teSize do
       testData.data[{ i,{c},{},{} }] = normalization:forward(testData.data[{ i,{c},{},{} }])
       xlua.progress(i,teSize)

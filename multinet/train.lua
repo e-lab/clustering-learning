@@ -18,6 +18,13 @@ require 'xlua'    -- xlua provides useful tools, like progress bars
 require 'optim'   -- an optimization package, for online and batch methods
 
 ----------------------------------------------------------------------
+-- Model + Loss:
+local t = require 'model'
+local model = t.model
+local loss = t.loss
+local dropout = t.dropout
+
+----------------------------------------------------------------------
 print '==> defining some tools'
 
 -- This matrix records the current confusion across classes
@@ -52,6 +59,37 @@ local yt = torch.Tensor(opt.batchSize)
 if opt.type == 'cuda' then 
    x = x:cuda()
    yt = yt:cuda()
+end
+
+----------------------------------------------------------------------
+print '==> generating recursive network cleaning routine'
+function nilling(module)
+   module.gradBias   = nil
+   if module.finput then module.finput = torch.Tensor() end
+   module.gradWeight = nil
+   module.output     = torch.Tensor()
+   module.fgradInput = nil
+   module.gradInput  = nil
+end
+
+function netLighter(network)
+   nilling(network)
+   if network.modules then
+      for _,a in ipairs(network.modules) do
+         netLighter(a)
+      end
+   end
+end
+
+----------------------------------------------------------------------
+print '==> generating network saving routine'
+function saveNet(name)
+   local filename = paths.concat(opt.save, name)
+   os.execute('mkdir -p ' .. sys.dirname(filename))
+   print('==> saving model to '..filename)
+   modelToSave = model:clone()
+   netLighter(modelToSave)
+   torch.save(filename, modelToSave)
 end
 
 ----------------------------------------------------------------------
@@ -98,25 +136,27 @@ function train(trainData)
 
          -- evaluate function for complete mini batch
          local y = model:forward(x)
-         local E = loss:forward(y,yt)
 
          -- estimate df/dW
          local dE_dy = loss:backward(y,yt)
          model:backward(x,dE_dy)
 
-         -- update confusion
-         for i = 1,opt.batchSize do
-            confusion:add(y[i],yt[i])
-         end
-
          -- return f and df/dX
-         return E,dE_dw
+         return 0,dE_dw
       end
 
       -- optimize on current mini-batch
       optim.sgd(eval_E, w, optimState)
+
+      -- update confusion
+      dropout.train = false
+      local y = model:forward(x)
+      for i = 1,opt.batchSize do
+         confusion:add(y[i],yt[i])
+      end
+      dropout.train = true
+
    end
-   xlua.progress(trainData:size(), trainData:size())
 
    -- time taken
    time = sys.clock() - time
@@ -124,7 +164,7 @@ function train(trainData)
    print("\n==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
    -- print confusion matrix
-   print(confusion)
+   print(tostring(confusion))
 
    -- update logger/plot
    trainLogger:add{['% mean class accuracy (train set)'] = confusion.totalValid * 100}
@@ -134,10 +174,7 @@ function train(trainData)
    end
 
    -- save/log current net
-   local filename = paths.concat(opt.save, 'multinet.net')
-   os.execute('mkdir -p ' .. sys.dirname(filename))
-   print('==> saving model to '..filename)
-   torch.save(filename, model)
+   saveNet('multinet.net')
 
    -- next epoch
    confusion:zero()

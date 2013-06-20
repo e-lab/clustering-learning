@@ -11,7 +11,11 @@ require 'pl'
 if not opt then
    print '==> Processing options'
    opt = lapp [[
---German          Use the German road sign dataset
+      --German                                  Use the German road sign dataset
+      --lim                (default 50)         at least <lim> examples per sign, max 1000
+      --maxBg              (number)             max number of background samples
+      --samplepercar       (default 6)          number of the patch to extract from per car (bounding box)
+      --dataStop                                use German stop signs
 ]]
 end
 
@@ -45,7 +49,13 @@ else
    local totalTestData = {}
 
    -- Datasets' name
-   if opt.German then roadSign = 'data-sign' else roadSign = 'data-AmericanSign' end
+   if opt.German then
+      roadSign = 'data-sign'
+   elseif opt.dataStop then
+      roadSign = 'data-stop'
+   else roadSign = 'data-AmericanSign'
+   end
+
    local datasets = {
       'data-person',
       roadSign,
@@ -85,9 +95,11 @@ else
    gnuplot.figure(1)
    gnuplot.hist(trainData.labels,totNbClasses[#totNbClasses])
    gnuplot.title('Training dataset category statistics')
+   gnuplot.axis({'','',0,''})
    gnuplot.figure(2)
    gnuplot.hist(testData.labels,totNbClasses[#totNbClasses])
    gnuplot.title('Testing dataset category statistics')
+   gnuplot.axis({'','',0,''})
 
    -- Save created dataset ------------------------------------------------------
    print '==> saving dataset on disk'
