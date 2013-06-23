@@ -40,9 +40,9 @@ opt = lapp[[
    -w,--whitening          (default true)        whitening applied to first layer
    -f,--dataset            (default cifar)       dataset: cifar or svhn
 ]]
-opt.initstd= 0.1
+opt.initstd = 0.1
 opt.batchSize = 1 -- mini batch for the stochastic gradient
-verbose = false    -- display information and kernels
+verbose = true    -- display information and kernels
 if (opt.whitening=='false') then opt.whitening = false end  -- false from the option is not boolean format
 torch.setdefaulttensortype('torch.FloatTensor')
 opt.threads = tonumber(opt.threads)
@@ -59,11 +59,8 @@ else
    dofile '1_data_svhn.lua'
 end
 
--- input image dateaset params:
+-- input image dataset params:
 ivch = trainData.data[1]:size(1) -- channels
-
-trainData.data = trainData.data
-testData.data = testData.data
 
 ----------------------------------------------------------------------
 print '==> generating CL unsupervised network:'

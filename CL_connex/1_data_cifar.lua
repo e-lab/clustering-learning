@@ -27,7 +27,7 @@ trainData = {
 }
 
 for i = 0,4 do
-   subset = torch.load('../../datasets//cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
+   local subset = torch.load('../../datasets//cifar-10-batches-t7/data_batch_' .. (i+1) .. '.t7', 'ascii')
    trainData.data[{ {i*10000+1, (i+1)*10000} }] = subset.data:t():float()
    trainData.labels[{ {i*10000+1, (i+1)*10000} }] = subset.labels:float()
 end

@@ -16,20 +16,16 @@ function trainLayer(nlayer, invdata, nsamples, nk, is, verbose)
    local ivhe = invdata[1]:size(2) -- height
    local ivwi = invdata[1]:size(3) -- width
       
-   if verbose then  print '==> extracting patches' end
-   local img = torch.Tensor(ivch, 1, ivhe, ivwi)
-   local data = torch.Tensor(nsamples, ivch*is*is) 
-   local i = 1
-   while i <= nsamples do
-      fimg = math.random(1,invdata:size(1)) -- pointer to current frame    
-      img[{{},{1}}] = invdata[fimg] -- pointer to current and all previous frames
- 
-      local z = math.random(1,ivch)
+   if verbose then print '==> extracting patches' end
+   local data = torch.Tensor(nsamples, ivch*is*is)
+   for i = 1,nsamples do
+      local fimg = math.random(1,invdata:size(1)) -- pointer to current frame    
+      img = invdata[fimg] -- pointer to current and all previous frames
       local x = math.random(1,ivwi-is+1)
       local y = math.random(1,ivhe-is+1)
-      local patches = img[{ {},{},{y,y+is-1},{x,x+is-1} }]:clone()   
-      data[i] = patches
-      i = i+1 -- if patches is used then count up   
+      local patches = img[{ {},{y,y+is-1},{x,x+is-1} }]
+      data[i] = patches:clone()
+      print(i)
       if verbose then xlua.progress(i, nsamples) end
    end 
 
