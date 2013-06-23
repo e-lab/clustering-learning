@@ -34,7 +34,7 @@ op:option{'-s', '--save', action='store', dest='save',
 
 op:option{'-d', '--dataset', action='store', dest='dataset',
           help='path to dataset',
-          default='../datasets/siftflow_dataset'}
+          default='../../datasets/siftflow_dataset'}
 op:option{'-w', '--www', action='store', dest='www', 
           default='http://data.neuflow.org/data/siftflow_dataset.tgz',
           help='path to retrieve dataset online (if not available locally)'}

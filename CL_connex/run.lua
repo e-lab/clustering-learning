@@ -71,14 +71,14 @@ print '==> generating CL unsupervised network:'
 -- compute network CL train time
 time = sys.clock()
 
-----------------------------------------------------------------------
-print '==> generating filters for layer 1:'
-kernels1, counts1, M, P = trainLayer(1, trainData.data, opt.nsamples, nk1, is1, verbose)
-   
 ---------------------------------------------------------------------- 
 --  1st layer network
 opt.model = '1st-layer'
 dofile '2_model.lua'
+
+----------------------------------------------------------------------
+print '==> generating filters for layer 1:'
+kernels1, counts1, M, P = trainLayer(1, trainData.data, opt.nsamples, nk1, is1, verbose)
 
 -- setup net/ load kernels into network:
 model.modules[1].bias = model.modules[1].bias*0 -- set bias to 0
