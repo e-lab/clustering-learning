@@ -25,7 +25,6 @@ function trainLayer(nlayer, invdata, nsamples, nk, is, verbose)
       local y = math.random(1,ivhe-is+1)
       local patches = img[{ {},{y,y+is-1},{x,x+is-1} }]
       data[i] = patches:clone()
-      print(i)
       if verbose then xlua.progress(i, nsamples) end
    end 
 
