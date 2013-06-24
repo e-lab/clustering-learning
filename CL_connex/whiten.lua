@@ -24,20 +24,19 @@ function zca_whiten(x)          -- zca whitening is used
 
 function whiten_image(data, M, P, is)   -- operation:  data = (data - M) x P
  
-       -- from 2D image to a list of 1D patches
+   -- from 2D image to a list of 1D patches
    local npatches = (32-is)+1
    local x = torch.zeros(npatches*npatches, 3*is*is)
    local m = 1
    for j = 1, npatches-1 do
       for k = 1, npatches-1 do
           -- slice 32x32 image (ignore 1px border) into 36 patches of 5x5
-          x[{m}] = data[{{1},{},{j,j+is-1},{k,k+is-1}}]:reshape(3*is*is)   --{((i-1)*6+(j-1))*6+k}
+          x[{m}] = data[{{1}, {}, {j,j+is-1},{k,k+is-1}}]:reshape(3*is*is)   --{((i-1)*6+(j-1))*6+k}
           m = m+1
       end
    end
-   
 
-       -- do whitening
+   -- do whitening
    x:add(torch.ger(torch.ones(npatches*npatches), M:squeeze()):mul(-1))
    x = x * P
    data2 = torch.zeros(3, npatches*is, npatches*is)                                                                     

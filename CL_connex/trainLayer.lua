@@ -16,22 +16,20 @@ function trainLayer(nlayer, invdata, nsamples, nk, is, verbose)
    local ivhe = invdata[1]:size(2) -- height
    local ivwi = invdata[1]:size(3) -- width
       
-   if verbose then  print '==> extracting patches' end
-   local img = torch.Tensor(ivch, 1, ivhe, ivwi)
-   local data = torch.Tensor(nsamples, ivch*is*is) 
-   for i =1, nsamples do
+   if verbose then print '==> extracting patches' end
+   local data = torch.Tensor(nsamples, ivch*is*is)
+   for i = 1,nsamples do
       local fimg = math.random(1,invdata:size(1)) -- pointer to current frame    
-      img[{{},{1}}] = invdata[fimg] -- pointer to current and all previous frames
-      local z = math.random(1,ivch)
+      img = invdata[fimg] -- pointer to current and all previous frames
       local x = math.random(1,ivwi-is+1)
       local y = math.random(1,ivhe-is+1)
-      local patches = img[{ {},{},{y,y+is-1},{x,x+is-1} }]:clone()   
-      data[i] = patches
+      local patches = img[{ {},{y,y+is-1},{x,x+is-1} }]
+      data[i] = patches:clone()
       if verbose then xlua.progress(i, nsamples) end
    end 
 
-   local Mmat = torch.Tensor()           -- to avoid error if no whitening
-   local Pmat = torch.Tensor()           -- to avoid error if no whitening
+   Mmat = torch.Tensor()           -- to avoid error if no whitening
+   Pmat = torch.Tensor()           -- to avoid error if no whitening
 
    -- apply whitening only for 1st layer input
    if nlayer == 1 and opt.whitening then
@@ -53,14 +51,10 @@ function trainLayer(nlayer, invdata, nsamples, nk, is, verbose)
       end
    end
    -- display final filters:
-   if verbose  and nlayer == 1 then
+   if verbose then
       win = image.display{image=kernels:reshape(nk, ivch, 1*is, is), padding=2, symmetric=true, 
          zoom=4, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
-   end
-   if verbose  and nlayer > 1 then
-      win = image.display{image=kernels, padding=2, symmetric=true, 
-         zoom=4, win=win, nrow=math.floor(math.sqrt(nk)), legend='Layer '..nlayer..' filters'}
-   end 
+   end     
    return kernels, counts, Mmat, Pmat 
 end
 

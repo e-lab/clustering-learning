@@ -77,7 +77,7 @@ opt.model = '1st-layer'
 dofile '2_model.lua'
 
 print '==> generating filters for layer 1:'
-kernels1, counts1, M, P = trainLayer(1, trainData.data, opt.nsamples, nk1, is1, opt.verbose)
+kernels1, counts1, M, P = trainLayer(1, trainData.data, opt.nsamples*10, nk1, is1, opt.verbose)
 
 
 -- setup net/ load kernels into network:
