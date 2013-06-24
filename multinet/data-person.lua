@@ -73,8 +73,8 @@ trainData = {
 local idx = 0
 for i = 1, trainImaNumber, 2 do
    idx = idx + 1
-   local img = image.loadPNG(trainDir..ls(trainDir)[i],ivch)
-   trainData.data[idx] = image.crop(img, cropTrX-desImaX/2, cropTrY-desImaY/2, cropTrX+desImaX/2, cropTrY+desImaY/2):clone()
+   img = image.loadPNG(trainDir..ls(trainDir)[i],ivch)
+   trainData.data[idx] = image.scale(image.crop(img, cropTrX-(desImaX-10)/2, cropTrY-(desImaY-10)/2, cropTrX+(desImaX-10)/2, cropTrY+(desImaY-10)/2),desImaX,desImaY)
    trainData.labels[idx] = labelPerson
    xlua.progress(idx,trSize)
 end
@@ -94,7 +94,7 @@ idx = 0
 for i = 1, testImaNumber, 2 do
    idx = idx + 1
    local img = image.loadPNG(testDir..ls(testDir)[i],ivch)
-   testData.data[idx] = image.crop(img, cropTeX-desImaX/2, cropTeY-desImaY/2, cropTeX+desImaX/2, cropTeY+desImaY/2):clone()
+   testData.data[idx] = image.scale(image.crop(img, cropTeX-(desImaX-10)/2, cropTeY-(desImaY-10)/2, cropTeX+(desImaX-10)/2, cropTeY+(desImaY-10)/2),desImaX,desImaY)
    testData.labels[idx] = labelPerson
    xlua.progress(idx,teSize)
 end
