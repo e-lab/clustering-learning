@@ -30,9 +30,9 @@ local channels = {'y','u','v'}
 -- Main program -------------------------------------------------------------
 io.write('Insert network\'s name: ')
 netName = io.read()
-net = torch.load(netName)
+--net = torch.load(netName)
 --netName = 'multinet-18Jun-17.26.net'
---net = torch.load('/Users/atcold/Dropbox/Multinet/Networks/'..netName)
+net = torch.load('/Users/atcold/Dropbox/Multinet/Networks/'..netName)
 torch.setdefaulttensortype(torch.typename(net.output))
 net.modules[2] = nn.SpatialClassifier(net.modules[2])
 
@@ -64,8 +64,11 @@ while true do
    maxMap[1] = m:eq(1)
    maxMap[2] = m:eq(2)
    maxMap[3] = m:eq(4)
-   masc = torch.Tensor(3,opt.height,opt.width)
-   image.scale(maxMap,masc,'simple')
+   masc = image.scale(maxMap,opt.width,opt.height,'simple'):float()
    overlaid = masc + currentFrame
-   win = image.display{image=overlaid,win=win,zoom=opt.zoom}
+   win = image.display{image=overlaid,win=win,zoom=opt.zoom,min=0,max=2}
+   -- win2 = image.display{image=maxMap,zoom=55,win=win2}
+   -- win3 = image.display{image=masc,win=win3,zoom=opt.zoom}
+   -- win4 = image.display{image=currentFrame,win=win4,zoom=opt.zoom}
+   -- io.read()
 end
