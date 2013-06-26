@@ -50,7 +50,7 @@ for i = 1,trSize/2 do
       x = (j<0) and 0 or w-min
       y = (j<0) and 0 or h-min
       local imgCrp = image.crop(img,x,y,x+min,y+min)
-      image.scale(imgCrp,trainData.data[i*2+j])
+      image.scale(trainData.data[i*2+j],imgCrp)
    end
    xlua.progress(i*2,trSize)
 end
@@ -91,7 +91,7 @@ while line ~= nil do
          y = (j<0) and 0 or h-min
          local imgCrp = image.crop(img,x,y,x+min,y+min)
          count = count + 1
-         image.scale(imgCrp,testData.data[count])
+         image.scale(testData.data[count],imgCrp)
       end
       xlua.progress(count,teSize)
    end
