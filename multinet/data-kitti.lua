@@ -284,7 +284,7 @@ if opt.maxBg ~= 1e9 then
    print('       - Bg size set to: ' .. lower)
 end
 -- local bgTrSize = math.floor(opt.ratio*backgroundData:size())
-local bgTrSize = math.floor(.953*backgroundData:size())
+local bgTrSize = math.floor(.888*backgroundData:size())
 local bgTeSize = math.floor((backgroundData:size()-bgTrSize))
 
 trSize = carTrSize + bgTrSize
