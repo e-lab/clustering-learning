@@ -9,6 +9,10 @@ require 'image'   -- to visualize the dataset
 require 'nn'      -- provides all sorts of trainable modules/layers
 require 'Dropout'
 
+--[[opt={}
+opt.dropout = .5
+classes = {1,2,3,4}]]
+
 if opt.type == 'cuda' then
    nn.SpatialConvolutionMM = nn.SpatialConvolution
 end

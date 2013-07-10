@@ -13,7 +13,7 @@ if not opt then
    opt = lapp [[
       --German                                  Use the German road sign dataset
       --lim                (default 50)         at least <lim> examples per sign, max 1000
-      --maxBg              (1e9)                max number of background samples
+      --maxBg              (default 1e9)        max number of background samples
       --samplepercar       (default 6)          number of the patch to extract from per car (bounding box)
       --dataStop                                use German stop signs
       --kittiRatio         (default 0.8)        train/tot ratio for kitti dataset
@@ -24,6 +24,7 @@ opt = opt or {}
 
 -- Parameters ----------------------------------------------------------------
 torch.setnumthreads(3)
+torch.setdefaulttensortype('torch.FloatTensor')
 
 -- Main IF -------------------------------------------------------------------
 if paths.filep('train.t7') and paths.filep('test.t7') then
@@ -58,7 +59,7 @@ else
    local datasets = {
       'data-person',
       roadSign,
-      'data-kitti'
+      'data-kitti2'
    }
 
    nbClasses = {}
