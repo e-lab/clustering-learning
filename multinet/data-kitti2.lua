@@ -9,8 +9,8 @@ trainData = kitti.trainData
 trSize = trainData:size()
 testData = kitti.testData
 teSize = testData:size()
-trainData.labels =trainData.labels:float()
-testData.labels = testData.labels:float()
+trainData.labels = trainData.labels:float()
+testData.labels =  testData.labels:float()
 
 image.display{image=trainData.data[{{kitti.bgTrSize+1-64,kitti.bgTrSize+64}}], nrow=16, zoom=2, legend = 'Train data'}
 image.display{image=testData.data[{{kitti.bgTeSize+1-64,kitti.bgTeSize+64}}], nrow=16, zoom=2, legend = 'Test data'}

@@ -334,9 +334,13 @@ print()
 
 -- Preprocessing -------------------------------------------------------------
 -- dofile 'preprocessing.lua'
+kitti = {}
+kitti.trainData = trainData
+kitti.testData  = testData
+torch.save('kitti.t7',kitti)
 
 -- Exports -------------------------------------------------------------------
-return {
+--[[return {
    trainData = trainData,
    testData = testData
-}
+}]]
