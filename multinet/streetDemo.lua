@@ -57,13 +57,24 @@ while true do
 
    distribution = net:forward(imgSCN)
    map = torch.Tensor(3,(#distribution)[2],(#distribution)[3])
+   th = -.05
+   distribution[1]:apply(function(x) return (x > th) and x or -500 end)
+   distribution[2]:apply(function(x) return (x > th) and x or -500 end)
+   distribution[4]:apply(function(x) return (x > th) and x or -500 end)
+   -- for c = 1,4 do
+   --    gnuplot.figure(c)
+   --    gnuplot.hist(distribution[c])
+   --    gnuplot.title('Classe ' .. c)
+   -- end
    map[{ {1,2},{},{} }] = distribution[{ {1,2},{},{} }]
    map[3] = distribution[4]
+   --map[3] = distribution[3]
    _,m = distribution:max(1)
    maxMap = torch.Tensor(map:size())
    maxMap[1] = m:eq(1)
    maxMap[2] = m:eq(2)
    maxMap[3] = m:eq(4)
+   --maxMap[3] = m:eq(3)
    masc = image.scale(maxMap,opt.width,opt.height,'simple'):float()
    overlaid = masc + currentFrame
    win = image.display{image=overlaid,win=win,zoom=opt.zoom,min=0,max=2}
@@ -71,4 +82,5 @@ while true do
    -- win3 = image.display{image=masc,win=win3,zoom=opt.zoom}
    -- win4 = image.display{image=currentFrame,win=win4,zoom=opt.zoom}
    -- io.read()
+   return
 end
