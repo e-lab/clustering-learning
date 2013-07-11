@@ -525,6 +525,14 @@ if opt.display then
    testData:display{title='test set'}
 end
 
+-- Global functions ----------------------------------------------------------
+function cat(a,b)
+   if a and b then
+      return torch.cat(a,b,1)
+   else
+      return a or b
+   end
+end
 
 -- ec added:force cleanup
 collectgarbage()
@@ -695,12 +703,18 @@ function epoch()
                ['Pixelwise Accuracy [%] (train set)'] = trainConfusion.totalValid * 100,
                ['Average Per-Class Accuracy [%] (test set)'] = testConfusion.averageValid * 100,
                ['Pixelwise Accuracy [%] (test set)'] = testConfusion.totalValid * 100}
+
+   trAc = cat(trAc, torch.Tensor({trainConfusion.totalValid * 100}))
+   teAc = cat(teAc, torch.Tensor({ testConfusion.totalValid * 100}))
+
    if opt.plot then
       logger:style {['Average Per-Class Accuracy [%] (train set)'] = {'+','~ 1e-3'},
                     ['Pixelwise Accuracy [%] (train set)'] = {'+','~ 1e-3'},
                     ['Average Per-Class Accuracy [%] (test set)'] = {'+','~ 1e-3'},
                     ['Pixelwise Accuracy [%] (test set)'] = {'+','~ 1e-3'}}
       logger:plot()
+      gnuplot.plot({'Train accuracy',trAc,'-'},{'Test accuracy',teAc,'-'})
+      gnuplot.xlabel('Epochs')
    end
 
    -- reset matrices
