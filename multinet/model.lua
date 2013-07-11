@@ -9,6 +9,10 @@ require 'image'   -- to visualize the dataset
 require 'nn'      -- provides all sorts of trainable modules/layers
 require 'Dropout'
 
+--[[opt={}
+opt.dropout = .5
+classes = {1,2,3,4}]]
+
 if opt.type == 'cuda' then
    nn.SpatialConvolutionMM = nn.SpatialConvolution
 end
@@ -19,16 +23,14 @@ end
 
 print '==> Defining network parameters:'
 
-local nnf1,nnf2,nnf3  = 1,1,1         -- number of frames at each layer
-local nk0,nk1,nk2,nk3 = 3,16,32,64    -- nb of features
-local is0,is1,is2,is3 = 15,7,5,5      -- size of kernels
-local ss1,ss2,ss3     = 2,2,4         -- size of subsamplers (strides)
-local hiddens         = 64            -- nb of hidden features for top perceptron (0=linear classifier)
-local cl_nk1,cl_nk2   = nk3, hiddens  -- dimensions for top perceptron
-local ivch            = 3
+local nk1,nk2,nk3   = 16,32,64    -- nb of features
+local is1,is2,is3   = 7,5,5      -- size of kernels
+local ss1,ss2,ss3   = 2,2,4         -- size of subsamplers (strides)
+local hiddens       = 64            -- nb of hidden features for top perceptron (0=linear classifier)
+local cl_nk1,cl_nk2 = nk3, hiddens  -- dimensions for top perceptron
+local ivch          = 3
 
--- Old net
---[[nnf1,nnf2,nnf3  = 1,1,1             -- number of frames at each layer
+--[[ Old net
 nk0,nk1,nk2,nk3 = 3,16,128,256      -- nb of features
 is0,is1,is2,is3 = 15,7,7,7          -- size of kernels
 ss1,ss2         = 2,2               -- size of subsamplers (strides)
@@ -92,7 +94,7 @@ for _,layer in ipairs(classifier.modules) do
    end
 end
 
-local model = nn.Sequential()
+model = nn.Sequential()
 model:add(CNN)
 model:add(classifier)
 

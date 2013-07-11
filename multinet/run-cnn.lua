@@ -32,10 +32,11 @@ opt = lapp[[
       --seed               (default 1)          use fixed seed for randomized initialization
       --German                                  use the German road sign dataset
       --lim                (default 50)         at least <lim> examples per sign, max 1000
-      --maxBg              (default 4170)       max number of background samples
+      --maxBg              (default 1e9)        max number of background samples
       --samplepercar       (default 6)          number of the patch to extract from per car (bounding box)
       --visualize                               show some outputs while loading the datasets
       --dataStop                                use German stop signs
+      --kittiRatio         (default 0.8)        train/tot ratio for kitti dataset
 ]]
 
 --[[dname,fname = sys.fpath()

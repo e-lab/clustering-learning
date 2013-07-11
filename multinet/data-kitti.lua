@@ -41,7 +41,7 @@ if not opt then
    cmd:option('-height',      46,     'height of extracted patch')
    cmd:option('-ratio',       0.8,    'ratio of train to test dataset split')
    cmd:option('-samplepercar',6,      'number of the patch to extract from per car (bounding box)')
-   cmd:option('-maxBg',       false,  'max number of background samples')
+   cmd:option('-maxBg',       1e9,  'max number of background samples')
 
    cmd:text()
    opt = cmd:parse(arg or {}) -- pass parameters to training files:
@@ -52,7 +52,7 @@ opt.seed = opt.seed or 1
 opt.threads = opt.threads or 3
 opt.height = opt.height or 46
 opt.width  = opt.width  or 46
-opt.ratio = opt.ratio or .8
+opt.ratio = opt.kittiRatio or opt.ratio or .8
 opt.samplepercar = opt.samplepercar or 6
 
 -- Parameters ----------------------------------------------------------------
@@ -269,18 +269,22 @@ iter = iter + 1
 xlua.progress(iter,tot)
 
 
-print '==> split dataset into train/test datasets'
+print('==> split dataset into train/test datasets (ratio: ' .. opt.ratio .. ')')
 
 local carTrSize = math.floor(opt.ratio*carData:size())
 local carTeSize = math.floor((carData:size()-carTrSize))
 local shuffleCar = torch.randperm(carData:size())
+-- local carTeSize = 550 -- average of testing samples for <pedestrian> and <stop>
 
 local shuffleBg = torch.randperm(backgroundData:size())
-if opt.maxBg then
-   lower = (opt.maxBg < backgroundData:size()) and opt.maxBg or backgroundData:size()
+if opt.maxBg ~= 1e9 then
+   print('       - Max bg size: ' .. backgroundData:size())
+   local lower = (opt.maxBg < backgroundData:size()) and opt.maxBg or backgroundData:size()
    backgroundData.size = function() return lower end
+   print('       - Bg size set to: ' .. lower)
 end
-local bgTrSize = math.floor(opt.ratio*backgroundData:size())
+-- local bgTrSize = math.floor(opt.ratio*backgroundData:size())
+local bgTrSize = math.floor(.743*backgroundData:size())
 local bgTeSize = math.floor((backgroundData:size()-bgTrSize))
 
 trSize = carTrSize + bgTrSize
@@ -290,7 +294,7 @@ teSize = carTeSize + bgTeSize
 trainData = {
    data   = zeros(trSize, 3, opt.width, opt.width),
    labels = zeros(trSize),
-   size   = function() return trSize end
+   size   = function() return (#trainData.labels)[1] end
 }
 for i = 1,bgTrSize do
    trainData.data[i] = backgroundData.data[shuffleBg[i]]
@@ -306,7 +310,7 @@ image.display{image=trainData.data[{{bgTrSize+1-64,bgTrSize+64}}], nrow=16, zoom
 testData  = {
    data   = zeros(teSize, 3, opt.width, opt.width),
    labels = zeros(teSize),
-   size   = function() return teSize end
+   size   = function() return (#testData.labels)[1] end
 }
 for i = 1,bgTeSize do
    testData.data[i] = backgroundData.data[shuffleBg[i+bgTrSize]]
@@ -329,10 +333,14 @@ print(testData)
 print()
 
 -- Preprocessing -------------------------------------------------------------
-dofile 'preprocessing.lua'
+-- dofile 'preprocessing.lua'
+kitti = {}
+kitti.trainData = trainData
+kitti.testData  = testData
+torch.save('kitti.t7',kitti)
 
 -- Exports -------------------------------------------------------------------
-return {
+--[[return {
    trainData = trainData,
    testData = testData
-}
+}]]
