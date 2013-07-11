@@ -11,6 +11,7 @@ require 'nnx'
 require 'Dropout'
 require 'image'
 require 'ffmpeg'
+require 'PyramidPacker'
 
 -- Parsing the command line --------------------------------------------------
    print '==> Processing options'
@@ -47,8 +48,15 @@ else
    video = ffmpeg.Video{path=opt.video, width=opt.width, height=opt.height, length=opt.time, seek=opt.seek, encoding='jpg', delete=false}
 end
 
+-- logspace(-1,0,11)
+scalesR = {0.1000, 0.1259, 0.1585, 0.1995, 0.2512, 0.3162, 0.3981, 0.5012, 0.6310, 0.7943, 1.0000}
+scales = {}; for i,s in ipairs(scalesR) do scales[#scalesR-i+1] = s end
+packer = nn.PyramidPacker(net, scales)
+
 while true do
-   currentFrame = video:forward()
+   currentFrame = packer(video:forward())
+   --image.display(currentFrame)
+   --io.read()
    imgYUV = image.rgb2yuv(currentFrame)
    imgSCN = torch.Tensor(imgYUV:size())
    for c,channel in ipairs(channels) do
@@ -75,12 +83,14 @@ while true do
    maxMap[2] = m:eq(2)
    maxMap[3] = m:eq(4)
    --maxMap[3] = m:eq(3)
-   masc = image.scale(maxMap,opt.width,opt.height,'simple'):float()
+   masc = torch.Tensor(currentFrame:size())
+   image.scale(masc,maxMap,'simple')
+   --masc = image.scale(maxMap,opt.width,opt.height,'simple'):float()
    overlaid = masc + currentFrame
    win = image.display{image=overlaid,win=win,zoom=opt.zoom,min=0,max=2}
    -- win2 = image.display{image=maxMap,zoom=55,win=win2}
    -- win3 = image.display{image=masc,win=win3,zoom=opt.zoom}
    -- win4 = image.display{image=currentFrame,win=win4,zoom=opt.zoom}
    -- io.read()
-   return
+   --return
 end
