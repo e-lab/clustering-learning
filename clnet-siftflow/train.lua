@@ -713,6 +713,7 @@ function epoch()
                     ['Average Per-Class Accuracy [%] (test set)'] = {'+','~ 1e-3'},
                     ['Pixelwise Accuracy [%] (test set)'] = {'+','~ 1e-3'}}
       logger:plot()
+      gnuplot.figure(1)
       gnuplot.plot({'Train accuracy',trAc,'-'},{'Test accuracy',teAc,'-'})
       gnuplot.xlabel('Epochs')
    end
