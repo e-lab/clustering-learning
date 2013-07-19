@@ -56,8 +56,14 @@ function test(testData)
       -- create mini batch
       local idx = 1
       for i = t,t+opt.batchSize-1 do
-         inputs[idx] = testData.data[i]
-         targets[idx] = testData.labels[i]
+         if opt.siftflow then
+            local a = testData[idx]
+            inputs[idx] = preproc:forward(a[1])
+            targets[idx] = a[2]:gt(0):float() * l
+         else
+            inputs[idx] = testData.data[i]
+            targets[idx] = testData.labels[i]
+         end
          idx = idx + 1
       end
 

@@ -42,6 +42,57 @@ ivch            = 3]]
 local dropout = nn.Dropout(opt.dropout)
 
 ----------------------------------------------------------------------
+if opt.siftflow then
+   local filterSize = 15
+   local planes = 3
+   local normthres = 1e-1
+
+   -- Preprocessor (normalizer)
+   preproc = nn.Sequential()
+   if opt.preproc == 'norm(rgb)' then
+      preproc:add(nn.SpatialContrastiveNormalization(planes, image.gaussian1D(filterSize), normthres))
+   elseif opt.preproc == 'norm(yuv)' then
+      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+      preproc:add(nn.SpatialContrastiveNormalization(planes, image.gaussian1D(filterSize), normthres))
+   elseif opt.preproc == 'norm(y)+norm(u)+norm(v)' then
+      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+      do
+         normer = nn.ConcatTable()
+         for i = 1,3 do
+            local n = nn.Sequential()
+            n:add(nn.Narrow(1,i,1))
+            n:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(filterSize), normthres))
+            normer:add(n)
+         end
+      end
+      preproc:add(normer)
+      preproc:add(nn.JoinTable(1))
+   elseif opt.preproc == 'norm(y)+uv' then
+      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+      do
+         ynormer = nn.Sequential()
+         ynormer:add(nn.Narrow(1,1,1))
+         ynormer:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(filterSize), normthres))
+         normer = nn.ConcatTable()
+         normer:add(ynormer)
+         normer:add(nn.Narrow(1,2,2))
+      end
+      preproc:add(normer)
+      preproc:add(nn.JoinTable(1))
+   elseif opt.preproc == 'norm(y)' then
+      planes = 1
+      preproc:add(nn.SpatialColorTransform('rgb2y'))
+      preproc:add(nn.SpatialContrastiveNormalization(1, image.gaussian1D(filterSize), normthres))
+   elseif opt.preproc == 'rgb' then
+      preproc:add(nn.Identity())
+   elseif opt.preproc == 'yuv' then
+      preproc:add(nn.SpatialColorTransform('rgb2yuv'))
+   else
+      print('incorrect arg: preproc')
+      op:help()
+      os.exit()
+   end
+end
 
 print '==> generating CNN network:'
 

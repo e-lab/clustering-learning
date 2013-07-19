@@ -124,8 +124,16 @@ function train(trainData)
       -- create mini batch
       local idx = 1
       for i = t,t+opt.batchSize-1 do
-         x[idx] = trainData.data[shuffle[i]]
-         yt[idx] = trainData.labels[shuffle[i]]
+         if opt.siftflow then
+            local a = trainData[idx]
+            --win2 = image.display{image=a[1],win=win2}
+            x[idx] = preproc:forward(a[1][{ {},{a[4]-23+1,a[4]+23},{a[3]-23+1,a[3]+23} }])
+            --win = image.display{image=x[idx],win=win}
+            yt[idx] = a[2] * l
+         else
+            x[idx] = trainData.data[shuffle[i]]
+            yt[idx] = trainData.labels[shuffle[i]]
+         end
          idx = idx + 1
       end
 
