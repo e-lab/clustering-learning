@@ -15,6 +15,7 @@ opt = opt or {}
 opt.dataset = '../datasets/siftflow_dataset'
 opt.sampling = 'equal'
 opt.type = 'double'
+opt.www = 'http://data.neuflow.org/data/siftflow_dataset.tgz'
 local filter = {ratio=0.1, size=25, step=4}
 patchSize = 46
 
@@ -58,7 +59,7 @@ labelGenerator = function(dataset, full_sample, full_mask, sample, mask, ctr_tar
                     return {full_sample, target, ctr_x, ctr_y, box_size}
                  end
 
-trainData = DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
+trainData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            verbose=true,
                            rawSampleMaxSize=256,
                            nbClasses=#classes,
@@ -74,7 +75,7 @@ trainData = DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            patchSize=patchSize}
 
 -- load test set
-testData = DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
+testData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
                           verbose=true,
                           nbClasses=#classes,
                           rawSampleMaxSize=256,
