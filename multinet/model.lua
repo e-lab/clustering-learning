@@ -7,7 +7,7 @@
 require 'torch'   -- torch
 require 'image'   -- to visualize the dataset
 require 'nn'      -- provides all sorts of trainable modules/layers
-require 'Dropout'
+--require 'Dropout'
 
 --[[opt={}
 opt.dropout = .5
