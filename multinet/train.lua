@@ -181,8 +181,9 @@ function train(trainData)
       trainLogger:plot()
    end
 
-   -- save/log current net
-   saveNet('multinet.net')
+   -- saving moved to testing script with conditional test on testing accuracy improvement
+   --[[ save/log current net
+   saveNet('multinet.net')]]
 
    -- next epoch
    confusion:zero()

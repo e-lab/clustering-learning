@@ -17,8 +17,11 @@ local model = t.model
 local loss = t.loss
 local dropout = t.dropout
 
--- This matrix records the current confusion across classes (<classes> is a global var.)
-local confusion = optim.ConfusionMatrix(classes)
+-- This matrix records the current testConfusion across classes (<classes> is a global var.)
+local testConfusion = optim.ConfusionMatrix(classes)
+
+-- Storing max test accuracy (for conditional network saving)
+local maxTestAccSoFar = 0
 
 -- Logger:
 local testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
@@ -70,9 +73,9 @@ function test(testData)
       -- test sample
       local preds = model:forward(inputs)
 
-      -- confusion
+      -- testConfusion
       for i = 1,opt.batchSize do
-         confusion:add(preds[i], targets[i])
+         testConfusion:add(preds[i], targets[i])
       end
    end
    xlua.progress(testData:size(), testData:size())
@@ -82,17 +85,24 @@ function test(testData)
    time = time / testData:size()
    print("\n==> time to test 1 sample = " .. (time*1000) .. 'ms')
 
-   -- print confusion matrix
-   print(confusion)
+   -- print testConfusion matrix
+   print(testConfusion)
 
    -- update log/plot
-   testLogger:add{['% mean class accuracy (test set)'] = confusion.totalValid * 100}
+   testLogger:add{['% mean class accuracy (test set)'] = testConfusion.totalValid * 100}
    if opt.plot then
       testLogger:style{['% mean class accuracy (test set)'] = '-'}
       testLogger:plot()
    end
 
-   confusion:zero()
+   -- save current net IF test accuracy has increased
+   if testConfusion.totalValid > maxTestAccSoFar then
+      print('==> test accuracy has increased to ' .. testConfusion.totalValid*100 .. '%, (+' .. (testConfusion.totalValid-maxTestAccSoFar)*100 .. '%) => saving network')
+      maxTestAccSoFar = testConfusion.totalValid
+      saveNet('multinet.net')
+   end
+
+   testConfusion:zero()
 
    -- dropout -> on
    dropout.train = true
