@@ -56,7 +56,8 @@ print '==> allocating minibatch memory'
 
 local x = torch.Tensor(opt.batchSize,trainData.data:size(2),trainData.data:size(3),trainData.data:size(4))
 local yt = torch.Tensor(opt.batchSize)
-if opt.type == 'cuda' then 
+if opt.type == 'cuda' then
+   print '  + sending data to the GPU'
    x = x:cuda()
    yt = yt:cuda()
 end

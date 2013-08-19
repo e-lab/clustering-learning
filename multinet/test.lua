@@ -29,7 +29,9 @@ local testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 -- Batch test:
 local inputs = torch.Tensor(opt.batchSize,testData.data:size(2),testData.data:size(3),testData.data:size(4))
 local targets = torch.Tensor(opt.batchSize)
-if opt.type == 'cuda' then 
+print '==> allocating minibatch memory'
+if opt.type == 'cuda' then
+   print '  + sending data to the GPU'
    inputs = inputs:cuda()
    targets = targets:cuda()
 end

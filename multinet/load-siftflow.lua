@@ -14,7 +14,7 @@ l = torch.range(1,34)
 opt = opt or {}
 opt.dataset = '../datasets/siftflow_dataset'
 opt.sampling = 'equal'
-opt.type = 'double'
+--opt.type = 'double'
 opt.www = 'http://data.neuflow.org/data/siftflow_dataset.tgz'
 local filter = {ratio=0.1, size=25, step=4}
 patchSize = 46
@@ -69,7 +69,7 @@ trainData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            samplingFilter=filter,
                            infiniteSet=true,
                            labelGenerator=labelGenerator,
-                           cacheFile='cached-256-'..patchSize..'-'..opt.type,
+                           cacheFile='cached-256-'..patchSize..'-'..'double',--opt.type,
                            nbPatchPerSample=5,
                            preloadSamples=false,
                            patchSize=patchSize}
@@ -81,7 +81,7 @@ testData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
                           rawSampleMaxSize=256,
                           classNames=classes,
                           classToSkip=1,
-                          cacheFile='cached-256-'..patchSize..'-'..opt.type,
+                          cacheFile='cached-256-'..patchSize..'-'..'double',--opt.type,
                           preloadSamples=false,
                           patchSize=patchSize}
 

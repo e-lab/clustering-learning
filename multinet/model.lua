@@ -23,10 +23,10 @@ end
 
 print '==> Defining network parameters:'
 
-local nk1,nk2,nk3   = 16,32,64    -- nb of features
+local nk1,nk2,nk3   = 16,64,256--32,64    -- nb of features
 local is1,is2,is3   = 7,5,5      -- size of kernels
 local ss1,ss2,ss3   = 2,2,4         -- size of subsamplers (strides)
-local hiddens       = 64            -- nb of hidden features for top perceptron (0=linear classifier)
+local hiddens       = 1024--64            -- nb of hidden features for top perceptron (0=linear classifier)
 local cl_nk1,cl_nk2 = nk3, hiddens  -- dimensions for top perceptron
 local ivch          = 3
 
@@ -95,19 +95,45 @@ if opt.siftflow then
 end
 
 print '==> generating CNN network:'
-
 local CNN = nn.Sequential()
-CNN:add(nn.SpatialConvolutionMM(ivch, nk1, is1, is1))
-CNN:add(nn.Threshold())
-CNN:add(nn.SpatialMaxPooling(ss1,ss1,ss1,ss1))
--- 2nd layer 
-CNN:add(nn.SpatialConvolutionMM(nk1,nk2, is2, is2))
-CNN:add(nn.Threshold())
-CNN:add(nn.SpatialMaxPooling(ss2,ss2,ss2,ss2))
--- 3rd layer
-CNN:add(nn.SpatialConvolutionMM(nk2,nk3, is3, is3))
-CNN:add(nn.Threshold())
-CNN:add(nn.SpatialMaxPooling(ss3,ss3,ss3,ss3))
+
+if opt.type == 'cuda' then
+   -- CUDA needs the batch dimension to be the inner most (=> transposition)
+   CNN:add(nn.Transpose({1,4},{1,3},{1,2}))
+
+   -- stage 1: conv+max
+   CNN:add(nn.SpatialConvolutionCUDA(ivch, nk1, is1, is1))
+   CNN:add(nn.Threshold())
+   CNN:add(nn.SpatialMaxPoolingCUDA(ss1, ss1, ss1, ss1))
+
+   -- stage 2: conv+max
+   CNN:add(nn.SpatialConvolutionCUDA(nk1, nk2, is2, is2))
+   CNN:add(nn.Threshold())
+   CNN:add(nn.SpatialMaxPoolingCUDA(ss2, ss2, ss2, ss2))
+
+   -- stage 3: conv+max
+   CNN:add(nn.SpatialConvolutionCUDA(nk2, nk3, is3, is3))
+   CNN:add(nn.Threshold())
+   CNN:add(nn.SpatialMaxPoolingCUDA(ss3, ss3, ss3, ss3))
+
+   -- CUDA reverse the transposition for integrability
+   CNN:add(nn.Transpose({1,4},{2,4},{3,4}))
+else
+   -- stage 1: conv+max
+   CNN:add(nn.SpatialConvolutionMM(ivch, nk1, is1, is1))
+   CNN:add(nn.Threshold())
+   CNN:add(nn.SpatialMaxPooling(ss1, ss1, ss1, ss1))
+
+   -- stage 2: conv+max
+   CNN:add(nn.SpatialConvolutionMM(nk1, nk2, is2, is2))
+   CNN:add(nn.Threshold())
+   CNN:add(nn.SpatialMaxPooling(ss2, ss2, ss2, ss2))
+
+   -- stage 2: conv+max
+   CNN:add(nn.SpatialConvolutionMM(nk2, nk3, is3, is3))
+   CNN:add(nn.Threshold())
+   CNN:add(nn.SpatialMaxPooling(ss3, ss3, ss3, ss3))
+end
 
 ----------------------------------------------------------------------
 -- Classifier (trainable with mini-batch)

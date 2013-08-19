@@ -45,10 +45,43 @@ opt = lapp[[
 parsed = tostring({'--nfeatures','--kernelsize','--subsize','--pooling','--hiddens','--slacmodel','--cnnmodel'})
 opt.save = opt.save:gsub('PARAMS', parsed)]]
 
+print('Options:')
+print('  + learningrate:     ', opt.learningrate     )
+print('  + learningRateDecay:', opt.learningRateDecay)
+print('  + dropout:          ', opt.dropout          )
+print('  + weightDecay:      ', opt.weightDecay      )
+print('  + momentum:         ', opt.momentum         )
+print('  + batchSize:        ', opt.batchSize        )
+print('  + threads:          ', opt.threads          )
+print('  + type:             ', opt.type             )
+print('  + devid:            ', opt.devid            )
+print('  + save:             ', opt.save             )
+print('  + plot:             ', opt.plot             )
+print('  + log:              ', opt.log              )
+print('  + seed:             ', opt.seed             )
+print('  + German:           ', opt.German           )
+print('  + lim:              ', opt.lim              )
+print('  + maxBg:            ', opt.maxBg            )
+print('  + samplepercar:     ', opt.samplepercar     )
+print('  + visualize:        ', opt.visualize        )
+print('  + dataStop:         ', opt.dataStop         )
+print('  + kittiRatio:       ', opt.kittiRatio       )
+print('  + siftflow:         ', opt.siftflow         )
+print('  + preproc:          ', opt.preproc          )
+
 torch.setdefaulttensortype('torch.FloatTensor')
 torch.manualSeed(opt.seed)
 torch.setnumthreads(opt.threads)
 print('Training: using ' .. opt.threads .. ' threads')
+
+-- type:
+if opt.type == 'cuda' then
+   print('==> switching to CUDA')
+   require 'cunn'
+   cutorch.setDevice(opt.devid)
+   print('==> using GPU #' .. cutorch.getDevice())
+   print(cutorch.getDeviceProperties(opt.devid))
+end
 
 if opt.log then
    xlua.log(sys.dirname(opt.save) .. '/session.txt')
