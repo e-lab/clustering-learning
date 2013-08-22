@@ -491,7 +491,7 @@ testConfusion  = optim.ConfusionMatrix(classes)
 logger         = optim.Logger(sys.dirname(opt.save) .. '/log.txt')
 
 -- train data
-trainData = DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
+trainData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            verbose=true,
                            rawSampleMaxSize=256,
                            nbClasses=#classes,
@@ -507,7 +507,7 @@ trainData = DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            patchSize=patchSize}
 
 -- load test set
-testData = DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
+testData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
                           verbose=true,
                           nbClasses=#classes,
                           rawSampleMaxSize=256,
