@@ -8,6 +8,7 @@ require 'xlua'
 require 'image'
 require 'nnx'
 require 'imgraph'
+require 'optim'
 
 ----------------------------------------------------------------------
 -- Parse options
@@ -16,11 +17,11 @@ dname,fname = sys.fpath()
 op = xlua.OptionParser('%prog [options]')
 
 op:option{'-n', '--network', action='store', dest='network',
-          help='path to existing [trained] network', req=true}
+          help='path to existing [trained] network', default='fovea.net'}
 
 op:option{'-d', '--dataset', action='store', dest='dataset',
           help='path to dataset',
-          default='/misc/LecunGroup/clement/siftflow_dataset'}
+          default='../datasets/siftflow_dataset'}
 
 op:option{'-dp', '--display', action='store_true', dest='display',
           help='show results live', default=false}
@@ -106,7 +107,7 @@ network.modules[2] = nn.SpatialClassifier(classifier)
 ----------------------------------------------------------------------
 -- Test network on dataset
 --
-confusion = nn.ConfusionMatrix(classes)
+confusion =  optim.ConfusionMatrix(classes)
 
 -- gaussian (a gaussian, really, is always useful)
 gaussian = image.gaussian(3)
@@ -121,7 +122,7 @@ if opt.save then
 end
 
 -- load test set
-testData = DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
+testData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
                           verbose=true,
                           nbClasses=#classes,
                           rawSampleMaxSize=width,
@@ -130,7 +131,7 @@ testData = DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
 
 for i = 1,#testData.rawdata do
    -- (0) confusion
-   sconfusion = nn.ConfusionMatrix(classes)
+   sconfusion = optim.ConfusionMatrix(classes)
 
    -- (1) load next sample to test
    testData:loadSample(i)
