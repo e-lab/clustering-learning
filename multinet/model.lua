@@ -26,7 +26,7 @@ print '==> Defining network parameters:'
 local nk1,nk2,nk3   = 16,64,256--32,64    -- nb of features
 local is1,is2,is3   = 7,5,5      -- size of kernels
 local ss1,ss2,ss3   = 2,2,4         -- size of subsamplers (strides)
-local hiddens       = 1024--64            -- nb of hidden features for top perceptron (0=linear classifier)
+local hiddens       = 256--1024--64            -- nb of hidden features for top perceptron (0=linear classifier)
 local cl_nk1,cl_nk2 = nk3, hiddens  -- dimensions for top perceptron
 local ivch          = 3
 
@@ -143,7 +143,7 @@ classifier:add(nn.Reshape(cl_nk1))
 classifier:add(nn.Linear(cl_nk1,cl_nk2))
 classifier:add(nn.Threshold())
 classifier:add(dropout)
-classifier:add(nn.Linear(cl_nk2,#classes))
+classifier:add(nn.Linear(cl_nk2,#nclasses))
 
 -- final stage: log probabilities
 classifier:add(nn.LogSoftMax())

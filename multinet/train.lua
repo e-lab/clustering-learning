@@ -28,7 +28,7 @@ local dropout = t.dropout
 print '==> defining some tools'
 
 -- This matrix records the current confusion across classes
-local confusion = optim.ConfusionMatrix(classes)
+local confusion = optim.ConfusionMatrix(nclasses)
 
 -- Log results to files
 local trainLogger = optim.Logger(paths.concat(opt.save, 'train.log'))
@@ -89,7 +89,7 @@ function saveNet(name)
    os.execute('mkdir -p ' .. sys.dirname(filename))
    print('==> saving model to '..filename)
    modelToSave = model:clone()
-   netLighter(modelToSave)
+   --netLighter(modelToSave)
    torch.save(filename, modelToSave)
 end
 
@@ -145,7 +145,6 @@ function train(trainData)
 
          -- evaluate function for complete mini batch
          local y = model:forward(x)
-
          -- estimate df/dW
          local dE_dy = loss:backward(y,yt)
          model:backward(x,dE_dy)

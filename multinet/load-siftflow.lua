@@ -8,8 +8,15 @@ local classes = {'unknown',
            'grass', 'moon', 'mountain', 'person', 'plant', 'pole', 'river',
            'road', 'rock', 'sand', 'sea', 'sidewalk', 'sign', 'sky',
            'staircase', 'streetlight', 'sun', 'tree', 'window'}
+local nclasses = {'unknown',
+           'building', 'bus',
+           'car', 
+           'grass', 'person', 
+           'road',  'sign', 'sky',
+           'tree'}
 
-l = torch.range(1,34)
+
+l = torch.range(1,#nclasses)
 
 opt = opt or {}
 opt.dataset = '../datasets/siftflow_dataset'
@@ -48,8 +55,23 @@ labelGenerator = function(dataset, full_sample, full_mask, sample, mask, ctr_tar
                     if opt.distributions then
                        target = distribution(mask)
                     else
-                       target = torch.Tensor(#classes):zero()
-                       target[ctr_target] = 1
+                       target = torch.Tensor(#nclasses):zero()
+                       if (ctr_target==7) then
+                       target[2] = 1 end
+                       if(ctr_target==9) then
+                       target[3] = 1 end
+                       if(ctr_target==16) then
+                       target[4] = 1 end
+                       if(ctr_target==19) then
+                       target[5] = 1 end
+                       if(ctr_target==23) then
+                       target[6] = 1 end
+                       if(ctr_target==28) then
+                       target[7] = 1 end
+                       if(ctr_target==29) then
+                       target[8] = 1 end
+                       if(ctr_target==33) then
+                       target[9] = 1 end
                     end
                     -- display sample
                     if opt.display then 
@@ -58,13 +80,14 @@ labelGenerator = function(dataset, full_sample, full_mask, sample, mask, ctr_tar
                     -- return
                     return {full_sample, target, ctr_x, ctr_y, box_size}
                  end
-
+classToSkip = {1,2,3,4,5,6,8,10,11,12,13,14,15,17,18,20,21,22,24,25,26,27,30,31,32,34}
+--classToSkip = {2}
 trainData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
                            verbose=true,
                            rawSampleMaxSize=256,
                            nbClasses=#classes,
                            classNames=classes,
-                           classToSkip=1,
+                           classToSkip=classToSkip,
                            samplingMode=opt.sampling,
                            samplingFilter=filter,
                            infiniteSet=true,
@@ -76,15 +99,21 @@ trainData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'train'),
 
 -- load test set
 testData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
-                          verbose=true,
-                          nbClasses=#classes,
-                          rawSampleMaxSize=256,
-                          classNames=classes,
-                          classToSkip=1,
-                          cacheFile='cached-256-'..patchSize..'-'..'double',--opt.type,
-                          preloadSamples=false,
-                          patchSize=patchSize}
-
+                           verbose=true,
+                           rawSampleMaxSize=256,
+                           nbClasses=#classes,
+                           classNames=classes,
+                           classToSkip=classToSkip,
+                           samplingMode=opt.sampling,
+                           samplingFilter=filter,
+                           infiniteSet=true,
+                           labelGenerator=labelGenerator,
+                           cacheFile='cached-256-'..patchSize..'-'..'double',--opt.type,
+                           nbPatchPerSample=5,
+                           preloadSamples=false,
+                           patchSize=patchSize}
+print('trainData ', trainData)
 trainData.data = torch.Tensor(1,3,46,46)
 testData.data = torch.Tensor(1,3,46,46)
 testData.size = function() return 5000 end -- instad of 20k
+print('trainData2 ', trainData)

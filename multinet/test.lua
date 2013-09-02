@@ -18,7 +18,7 @@ local loss = t.loss
 local dropout = t.dropout
 
 -- This matrix records the current testConfusion across classes (<classes> is a global var.)
-local testConfusion = optim.ConfusionMatrix(classes)
+local testConfusion = optim.ConfusionMatrix(nclasses)
 
 -- Storing max test accuracy (for conditional network saving)
 local maxTestAccSoFar = 0
@@ -63,8 +63,9 @@ function test(testData)
       for i = t,t+opt.batchSize-1 do
          if opt.siftflow then
             local a = testData[idx]
-            inputs[idx] = preproc:forward(a[1])
-            targets[idx] = a[2]:gt(0):float() * l
+            inputs[idx] = preproc:forward(a[1][{ {},{a[4]-23+1,a[4]+23},{a[3]-23+1,a[3]+23} }])
+            --win = image.display{image=x[idx],win=win}
+            targets[idx] = a[2] * l
          else
             inputs[idx] = testData.data[i]
             targets[idx] = testData.labels[i]
@@ -103,7 +104,7 @@ function test(testData)
       maxTestAccSoFar = testConfusion.totalValid
       saveNet('multinet.net')
    end
-
+   saveNet('multi2net.net')
    testConfusion:zero()
 
    -- dropout -> on
