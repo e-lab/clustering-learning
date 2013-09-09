@@ -87,4 +87,5 @@ testData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
 
 trainData.data = torch.Tensor(1,3,46,46)
 testData.data = torch.Tensor(1,3,46,46)
+print '==> Limiting the testing dataset to 5000 samples'
 testData.size = function() return 5000 end -- instad of 20k
