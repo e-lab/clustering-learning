@@ -8,7 +8,7 @@
 -- Requires ------------------------------------------------------------------
 require 'image'   -- to visualize the dataset
 require 'nn'      -- provides a normalization operator
-require 'unsup'
+--require 'unsup'
 require 'sys'
 require 'ffmpeg'
 require 'eex'

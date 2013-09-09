@@ -7,7 +7,6 @@
 -- Requires ------------------------------------------------------------------
 require 'image'
 require 'sys'
-require 'pl'
 require 'eex'
 require 'xlua'
 
