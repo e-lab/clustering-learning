@@ -8,6 +8,7 @@ local classes = {'unknown',
            'grass', 'moon', 'mountain', 'person', 'plant', 'pole', 'river',
            'road', 'rock', 'sand', 'sea', 'sidewalk', 'sign', 'sky',
            'staircase', 'streetlight', 'sun', 'tree', 'window'}
+torch.save('siftflowLabels.t7',classes)
 
 l = torch.range(1,34)
 

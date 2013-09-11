@@ -129,8 +129,17 @@ if opt.siftflow then
       'Window'
    }
 else
-   classes = {'Person'}
-   for i = 1, nbClasses[2]  do classes[#classes+1] = signLabels[i] end
+
+   local siftflowLabels = torch.load('siftflowLabels.t7')
+   local k
+   classes = {}
+   if opt.includeSiftflow then
+      for i = 1, nbClasses[1] do classes[#classes+1] = siftflowLabels[i] end
+      k = 3
+   else k = 2
+   end
+   table.insert(classes,'Person')
+   for i = 1, nbClasses[k]  do classes[#classes+1] = signLabels[i] end
    classes[#classes+1] = 'Background'
    classes[#classes+1] = 'Car'
 end

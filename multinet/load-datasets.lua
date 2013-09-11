@@ -17,6 +17,7 @@ if not opt then
       --samplepercar       (default 6)          number of the patch to extract from per car (bounding box)
       --dataStop                                use German stop signs
       --kittiRatio         (default 0.8)        train/tot ratio for kitti dataset
+      --includeSiftflow                         include siftflow dataset among other datasets
 ]]
 end
 
@@ -56,11 +57,14 @@ else
    elseif opt.dataStop then
       roadSign = 'data-stop'
    else roadSign = 'data-AmericanSign' end
-   local datasets = {
-      'data-person',
-      roadSign,
-      'data-kitti2'
-   }
+
+   local datasets = {}
+   if opt.includeSiftflow then
+      table.insert(datasets,'data-siftflow')
+   end
+   table.insert(datasets, 'data-person')
+   table.insert(datasets, roadSign)
+   table.insert(datasets, 'data-kitti2')
 
    nbClasses = {}
    local totNbClasses = {0}
