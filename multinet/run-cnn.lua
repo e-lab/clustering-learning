@@ -39,7 +39,8 @@ opt = lapp[[
       --kittiRatio         (default 0.8)                          train/tot ratio for kitti dataset
       --siftflow                                                  load the siftflow dataset instead:noh
       --preproc            (default 'norm(y)+norm(u)+norm(v)')    preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
-      --includeSiftflow                         include siftflow dataset among other datasets
+      --includeSiftflow                                           include siftflow dataset among other datasets
+      --small              (default false)                        uses a reduced version of the dataset (no shifting sample multiplication)
 ]]
 
 --[[dname,fname = sys.fpath()

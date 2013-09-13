@@ -34,41 +34,54 @@ local translate = 5
 
 -- Main program -------------------------------------------------------------
 print '==> creating a new training dataset from raw files:'
-trainDataTemp = {
+if opt.small then trSize = trSize/2 end
+local trainDataTemp = {
    data = torch.Tensor(trSize,3,height+2*translate,width+2*translate),
    labels = torch.zeros(trSize),
-   size = function() return trSize end
+   size = function() return (#trainDataTemp.labels)[1] end
 }
+if opt.small then trSize = trSize*2 end
 
 for i = 1,trSize/2 do
    local img = image.load(trNames[i])
    local w,h = (#img)[3],(#img)[2]
    local min = (w < h) and w or h
-   for j = -1,0 do
-      -- x = math.random(0,w-min)
-      -- y = math.random(0,h-min)
-      x = (j<0) and 0 or w-min
-      y = (j<0) and 0 or h-min
+   if opt.small then
+      x = math.random(0,w-min)
+      y = math.random(0,h-min)
       local imgCrp = image.crop(img,x,y,x+min,y+min)
-      image.scale(trainDataTemp.data[i*2+j],imgCrp)
+      image.scale(trainDataTemp.data[i],imgCrp)
+      xlua.progress(i,trSize/2)
+   else
+      for j = -1,0 do
+         x = (j<0) and 0 or w-min
+         y = (j<0) and 0 or h-min
+         local imgCrp = image.crop(img,x,y,x+min,y+min)
+         image.scale(trainDataTemp.data[i*2+j],imgCrp)
+      end
+      xlua.progress(i*2,trSize)
    end
-   xlua.progress(i*2,trSize)
 end
 
-print '       Translation/multiplication of the dataset'
-trainData = {
-   data = torch.Tensor(trSize*9,3,height,width),
-   labels = torch.zeros(trSize*9),
-   size = function() return trSize*9 end
-}
+if opt.small then
+   trainData = trainDataTemp
+   trainData.size = function() return (#trainData.labels)[1] end
+else
+   print '       Translation/multiplication of the dataset'
+   trainData = {
+      data = torch.Tensor(trSize*9,3,height,width),
+      labels = torch.zeros(trSize*9),
+      size = function() return trSize*9 end
+   }
 
-local idx = 0
-for i = 1,trSize do
-   for xCrop = 0,translate*2,translate do
-      for yCrop = 0,translate*2,translate do
-         idx = idx + 1
-         trainData.data[idx] = image.crop(trainDataTemp.data[i],xCrop,yCrop,xCrop+width,yCrop+height)
-         xlua.progress(idx,trSize*9)
+   local idx = 0
+   for i = 1,trSize do
+      for xCrop = 0,translate*2,translate do
+         for yCrop = 0,translate*2,translate do
+            idx = idx + 1
+            trainData.data[idx] = image.crop(trainDataTemp.data[i],xCrop,yCrop,xCrop+width,yCrop+height)
+            xlua.progress(idx,trSize*9)
+         end
       end
    end
 end
@@ -91,11 +104,13 @@ while line ~= nil do
 end
 teSize = teSize*2
 
+if opt.small then teSize = teSize/2 end
 local testDataTemp = {
    data = torch.Tensor(teSize,3,height+2*translate,width+2*translate),
    labels = torch.zeros(teSize),
-   size = function() return teSize end
+   size = function() return (#testDataTemp.labels)[1] end
 }
+if opt.small then teSize = teSize*2 end
 
 testDataFile:seek('set',0)
 line = testDataFile:read()
@@ -105,34 +120,46 @@ while line ~= nil do
       local img = image.load(tePath .. sys.split(line,';')[1])
       local w,h = (#img)[3],(#img)[2]
       local min = (w < h) and w or h
-      for j = -1,0 do
-         -- x = math.random(0,w-min)
-         -- y = math.random(0,h-min)
-         x = (j<0) and 0 or w-min
-         y = (j<0) and 0 or h-min
+      if opt.small then
+         x = math.random(0,w-min)
+         y = math.random(0,h-min)
          local imgCrp = image.crop(img,x,y,x+min,y+min)
          count = count + 1
          image.scale(testDataTemp.data[count],imgCrp)
+         xlua.progress(count,teSize/2)
+      else
+         for j = -1,0 do
+            x = (j<0) and 0 or w-min
+            y = (j<0) and 0 or h-min
+            local imgCrp = image.crop(img,x,y,x+min,y+min)
+            count = count + 1
+            image.scale(testDataTemp.data[count],imgCrp)
+         end
+         xlua.progress(count,teSize)
       end
-      xlua.progress(count,teSize)
    end
    line = testDataFile:read()
 end
 
-print '       Translation/multiplication of the dataset'
-testData = {
-   data = torch.Tensor(teSize*9,3,height,width),
-   labels = torch.zeros(teSize*9),
-   size = function() return teSize*9 end
-}
+if opt.small then
+   testData = testDataTemp
+   testData.size = function() return (#testData.labels)[1] end
+else
+   print '       Translation/multiplication of the dataset'
+   testData = {
+      data = torch.Tensor(teSize*9,3,height,width),
+      labels = torch.zeros(teSize*9),
+      size = function() return teSize*9 end
+   }
 
-local idx = 0
-for i = 1,teSize do
-   for xCrop = 0,translate*2,translate do
-      for yCrop = 0,translate*2,translate do
-         idx = idx + 1
-         testData.data[idx] = image.crop(testDataTemp.data[i],xCrop,yCrop,xCrop+width,yCrop+height)
-         xlua.progress(idx,teSize*9)
+   local idx = 0
+   for i = 1,teSize do
+      for xCrop = 0,translate*2,translate do
+         for yCrop = 0,translate*2,translate do
+            idx = idx + 1
+            testData.data[idx] = image.crop(testDataTemp.data[i],xCrop,yCrop,xCrop+width,yCrop+height)
+            xlua.progress(idx,teSize*9)
+         end
       end
    end
 end
