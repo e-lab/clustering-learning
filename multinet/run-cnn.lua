@@ -17,7 +17,7 @@ require 'optim'
 print '==> processing options'
 
 opt = lapp[[
-   -r,--learningRate       (default 0.2)                          learning rate olf default 
+   -r,--learningRate       (default 0.1)                          learning rate olf default 
    -l,--learningRateDecay  (default 1e-7)                         learning rate decay (in # samples)
    -d,--dropout            (default 0.5)                          dropout amount
    -w,--weightDecay        (default 1e-5)                         L2 penalty on the weights
@@ -38,7 +38,7 @@ opt = lapp[[
       --dataStop                                                  use German stop signs
       --kittiRatio         (default 0.8)                          train/tot ratio for kitti dataset
       --siftflow                                                  load the siftflow dataset instead:noh
-      --preproc            (default 'norm(y)+norm(u)+norm(v)')    preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
+      --preproc            (default 'rgb')    preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
 ]]
 
 --[[dname,fname = sys.fpath()
