@@ -22,7 +22,8 @@ require 'optim'   -- an optimization package, for online and batch methods
 local t = require 'model'
 local model = t.model
 local loss = t.loss
-local dropout = t.dropout
+local dropout1 = t.dropout1
+local dropout2 = t.dropout2
 
 ----------------------------------------------------------------------
 print '==> defining some tools'
@@ -157,12 +158,14 @@ function train(trainData)
       optim.sgd(eval_E, w, optimState)
 
       -- update confusion
-      dropout.train = false
+      dropout1.train = false
+      dropout2.train = false
       local y = model:forward(x)
       for i = 1,opt.batchSize do
          confusion:add(y[i],yt[i])
       end
-      dropout.train = true
+      dropout1.train = true
+      dropout2.train = true
 
    end
 

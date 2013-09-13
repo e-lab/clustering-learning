@@ -39,8 +39,8 @@ cl_nk1,cl_nk2   = nk3, hiddens      -- dimensions for top perceptron
 ivch            = 3]]
 
 -- dropout?
-local dropout = nn.Dropout(opt.dropout)
-
+local dropout1 = nn.Dropout(opt.dropout)
+local dropout2 = nn.Dropout(opt.dropout)
 ----------------------------------------------------------------------
 if opt.siftflow then
    local filterSize = 15
@@ -140,9 +140,10 @@ end
 -- a 2-layer perceptron
 local classifier = nn.Sequential()
 classifier:add(nn.Reshape(cl_nk1))
+classifier:add(dropout1)
 classifier:add(nn.Linear(cl_nk1,cl_nk2))
 classifier:add(nn.Threshold())
-classifier:add(dropout)
+classifier:add(dropout2)
 classifier:add(nn.Linear(cl_nk2,#nclasses))
 
 -- final stage: log probabilities
@@ -192,6 +193,7 @@ end
 return {
    model = model,
    loss = loss,
-   dropout = dropout
+   dropout1 = dropout1,
+   dropout2 = dropout2
 }
 

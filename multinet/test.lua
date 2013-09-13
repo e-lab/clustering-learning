@@ -15,7 +15,8 @@ print '==> defining some tools'
 local t = require 'model'
 local model = t.model
 local loss = t.loss
-local dropout = t.dropout
+local dropout1 = t.dropout1
+local dropout2 = t.dropout2
 
 -- This matrix records the current testConfusion across classes (<classes> is a global var.)
 local testConfusion = optim.ConfusionMatrix(nclasses)
@@ -45,7 +46,8 @@ function test(testData)
    local time = sys.clock()
 
    -- dropout -> off
-   dropout.train = false
+   dropout1.train = false
+   dropout2.train = false
 
    -- test over test data
    print('==> testing on test set:')
@@ -108,7 +110,8 @@ function test(testData)
    testConfusion:zero()
 
    -- dropout -> on
-   dropout.train = true
+   dropout1.train = true
+   dropout2.train = true
 end
 
 -- Export:
