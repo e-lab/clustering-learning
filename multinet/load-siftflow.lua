@@ -82,7 +82,12 @@ testData = nn.DataSetLabelMe{path=sys.concat(opt.dataset,'test'),
                           rawSampleMaxSize=256,
                           classNames=classes,
                           classToSkip=1,
+                          samplingMode=opt.sampling,
+                          samplingFilter=filter,
+                          infiniteSet=true,
+                          labelGenerator=labelGenerator,
                           cacheFile='cached-256-'..patchSize..'-'..'double',--opt.type,
+                          nbPatchPerSample=5,
                           preloadSamples=false,
                           patchSize=patchSize}
 
