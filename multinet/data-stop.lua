@@ -31,6 +31,7 @@ local width = opt.width or 46
 local trNames = ls(trPath .. '00014/*png')
 trSize = 2 * #trNames
 local translate = 5
+if opt.small then translate = 0 end
 
 -- Main program -------------------------------------------------------------
 print '==> creating a new training dataset from raw files:'
