@@ -63,7 +63,7 @@ else
       table.insert(datasets,'data-siftflow')
    end
    --table.insert(datasets, 'data-person')
-   table.insert(datasets, roadSign)
+   --table.insert(datasets, roadSign)
    --table.insert(datasets, 'data-kitti2')
 
    nbClasses = {}
