@@ -40,7 +40,7 @@ opt = lapp[[
       --siftflow                                                  load the siftflow dataset instead:noh
       --preproc            (default 'norm(y)+norm(u)+norm(v)')    preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
       --includeSiftflow                                           include siftflow dataset among other datasets
-      --small              (default false)                        uses a reduced version of the dataset (no shifting sample multiplication)
+      --small                                                     uses a reduced version of the dataset (no shifting sample multiplication)
 ]]
 
 --[[dname,fname = sys.fpath()
@@ -71,6 +71,7 @@ print('  + kittiRatio:       ', opt.kittiRatio       )
 print('  + siftflow:         ', opt.siftflow         )
 print('  + preproc:          ', opt.preproc          )
 print('  + includeSiftflow   ', opt.includeSiftflow  )
+print('  + small             ', opt.small            )
 
 torch.setdefaulttensortype('torch.FloatTensor')
 torch.manualSeed(opt.seed)
