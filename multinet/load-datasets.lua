@@ -62,9 +62,9 @@ else
    if opt.includeSiftflow then
       table.insert(datasets,'data-siftflow')
    end
-   table.insert(datasets, 'data-person')
+   --table.insert(datasets, 'data-person')
    table.insert(datasets, roadSign)
-   table.insert(datasets, 'data-kitti2')
+   --table.insert(datasets, 'data-kitti2')
 
    nbClasses = {}
    local totNbClasses = {0}

@@ -138,9 +138,10 @@ else
       k = 3
    else k = 2
    end
-   table.insert(classes,'Person')
+   --table.insert(classes,'Person')
+   k = 2 -- hand fixed
    for i = 1, nbClasses[k]  do classes[#classes+1] = signLabels[i] end
-   classes[#classes+1] = 'Background'
-   classes[#classes+1] = 'Car'
+   --classes[#classes+1] = 'Background'
+   --classes[#classes+1] = 'Car'
 end
 
