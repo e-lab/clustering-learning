@@ -101,7 +101,13 @@ function test(testData)
    if testConfusion.totalValid > maxTestAccSoFar then
       print('==> test accuracy has increased to ' .. testConfusion.totalValid*100 .. '%, (+' .. (testConfusion.totalValid-maxTestAccSoFar)*100 .. '%) => saving network')
       maxTestAccSoFar = testConfusion.totalValid
-      saveNet('multinet.net')
+      local netName = 'multinet'
+      if opt.type == 'cuda' then
+         netName = netName .. '-cuda.net'
+      else
+         netName = netName .. '-float.net'
+      end
+      saveNet(netName)
    end
 
    testConfusion:zero()
