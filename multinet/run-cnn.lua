@@ -11,7 +11,6 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
---require 'Dropout'
 
 ----------------------------------------------------------------------
 print '==> processing options'
