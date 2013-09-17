@@ -10,9 +10,10 @@ local classes = {'unknown',
                  'road', 'rock', 'sand', 'sea', 'sidewalk', 'sign', 'sky',
                  'staircase', 'streetlight', 'sun', 'tree', 'window'}
 
+local nclasses
 if opt.smallSift then 
-   local nclasses = {'unknown', 'building', 'bus', 'car', 'grass', 'person', 'road',  
-                     'sign', 'sky', 'tree'}
+   nclasses = {'unknown', 'building', 'bus', 'car', 'grass', 'person', 'road',  
+               'sign', 'sky', 'tree'}
    l = torch.range(1,#nclasses)
    classToSkip = {1,2,3,4,5,6,8,10,11,12,13,14,15,17,18,20,21,22,24,25,26,27,30,31,32,34}
    torch.save('siftflowLabels.t7',nclasses)
