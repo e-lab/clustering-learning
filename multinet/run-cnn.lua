@@ -11,7 +11,6 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
---require 'Dropout'
 
 ----------------------------------------------------------------------
 print '==> processing options'
@@ -41,6 +40,7 @@ opt = lapp[[
       --preproc            (default 'norm(y)+norm(u)+norm(v)')    preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
       --includeSiftflow                                           include siftflow dataset among other datasets
       --small                                                     uses a reduced version of the dataset (no shifting sample multiplication)
+      --smallSift          (default true)                         reduced categories of the siftflow
 ]]
 
 --[[dname,fname = sys.fpath()
@@ -72,6 +72,7 @@ print('  + siftflow:         ', opt.siftflow         )
 print('  + preproc:          ', opt.preproc          )
 print('  + includeSiftflow   ', opt.includeSiftflow  )
 print('  + small             ', opt.small            )
+print('  + smallSift         ', opt.smallSift        )
 
 torch.setdefaulttensortype('torch.FloatTensor')
 torch.manualSeed(opt.seed)
