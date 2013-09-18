@@ -91,46 +91,10 @@ else
    }
 end
 
+local siftflowLabels = torch.load('siftflowLabels.t7')
 if opt.siftflow then
-   classes = {
-      'Unknown',
-      'Awning',
-      'Balcony',
-      'Bird',
-      'Boat',
-      'Bridge',
-      'Building',
-      'Bus',
-      'Car',
-      'Cow',
-      'Crosswalk',
-      'Desert',
-      'Door',
-      'Fence',
-      'Field',
-      'Grass',
-      'Moon',
-      'Mountain',
-      'Person',
-      'Plant',
-      'Pole',
-      'River',
-      'Road',
-      'Rock',
-      'Sand',
-      'Sea',
-      'Sidewalk',
-      'Sign',
-      'Sky',
-      'Staircase',
-      'Streetlight',
-      'Sun',
-      'Tree',
-      'Window'
-   }
+   classes = siftflowLabels
 else
-
-   local siftflowLabels = torch.load('siftflowLabels.t7')
    local k
    classes = {}
    if opt.includeSiftflow then
