@@ -16,7 +16,7 @@ require 'optim'
 print '==> processing options'
 
 opt = lapp[[
-   -r,--learningRate       (default 0.2)                          learning rate
+   -r,--learningRate       (default 0.1)                          learning rate
    -l,--learningRateDecay  (default 1e-7)                         learning rate decay (in # samples)
    -d,--dropout            (default 0.5)                          dropout amount
    -w,--weightDecay        (default 1e-5)                         L2 penalty on the weights
