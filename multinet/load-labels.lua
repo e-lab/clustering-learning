@@ -133,7 +133,7 @@ else
    local siftflowLabels = torch.load('siftflowLabels.t7')
    local k
    classes = {}
-   if opt.includeSiftflow then
+   if opt.includeSiftflow or opt.smallSift then 
       for i = 1, nbClasses[1] do classes[#classes+1] = siftflowLabels[i] end
       k = 3
    else k = 2
