@@ -11,13 +11,12 @@ require 'pl'
 require 'image'
 require 'nnx'
 require 'optim'
---require 'Dropout'
 
 ----------------------------------------------------------------------
 print '==> processing options'
 
 opt = lapp[[
-   -r,--learningRate       (default 0.2)                          learning rate
+   -r,--learningRate       (default 0.1)                          learning rate
    -l,--learningRateDecay  (default 1e-7)                         learning rate decay (in # samples)
    -d,--dropout            (default 0.5)                          dropout amount
    -w,--weightDecay        (default 1e-5)                         L2 penalty on the weights
@@ -38,9 +37,10 @@ opt = lapp[[
       --dataStop                                                  use German stop signs
       --kittiRatio         (default 0.8)                          train/tot ratio for kitti dataset
       --siftflow                                                  load the siftflow dataset instead:noh
-      --preproc            (default 'norm(y)+norm(u)+norm(v)')    preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
+      --preproc            (default 'rgb')                        preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
       --includeSiftflow                                           include siftflow dataset among other datasets
       --small                                                     uses a reduced version of the dataset (no shifting sample multiplication)
+      --smallSift          (default true)                         reduced categories of the siftflow
 ]]
 
 --[[dname,fname = sys.fpath()
@@ -72,6 +72,7 @@ print('  + siftflow:         ', opt.siftflow         )
 print('  + preproc:          ', opt.preproc          )
 print('  + includeSiftflow   ', opt.includeSiftflow  )
 print('  + small             ', opt.small            )
+print('  + smallSift         ', opt.smallSift        )
 
 torch.setdefaulttensortype('torch.FloatTensor')
 torch.manualSeed(opt.seed)

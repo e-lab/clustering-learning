@@ -18,6 +18,7 @@ if not opt then
       --dataStop                                use German stop signs
       --kittiRatio         (default 0.8)        train/tot ratio for kitti dataset
       --includeSiftflow                         include siftflow dataset among other datasets
+      --smallSift          (default true)       reduced categories of the siftflow
 ]]
 end
 
@@ -59,12 +60,12 @@ else
    else roadSign = 'data-AmericanSign' end
 
    local datasets = {}
-   if opt.includeSiftflow then
+   if opt.includeSiftflow or opt.smallSift then
       table.insert(datasets,'data-siftflow')
    end
-   table.insert(datasets, 'data-person')
-   table.insert(datasets, roadSign)
-   table.insert(datasets, 'data-kitti2')
+   --table.insert(datasets, 'data-person')
+   --table.insert(datasets, roadSign)
+   --table.insert(datasets, 'data-kitti2')
 
    nbClasses = {}
    local totNbClasses = {0}

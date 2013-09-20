@@ -57,8 +57,8 @@ image.display{image=trainData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Train 
 print '==> Loading testing dataset to RAM'
 for idx = 1, teSize do
    local a = testData[idx]
-   newTestData.data[idx] = a[1]
-   newTestData.labels[idx] = a[2]:gt(0):float() * l - 1
+   newTestData.data[idx] = a[1][{ {},{a[4]-23+1,a[4]+23},{a[3]-23+1,a[3]+23} }]
+   newTestData.labels[idx] = a[2] * l - 1
    xlua.progress(idx,teSize)
 end
 
@@ -69,7 +69,7 @@ newTestData = nil
 image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
 -- Preprocessing -------------------------------------------------------------
-dofile 'preprocessing.lua'
+if opt.preprocessing=='norm(y)+norm(u)+norm(v)' then dofile 'preprocessing.lua' end
 
 -- Exports -------------------------------------------------------------------
 return {
