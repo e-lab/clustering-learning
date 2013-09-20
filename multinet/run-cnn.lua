@@ -37,7 +37,7 @@ opt = lapp[[
       --dataStop                                                  use German stop signs
       --kittiRatio         (default 0.8)                          train/tot ratio for kitti dataset
       --siftflow                                                  load the siftflow dataset instead:noh
-      --preproc            (default 'norm(y)+norm(u)+norm(v)')    preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
+      --preproc            (default 'rgb')                        preprocessing type, can be one of : norm(rgb) OR norm(yuv) OR norm(y)+norm(u)+norm(v) OR norm(y)+uv OR norm(y) OR rgb OR yuv
       --includeSiftflow                                           include siftflow dataset among other datasets
       --small                                                     uses a reduced version of the dataset (no shifting sample multiplication)
       --smallSift          (default true)                         reduced categories of the siftflow

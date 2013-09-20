@@ -69,7 +69,7 @@ newTestData = nil
 image.display{image=testData.data[{{1,128}}], nrow=16, zoom=2, legend = 'Test Data'}
 
 -- Preprocessing -------------------------------------------------------------
-dofile 'preprocessing.lua'
+if opt.preprocessing=='norm(y)+norm(u)+norm(v)' then dofile 'preprocessing.lua' end
 
 -- Exports -------------------------------------------------------------------
 return {

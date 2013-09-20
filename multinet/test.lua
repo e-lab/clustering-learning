@@ -94,7 +94,7 @@ function test(testData)
    testLogger:add{['% mean class accuracy (test set)'] = testConfusion.totalValid * 100}
    if opt.plot then
       testLogger:style{['% mean class accuracy (test set)'] = '-'}
-      testLogger:plot()
+   --   testLogger:plot()
    end
 
    -- save current net IF test accuracy has increased
