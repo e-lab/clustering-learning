@@ -179,7 +179,7 @@ function train(trainData)
    trainLogger:add{['% mean class accuracy (train set)'] = confusion.totalValid * 100}
    if opt.plot then
       trainLogger:style{['% mean class accuracy (train set)'] = '-'}
-   --   trainLogger:plot()
+      trainLogger:plot()
    end
 
    -- saving moved to testing script with conditional test on testing accuracy improvement
