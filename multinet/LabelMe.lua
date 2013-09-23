@@ -451,7 +451,7 @@ function LabelMe:parseMask(existing_tags)
    local x_end = mask:size(2) - math.ceil(self.patchSize/2)
    local y_start = math.ceil(self.patchSize/2)
    local y_end = mask:size(1) - math.ceil(self.patchSize/2)
-   mask.nn.LabelMe_extract(tags, mask, 
+   mask.nn.DataSetLabelMe_extract(tags, mask, 
    x_start, x_end, 
    y_start, y_end, self.currentIndex,
    filter.ratio, filter.size, filter.step)
