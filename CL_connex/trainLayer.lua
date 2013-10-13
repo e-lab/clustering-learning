@@ -38,7 +38,7 @@ function trainLayer(nlayer, invdata, nsamples, nk, is, verbose)
    end     
    ----------------------------------------------------------------------
    if verbose then print '==> running k-means to learn filter' end                   
-   kernels, counts = unsup.kmeans(data, nk, opt.initstd, opt.niter, opt.batchsize, cb, verbose)
+   kernels, counts = unsup.kmeans(data, nk, opt.niter, opt.batchsize, cb, verbose)
 
    for i=1,nk do
       -- normalize kernels to 0 mean and 1 std:

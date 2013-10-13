@@ -41,7 +41,7 @@ opt = lapp[[
    -n,--network				(default false)		path to existing [trained] network
 	-s,--save					(default scratch/) 	file name to save network [after each epoch]
 	
-	--initstd               (dafault 0.1)        initial std for k-means
+	--initstd               (default 0.1)        initial std for k-means
 	--niter                 (default 15)         iterations for k-means
 	--kmbatchsize           (default 1000)       batch size for k-means
 	--numlayers             (default 3)          number of layers in network	
